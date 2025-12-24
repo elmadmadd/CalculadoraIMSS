@@ -6,16 +6,14 @@ plugins {
 
 android {
     namespace = "com.example.consucalcu"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.consucalcu"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -71,4 +69,9 @@ dependencies {
 
     // 5. ViewModel para Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+
+    // 6. Lottie Compose for Juicy Animations
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
+
+
 }

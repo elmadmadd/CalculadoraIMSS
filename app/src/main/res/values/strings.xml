@@ -1,3 +1,38 @@
 <resources>
     <string name="app_name">consucalcu</string>
+    
+    <!-- Empty State Strings -->
+    <string name="empty_results_title">Sin Resultados</string>
+    <string name="empty_results_subtitle">No encontramos ofertas que cumplan con los criterios. Intenta ajustar los montos o plazos.</string>
+    <string name="empty_results_cta">Nueva Búsqueda</string>
+    <string name="search_empty_content_description">Animación de búsqueda sin resultados</string>
+    
+    <!-- Legacy support (backward compatibility) -->
+    <string name="search_empty_title">@string/empty_results_title</string>
+    <string name="search_empty_subtitle">@string/empty_results_subtitle</string>
+    <string name="search_empty_action">@string/empty_results_cta</string>
+    
+    <!-- Client Form -->
+    <string name="client_form_title">Datos del Cliente</string>
+    <string name="client_form_subtitle">Completa la información para generar la propuesta</string>
+    <string name="client_form_name_label">Nombre</string>
+    <string name="client_form_nss_label">NSS</string>
+    <string name="client_form_curp_label">CURP</string>
+    <string name="client_form_rfc_label">RFC</string>
+    <string name="client_form_phone_label">Teléfono</string>
+    <string name="client_form_bank_label">Banco</string>
+    <string name="client_form_clabe_label">CLABE</string>
+    <string name="client_form_generate_ticket">🎫 GENERAR TICKET (JPG)</string>
+    <string name="client_form_copy_text">📋 COPIAR TEXTO</string>
+    
+    <!-- Validation Errors -->
+    <string name="error_empty_field">Este campo es obligatorio</string>
+    <string name="error_invalid_nss">NSS debe tener 11 dígitos</string>
+    <string name="error_invalid_curp">CURP debe tener 18 caracteres</string>
+    <string name="error_invalid_rfc">RFC inválido</string>
+    <string name="error_invalid_phone">Teléfono debe tener 10 dígitos</string>
+    <string name="error_invalid_clabe">CLABE debe tener 18 dígitos</string>
+    <string name="error_invalid_amount">Monto inválido</string>
+    <string name="error_min_amount">Monto mínimo: $%1$s</string>
+    <string name="error_max_amount">Monto máximo: $%1$s</string>
 </resources>
