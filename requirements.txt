@@ -1,0 +1,10 @@
+flet>=0.80.1
+flet-lottie>=0.80.1
+flet-audio>=0.80.1
+Pillow>=10.0.0
+openpyxl>=3.1.0
+fpdf>=1.7.2
+requests>=2.31.0
+psutil>=5.9.0
+pyinstaller>=6.4.0
+pygame>=2.5.0
