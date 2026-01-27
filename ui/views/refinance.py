@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class RefinanceView(ft.Container):
     def __init__(self, page, config_manager, gestor_ops, history_manager=None, sound_manager=None, offer_comparator=None):
         super().__init__(expand=True)
-        self.page = page
+        self.main_page = page
         self.config_manager = config_manager
         self.gestor_ops = gestor_ops
         self.history_manager = history_manager
@@ -124,13 +124,15 @@ class RefinanceView(ft.Container):
         self.col_deudas.update()
         self.liquidity_input.update()
         if self.validation_gates_widget.page: self.validation_gates_widget.update()
-        self.page.update()
+        try:
+            self.main_page.update()
+        except: pass
         self.upd_sum()
 
     def msg(self, t, c=THEME["colors"]["success"]):
-        self.page.snack_bar = ft.SnackBar(ft.Text(t, color="white"), bgcolor=c)
-        self.page.snack_bar.open = True
-        self.page.update()
+        self.main_page.snack_bar = ft.SnackBar(ft.Text(t, color="white"), bgcolor=c)
+        self.main_page.snack_bar.open = True
+        self.main_page.update()
 
     def upd_sum(self, e=None):
         try:
@@ -235,7 +237,7 @@ class RefinanceView(ft.Container):
                     ds.append(data)
 
             if not ds:
-                await shake_control(self.col_deudas, self.page)
+                await shake_control(self.col_deudas, self.main_page)
                 self.msg("Agrega al menos una deuda", THEME["colors"]["error"])
                 return
 
@@ -304,7 +306,7 @@ class RefinanceView(ft.Container):
                     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
                     alignment=ft.Alignment(0, 0), opacity=0.7
                 ))
-                await shake_control(self.grid_cnca, self.page)
+                await shake_control(self.grid_cnca, self.main_page)
                 self.check_cnca_empty_state()
             else:
                 if self.sound_manager: self.sound_manager.play("cash")
@@ -323,14 +325,14 @@ class RefinanceView(ft.Container):
                         on_detail=lambda d: print("Detalle"),
                         on_compare=lambda d: print("Comparar"),
                         on_amortization=lambda d: print("Amortización"),
-                        page=self.page, delay_ms=delay
+                        page=self.main_page, delay_ms=delay
                     )
 
                     grid_config = {"xs": 12, "md": 6, "xl": 4}
                     c.col = grid_config
 
                     if self.offer_comparator:
-                        selectable_card = create_selectable_offer_card(o, self.offer_comparator, c, self.page)
+                        selectable_card = create_selectable_offer_card(o, self.offer_comparator, c, self.main_page)
                         if hasattr(selectable_card, 'col'):
                             selectable_card.col = grid_config
                         return selectable_card
@@ -357,7 +359,7 @@ class RefinanceView(ft.Container):
                         'mejor_opcion': ops[0]
                     })
 
-            self.page.update()
+            self.main_page.update()
 
         except Exception as ex:
             import traceback

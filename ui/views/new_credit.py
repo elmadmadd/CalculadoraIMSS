@@ -29,7 +29,7 @@ SUNSET_APRICOT = "#E47A24" # Apricot
 class NewCreditView(ft.Container):
     def __init__(self, page, config_manager, gestor_ops, history_manager=None, sound_manager=None, offer_comparator=None):
         super().__init__(expand=True)
-        self.page = page
+        self.main_page = page
         self.config_manager = config_manager
         self.gestor_ops = gestor_ops
         self.history_manager = history_manager
@@ -57,7 +57,7 @@ class NewCreditView(ft.Container):
             self.input_nuevo.input_box.focused_border_color = GOLD_PRIMARY
 
         # Radio Group (Hidden logic)
-        self.radio_nuevo = ft.RadioGroup(value="CAPACIDAD")
+        self.radio_nuevo = ft.RadioGroup(content=ft.Container(), value="CAPACIDAD")
 
         # Switch Retención
         self.cb_retencion = ft.Switch(
@@ -352,9 +352,9 @@ class NewCreditView(ft.Container):
         if self.cb_retencion.page: self.cb_retencion.update()
 
     def msg(self, t, c=THEME["colors"]["success"]):
-        self.page.snack_bar = ft.SnackBar(ft.Text(t, color="white"), bgcolor=c)
-        self.page.snack_bar.open = True
-        self.page.update()
+        self.main_page.snack_bar = ft.SnackBar(ft.Text(t, color="white"), bgcolor=c)
+        self.main_page.snack_bar.open = True
+        self.main_page.update()
 
     async def run_nuevo(self, e):
         start_time = time.time()
@@ -405,7 +405,7 @@ class NewCreditView(ft.Container):
 
                 def create_card(item):
                     o, i = item
-                    return FintechCard(o, i==0, "NUEVO", None, None, None, None, self.page, delay_ms=i*50)
+                    return FintechCard(o, i==0, "NUEVO", None, None, None, None, self.main_page, delay_ms=i*50)
 
                 await render_cards_progressively(self.grid_nuevo, [(o,i) for i,o in enumerate(ops)], create_card)
 
@@ -413,7 +413,7 @@ class NewCreditView(ft.Container):
 
         except Exception as ex:
             if self.sound_manager: self.sound_manager.play("wrong")
-            await shake_control(self.input_nuevo, self.page)
+            await shake_control(self.input_nuevo, self.main_page)
             self.msg(f"Error: {ex}", THEME["colors"]["error"])
         finally:
             self.btn_icon.visible = True

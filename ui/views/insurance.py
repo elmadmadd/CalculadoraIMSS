@@ -23,7 +23,7 @@ PURPLE_WHITE = "#F5EBFA"
 class InsuranceView(ft.Container):
     def __init__(self, page, config_manager, sound_manager=None, history_manager=None):
         super().__init__(expand=True)
-        self.page = page
+        self.main_page = page
         self.config_manager = config_manager
         self.sound_manager = sound_manager
         self.history_manager = history_manager
@@ -233,7 +233,7 @@ class InsuranceView(ft.Container):
                 c.content.color = "white" if is_sel else accent_color
                 c.scale = 1.0
                 c.update()
-            self.page.update()
+            self.main_page.update()
 
         for option in options:
             opt_val = option if isinstance(option, str) else option.get("value", option)
@@ -339,7 +339,7 @@ class InsuranceView(ft.Container):
             self.in_seg_fecha_nac.visible = False
             e.control.content.controls[1].value = "Usar Fecha Nacimiento"
             e.control.content.controls[0].name = ft.Icons.CALENDAR_TODAY
-        self.page.update()
+        self.main_page.update()
 
     def calcular_edad_desde_fecha(self, e):
         """Calcular edad desde fecha de nacimiento con auto-formateo"""
@@ -404,7 +404,7 @@ class InsuranceView(ft.Container):
         self.kpi_seg_mensual_text.value = "$0"
         self.seg_results_container.visible = False
         self.seg_empty_state.visible = True
-        self.page.update()
+        self.main_page.update()
 
     async def run_seguro(self, e):
         btn = e.control
@@ -449,15 +449,15 @@ class InsuranceView(ft.Container):
             monto = self.in_seg_monto.raw_value
             if monto <= 0:
                 if self.sound_manager: self.sound_manager.play("wrong")
-                await shake_control(self.in_seg_monto, self.page)
+                await shake_control(self.in_seg_monto, self.main_page)
                 return
 
             if edad <= 0 or edad > 120:
                 if self.sound_manager: self.sound_manager.play("wrong")
                 if self.edad_mode_value[0] == "edad":
-                    await shake_control(self.in_seg_edad, self.page)
+                    await shake_control(self.in_seg_edad, self.main_page)
                 else:
-                    await shake_control(self.in_seg_fecha_nac, self.page)
+                    await shake_control(self.in_seg_fecha_nac, self.main_page)
                 return
 
             if self.sound_manager: self.sound_manager.play("pop")
@@ -491,7 +491,7 @@ class InsuranceView(ft.Container):
             self.seg_results_container.scale = 1.0
 
             if self.sound_manager: self.sound_manager.play("cash")
-            self.page.update()
+            self.main_page.update()
 
             if self.history_manager:
                  self.history_manager.add_calculation({

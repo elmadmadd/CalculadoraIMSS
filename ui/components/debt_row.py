@@ -51,7 +51,7 @@ class DebtRow(ft.Container):
             border_radius=8
         )
         self.dd_i.expand = True  # Establecer expand como propiedad después de la creación
-        self.dd_i.on_change = lambda e: [on_upd(e), self._check_complete(), self._update_brand_style()]
+        self.dd_i.on_select = lambda e: [on_upd(e), self._check_complete(), self._update_brand_style()]
 
         # Dropdown Plazo (Compacto)
         self.dd_p = ft.Dropdown(
@@ -66,7 +66,7 @@ class DebtRow(ft.Container):
             filled=True,
             border_radius=6
         )
-        self.dd_p.on_change = lambda e: [on_upd(e), self._check_complete()]
+        self.dd_p.on_select = lambda e: [on_upd(e), self._check_complete()]
 
         # Inputs individuales (todos con height=40)
         self.tf_s = ft.TextField(

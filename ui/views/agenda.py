@@ -5,7 +5,7 @@ from ui.theme import THEME
 class AgendaView(ft.Stack):
     def __init__(self, page, perfil, sound_manager=None):
         super().__init__(expand=True)
-        self.page = page
+        self.main_page = page
         self.perfil = perfil
         self.sound_manager = sound_manager
         self.agenda_manager = AgendaManagerAdapter()
@@ -41,7 +41,7 @@ class AgendaView(ft.Stack):
         self.txt_buscar_cliente = ft.TextField(hint_text="Buscar...", prefix_icon=ft.Icons.SEARCH_ROUNDED, col={"xs": 12, "md": 8}, on_change=lambda e: self.cargar_clientes())
         self.dd_filtro_estatus = ft.Dropdown(
             label="Filtrar", options=[ft.dropdown.Option("Todos")] + [ft.dropdown.Option(x) for x in ["Prospecto", "En Proceso", "Aprobado"]],
-            value="Todos", col={"xs": 12, "md": 4}, on_change=lambda e: self.cargar_clientes()
+            value="Todos", col={"xs": 12, "md": 4}, on_select=lambda e: self.cargar_clientes()
         )
 
         self.lista_clientes = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO)
@@ -180,7 +180,7 @@ class AgendaView(ft.Stack):
                 self.clientes_seleccionados.clear()
                 dlg.open = False
                 self.cargar_clientes()
-                self.page.update()
+                self.main_page.update()
             except Exception as ex:
                 print(f"Error eliminar: {ex}")
 
@@ -188,13 +188,13 @@ class AgendaView(ft.Stack):
             title=ft.Text("Confirmar"),
             content=ft.Text(f"¿Eliminar {len(self.clientes_seleccionados)} clientes?"),
             actions=[
-                ft.TextButton("Cancelar", on_click=lambda e: [setattr(dlg, "open", False), self.page.update()]),
+                ft.TextButton("Cancelar", on_click=lambda e: [setattr(dlg, "open", False), self.main_page.update()]),
                 ft.TextButton("Eliminar", on_click=confirmar)
             ]
         )
-        self.page.dialog = dlg
+        self.main_page.dialog = dlg
         dlg.open = True
-        self.page.update()
+        self.main_page.update()
 
     def on_scroll_lista(self, e):
         if e.pixels >= e.max_scroll_extent - 100:

@@ -31,7 +31,7 @@ class JuicyDropdown(ft.Container):
             content_padding=10,
             label_style=ft.TextStyle(size=13, color=THEME["colors"]["text_tertiary"]),
         )
-        self.dd.on_change = self._on_change_wrapper
+        self.dd.on_select = self._on_change_wrapper
 
         # Container Style - PREMIUM OPAQUE
         self.border_radius = 12
