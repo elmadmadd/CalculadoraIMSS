@@ -1,5 +1,5 @@
 import flet as ft
-from core.agenda_manager import AgendaManager
+from core.agenda_manager_adapter import AgendaManagerAdapter
 from ui.theme import THEME
 
 class AgendaView(ft.Stack):
@@ -8,7 +8,7 @@ class AgendaView(ft.Stack):
         self.page = page
         self.perfil = perfil
         self.sound_manager = sound_manager
-        self.agenda_manager = AgendaManager()
+        self.agenda_manager = AgendaManagerAdapter()
 
         self.clientes_seleccionados = set()
         self.paginacion_limite = 20
