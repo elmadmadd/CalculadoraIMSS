@@ -28,40 +28,40 @@ Aplicación profesional para el cálculo y gestión de créditos financieros (Re
 - KPIs de seguimiento (Prospectos, En Proceso, Aprobados).
 - Persistencia en SQLite.
 
-## 📂 Estructura del Proyecto
+## 📂 Estructura del Proyecto (Modular)
 
-### Núcleo
-- `main.py`: Punto de entrada principal y lógica de la UI.
-- `requirements.txt`: Dependencias del proyecto.
+El proyecto ha sido refactorizado para mejorar la mantenibilidad y escalabilidad:
 
-### Módulos de Lógica
-- `NORMATIVA_CNCA.py`: Motor de reglas de negocio y cálculos financieros.
-- `PERFORMANCE_MANAGER.py`: Gestor de recursos y diagnósticos del sistema.
-- `CALCULATION_HISTORY.py`: Sistema de historial local.
-
-### Componentes UI
-- `PREMIUM_DESIGN_SYSTEM.py`: Tokens de diseño, colores y tipografía.
-- `MODERN_COMPONENTS.py`: Componentes visuales modernos (Inputs, Cards).
-- `FINANCIAL_WIDGETS.py`: Widgets especializados (Salud financiera, Capacidad).
-- `ANIMATED_INPUTS.py`: Inputs con animaciones y validación.
-- `PROGRESS_INDICATOR.py`: Indicadores de progreso por pasos.
-- `SKELETON_LOADING.py`: Pantallas de carga (skeletons).
-- `VIRTUAL_SCROLL.py`: Sistema de renderizado eficiente para listas largas.
-
-### Utilidades
-- `fpdf` y `openpyxl`: Generación de reportes PDF/Excel.
+- `core/`: Lógica de negocio (Cálculos, Configuración, Datos).
+- `ui/`: Interfaz de Usuario.
+    - `views/`: Pantallas principales (Refinanciamiento, Nuevo, Seguros, Agenda).
+    - `components/`: Componentes reutilizables (Tarjetas, Inputs, Sidebar).
+    - `layouts/`: Estructuras de página.
+- `utils/`: Utilidades generales (PDF, Excel, Imágenes).
+- `main.py`: Punto de entrada de la aplicación.
 
 ## 🛠️ Instalación y Ejecución
 
-1. **Instalar dependencias**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Requisitos Previos
+- Python 3.10 o superior.
 
-2. **Ejecutar la aplicación**:
-   ```bash
-   python main.py
-   ```
+### Pasos Rápidos
+
+1.  **Instalar dependencias**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2.  **Ejecutar la aplicación**:
+    ```bash
+    python main.py
+    ```
+
+### Scripts de Ayuda
+Hemos incluido scripts para facilitar el inicio:
+
+- **Windows**: Doble clic en `run_app.bat`
+- **macOS/Linux**: Ejecutar `./run_app.sh` en la terminal.
 
 ## 🏗️ Compilación
 
@@ -82,4 +82,4 @@ build_windows.bat
 - **Progressive Rendering**: Carga de listas grandes sin congelar la UI.
 - **ThreadPool Executor**: Cálculos matemáticos en hilos secundarios.
 - **Global Caching**: Reducción de 70% en tiempo de recálculo.
-- **Memory Management**: Limpieza activa de recursos gráficos.
+- **Modular Architecture**: Código limpio y organizado por responsabilidad.

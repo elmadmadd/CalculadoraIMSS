@@ -9,10 +9,9 @@ echo 📦 Empaquetando aplicacion...
 pyinstaller --noconfirm --onedir --windowed --name "ConsuCalcu" ^
     --icon "assets/icon.ico" ^
     --add-data "assets;assets" ^
-    --add-data "NORMATIVA_CNCA.py;." ^
-    --add-data "PERFORMANCE_MANAGER.py;." ^
-    --add-data "PREMIUM_DESIGN_SYSTEM.py;." ^
-    --add-data "*.py;." ^
+    --add-data "core;core" ^
+    --add-data "ui;ui" ^
+    --add-data "utils;utils" ^
     --hidden-import "PIL" ^
     --hidden-import "flet" ^
     --hidden-import "openpyxl" ^
