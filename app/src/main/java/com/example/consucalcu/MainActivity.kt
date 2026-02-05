@@ -162,6 +162,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -779,7 +780,7 @@ fun AnimatedResultItem(
 }
 
 /**
- * Animated wrapper for tab content with floating entrance effect
+ * Animated wrapper for tab content with floating entrance effect (SUTIL)
  * Triggers animation when tabKey changes (tab switch)
  */
 @Composable
@@ -805,7 +806,7 @@ fun AnimatedTabContent(
     )
     
     val translationY by animateFloatAsState(
-        targetValue = if (isVisible) 0f else 80f,
+        targetValue = if (isVisible) 0f else 30f, // Más sutil: 30f en lugar de 80f
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
@@ -814,7 +815,7 @@ fun AnimatedTabContent(
     )
     
     val scale by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0.92f,
+        targetValue = if (isVisible) 1f else 0.96f, // Más sutil: 0.96f en lugar de 0.92f
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
@@ -833,6 +834,78 @@ fun AnimatedTabContent(
             }
     ) {
         content()
+    }
+}
+
+/**
+ * Custom Navigation Bar Item con animaciones suaves
+ */
+@Composable
+fun NavBarItem(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val animatedColor by animateColorAsState(
+        targetValue = if (selected) color else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        animationSpec = tween(300),
+        label = "navItemColor"
+    )
+    
+    val animatedScale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.9f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "navItemScale"
+    )
+    
+    val animatedBackgroundAlpha by animateFloatAsState(
+        targetValue = if (selected) 0.15f else 0f,
+        animationSpec = tween(300),
+        label = "navItemBgAlpha"
+    )
+    
+    Column(
+        modifier = modifier
+            .height(80.dp)
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(40.dp)
+                .background(
+                    color = color.copy(alpha = animatedBackgroundAlpha),
+                    shape = CircleShape
+                )
+                .scale(animatedScale)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = animatedColor,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        Spacer(Modifier.height(4.dp))
+        
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            color = animatedColor,
+            fontSize = 11.sp,
+            maxLines = 1
+        )
     }
 }
 
@@ -2364,10 +2437,14 @@ fun ConsuCalcuApp(
 
     val pagerState = rememberPagerState(pageCount = { 4 })
     LaunchedEffect(state.selectedTab) { pagerState.animateScrollToPage(state.selectedTab) }
-    LaunchedEffect(pagerState.currentPage) {
-        if (state.selectedTab != pagerState.currentPage) viewModel.setTab(
-            pagerState.currentPage
-        )
+    // Sincronización Pager -> ViewModel (Solo cuando termina el scroll)
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.isScrollInProgress to pagerState.currentPage }
+            .collect { (isScrollInProgress, currentPage) ->
+                if (!isScrollInProgress && state.selectedTab != currentPage) {
+                    viewModel.setTab(currentPage)
+                }
+            }
     }
 
     DisposableEffect(Unit) { onDispose { soundManager.release() } }
@@ -2578,9 +2655,9 @@ fun ConsuCalcuApp(
                     )
                 },
                 bottomBar = {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 0.dp,
+                    // ========== CUSTOM NAVIGATION BAR CON INDICADOR DESLIZANTE ==========
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier
                             .navigationBarsPadding()
                             .border(
@@ -2590,123 +2667,160 @@ fun ConsuCalcuApp(
                             )
                             .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     ) {
-                        NavigationBarItem(
-                            icon = { 
-                                Icon(
-                                    if (state.selectedTab == 0) Icons.Rounded.Loop else Icons.Outlined.Loop,
-                                    contentDescription = "Refinanciar"
-                                ) 
-                            },
-                            label = { Text("Refinanciar", fontWeight = FontWeight.Bold) },
-                            selected = state.selectedTab == 0,
-                            onClick = {
-                                soundManager.play("pop"); haptic.performHapticFeedback(
-                                HapticFeedbackType.TextHandleMove
-                            ); viewModel.setTab(0)
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = JuicyBlue.copy(
-                                    alpha = 0.15f
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            // Indicador deslizante animado (FLUIDO como líquido)
+                            val indicatorOffset by animateFloatAsState(
+                                targetValue = state.selectedTab.toFloat(),
+                                animationSpec = tween(
+                                    durationMillis = 600, // Más lento para efecto fluido
+                                    easing = FastOutSlowInEasing // Curva suave como líquido
                                 ),
-                                selectedIconColor = JuicyBlue,
-                                selectedTextColor = JuicyBlue,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.6f
-                                )
+                                label = "indicatorOffset"
                             )
-                        )
-                        NavigationBarItem(
-                            icon = { 
-                                Icon(
-                                    if (state.selectedTab == 1) Icons.Rounded.AttachMoney else Icons.Outlined.AttachMoney,
-                                    contentDescription = "Crédito Nuevo"
-                                ) 
-                            },
-                            label = { Text("Nuevo", fontWeight = FontWeight.Bold) },
-                            selected = state.selectedTab == 1,
-                            onClick = {
-                                soundManager.play("pop"); haptic.performHapticFeedback(
-                                HapticFeedbackType.TextHandleMove
-                            ); viewModel.setTab(1)
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = JuicyGreen.copy(
-                                    alpha = 0.15f
+                            
+                            // Colores por pestaña
+                            val tabColors = listOf(JuicyBlue, JuicyGreen, JuicyPurple, JuicyOrange)
+                            val currentColor = tabColors[state.selectedTab]
+                            
+                            val animatedIndicatorColor by animateColorAsState(
+                                targetValue = currentColor,
+                                animationSpec = tween(
+                                    durationMillis = 500, // Transición de color más suave
+                                    easing = FastOutSlowInEasing
                                 ),
-                                selectedIconColor = JuicyGreen,
-                                selectedTextColor = JuicyGreen,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.6f
-                                )
+                                label = "indicatorColor"
                             )
-                        )
-                        NavigationBarItem(
-                            icon = { 
-                                Icon(
-                                    Icons.Outlined.Savings,
-                                    contentDescription = "Seguro"
-                                ) 
-                            },
-                            label = { Text("Seguro", fontWeight = FontWeight.Bold) },
-                            selected = state.selectedTab == 2,
-                            onClick = {
-                                soundManager.play("pop"); haptic.performHapticFeedback(
-                                HapticFeedbackType.TextHandleMove
-                            ); viewModel.setTab(2)
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = JuicyPurple.copy(
-                                    alpha = 0.15f
-                                ),
-                                selectedIconColor = JuicyPurple,
-                                selectedTextColor = JuicyPurple,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.6f
-                                )
+                            
+                            // Barra indicadora deslizante
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .offset(x = (indicatorOffset * (LocalContext.current.resources.displayMetrics.widthPixels / 4f / LocalContext.current.resources.displayMetrics.density)).dp)
+                                    .width((LocalContext.current.resources.displayMetrics.widthPixels / 4f / LocalContext.current.resources.displayMetrics.density).dp)
+                                    .height(3.dp)
+                                    .padding(horizontal = 24.dp)
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                animatedIndicatorColor,
+                                                animatedIndicatorColor,
+                                                Color.Transparent
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
+                                    )
                             )
-                        )
-                        NavigationBarItem(
-                            icon = { 
-                                Icon(
-                                    if (state.selectedTab == 3) Icons.Rounded.School else Icons.Outlined.School,
-                                    contentDescription = "Academia"
-                                ) 
-                            },
-                            label = { Text("Academia", fontWeight = FontWeight.Bold) },
-                            selected = state.selectedTab == 3,
-                            onClick = {
-                                soundManager.play("pop"); haptic.performHapticFeedback(
-                                HapticFeedbackType.TextHandleMove
-                            ); viewModel.setTab(3)
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = JuicyOrange.copy(
-                                    alpha = 0.15f
-                                ),
-                                selectedIconColor = JuicyOrange,
-                                selectedTextColor = JuicyOrange,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.6f
+                            
+                            // Items de navegación
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                // Tab 0: Refinanciar
+                                NavBarItem(
+                                    icon = if (state.selectedTab == 0) Icons.Rounded.Loop else Icons.Outlined.Loop,
+                                    label = "Refinanciar",
+                                    selected = state.selectedTab == 0,
+                                    color = JuicyBlue,
+                                    onClick = {
+                                        soundManager.play("pop")
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        viewModel.setTab(0)
+                                    },
+                                    modifier = Modifier.weight(1f)
                                 )
-                            )
-                        )
+                                
+                                // Tab 1: Nuevo
+                                NavBarItem(
+                                    icon = if (state.selectedTab == 1) Icons.Rounded.AttachMoney else Icons.Outlined.AttachMoney,
+                                    label = "Nuevo",
+                                    selected = state.selectedTab == 1,
+                                    color = JuicyGreen,
+                                    onClick = {
+                                        soundManager.play("pop")
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        viewModel.setTab(1)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                // Tab 2: Seguro
+                                NavBarItem(
+                                    icon = Icons.Outlined.Savings,
+                                    label = "Seguro",
+                                    selected = state.selectedTab == 2,
+                                    color = JuicyPurple,
+                                    onClick = {
+                                        soundManager.play("pop")
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        viewModel.setTab(2)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                // Tab 3: Academia
+                                NavBarItem(
+                                    icon = if (state.selectedTab == 3) Icons.Rounded.School else Icons.Outlined.School,
+                                    label = "Academia",
+                                    selected = state.selectedTab == 3,
+                                    color = JuicyOrange,
+                                    onClick = {
+                                        soundManager.play("pop")
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        viewModel.setTab(3)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
+                    // ====================================================================
                 }
             ) { padding ->
+                // ========== HORIZONTAL PAGER CON EFECTO LIQUID GLASS ==========
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.padding(padding).fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    pageSpacing = 0.dp, // Sin espacio entre páginas para transición suave
+                    userScrollEnabled = true
                 ) { page ->
-                    AnimatedTabContent(tabKey = page) {
-                        when (page) {
-                            0 -> RefinanceScreen(viewModel, state, soundManager, ctx, rewardsState)
-                            1 -> NewCreditScreen(viewModel, state, soundManager, ctx, rewardsState)
-                            2 -> InsuranceScreen(viewModel, state, soundManager, ctx)
-                            3 -> AcademyScreen(soundManager = soundManager)
+                    // Efecto de transformación de página (Liquid Glass)
+                    val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                    val absoluteOffset = kotlin.math.abs(pageOffset)
+                    
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                // Escala suave: la página actual es 1.0, las demás se reducen ligeramente
+                                val scale = 1f - (absoluteOffset * 0.05f).coerceIn(0f, 0.05f)
+                                scaleX = scale
+                                scaleY = scale
+                                
+                                // Alpha suave: fade in/out durante la transición
+                                alpha = 1f - (absoluteOffset * 0.3f).coerceIn(0f, 0.3f)
+                                
+                                // Translación suave en Y para efecto de profundidad
+                                translationY = absoluteOffset * 20f
+                            }
+                    ) {
+                        AnimatedTabContent(tabKey = page) {
+                            when (page) {
+                                0 -> RefinanceScreen(viewModel, state, soundManager, ctx, rewardsState)
+                                1 -> NewCreditScreen(viewModel, state, soundManager, ctx, rewardsState)
+                                2 -> InsuranceScreen(viewModel, state, soundManager, ctx)
+                                3 -> AcademyScreen(soundManager = soundManager)
+                            }
                         }
                     }
                 }
+                // ================================================================
             }
 
             state.selectedOfferForLayout?.let { selectedOffer ->
@@ -3610,105 +3724,225 @@ fun InsuranceScreen(
             }
         }
         
-        // Result Card - Diseño Semáforo Mejorado
+        // Result Card - Diseño Simplificado y Claro
         if (state.insResultStatus.isNotEmpty()) {
             item {
                 AnimatedResultItem(index = 0) {
                     val isRejected = state.insResultStatus.contains("RECHAZADO")
                     val isFree = state.insResultStatus.contains("NO APLICA")
+                    val hasCost = state.insCost1Year > BD_ZERO || state.insCostTotal > BD_ZERO
                     
                     JuicyCard(
-                        color = state.insResultColor.copy(alpha = 0.1f), // Fondo muy suave
+                        color = MaterialTheme.colorScheme.surface,
                         shadowColor = state.insResultColor
                     ) {
-                        Column(Modifier.padding(20.dp)) {
-                            // Encabezado Semántico
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Círculo grande con icono
+                        Column(Modifier.padding(24.dp)) {
+                            // ========== DICTAMEN PRINCIPAL ==========
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                // Icono de estado
                                 Box(
                                     modifier = Modifier
-                                        .size(50.dp)
-                                        .background(state.insResultColor.copy(alpha = 0.2f), CircleShape),
+                                        .size(56.dp)
+                                        .background(
+                                            state.insResultColor.copy(alpha = 0.15f),
+                                            CircleShape
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = when {
                                             isRejected -> Icons.Rounded.Close
-                                            isFree -> Icons.Rounded.EmojiEmotions
-                                            else -> Icons.Rounded.AttachMoney
+                                            isFree -> Icons.Rounded.CheckCircle
+                                            hasCost -> Icons.Rounded.AttachMoney
+                                            else -> Icons.Rounded.HelpOutline
                                         },
                                         contentDescription = null,
                                         tint = state.insResultColor,
-                                        modifier = Modifier.size(30.dp)
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 }
+                                
                                 Spacer(Modifier.width(16.dp))
-                                Column {
+                                
+                                // Texto del dictamen
+                                Column(Modifier.weight(1f)) {
                                     Text(
-                                        "DICTAMEN DEL SEGURO",
+                                        text = "RESULTADO",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                        fontSize = 10.sp,
+                                        letterSpacing = 1.sp
                                     )
+                                    Spacer(Modifier.height(4.dp))
                                     Text(
-                                        text = state.insResultStatus.lines().firstOrNull() ?: "",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        text = when {
+                                            isRejected -> "RECHAZADO"
+                                            isFree -> "SIN COSTO"
+                                            hasCost -> "CON COSTO"
+                                            else -> "PROCESADO"
+                                        },
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Black,
-                                        color = state.insResultColor
+                                        color = state.insResultColor,
+                                        fontSize = 24.sp
+                                    )
+                                }
+                            }
+
+                            
+                            // ========== COSTO (SI APLICA) ==========
+                            if (hasCost) {
+                                Spacer(Modifier.height(24.dp))
+                                
+                                // Tarjeta de costo destacada
+                                Surface(
+                                    color = state.insResultColor,
+                                    shape = RoundedCornerShape(16.dp),
+                                    shadowElevation = 4.dp
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(20.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "COSTO DEL SEGURO",
+                                            color = Color.White.copy(alpha = 0.9f),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontSize = 11.sp,
+                                            letterSpacing = 1.2.sp
+                                        )
+                                        
+                                        Spacer(Modifier.height(8.dp))
+                                        
+                                        val finalCost = if (state.insCostTotal > BD_ZERO) 
+                                            state.insCostTotal 
+                                        else 
+                                            state.insCost1Year
+                                        
+                                        Text(
+                                            text = "$${finalCost.toCurrency()}",
+                                            style = MaterialTheme.typography.headlineLarge,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            fontSize = 36.sp,
+                                            letterSpacing = (-1).sp
+                                        )
+                                        
+                                        // Indicador de tipo de pago
+                                        if (state.insCostTotal > BD_ZERO) {
+                                            Spacer(Modifier.height(4.dp))
+                                            Surface(
+                                                color = Color.White.copy(alpha = 0.2f),
+                                                shape = RoundedCornerShape(50)
+                                            ) {
+                                                Text(
+                                                    text = "PAGO ÚNICO",
+                                                    color = Color.White,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 10.sp,
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                                )
+                                            }
+                                        } else {
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(
+                                                text = "Primer año",
+                                                color = Color.White.copy(alpha = 0.8f),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // ========== DETALLES EXPANDIBLES ==========
+                            var showDetails by remember { mutableStateOf(false) }
+                            
+                            Spacer(Modifier.height(20.dp))
+                            
+                            // Botón para mostrar/ocultar detalles
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { 
+                                        showDetails = !showDetails
+                                        soundManager.play("pop")
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.HelpOutline,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = if (showDetails) "Ocultar análisis" else "Ver análisis detallado",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                    
+                                    Icon(
+                                        imageVector = if (showDetails) 
+                                            Icons.Rounded.Close 
+                                        else 
+                                            Icons.Rounded.AddCircleOutline,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
                             
-                            Spacer(Modifier.height(16.dp))
-                            HorizontalDivider(color = state.insResultColor.copy(alpha = 0.2f))
-                            Spacer(Modifier.height(16.dp))
-
-                            // Explicación Lógica (Reglas)
-                            Text(
-                                "Análisis:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = state.insResultStatus,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-
-                            // Sección de Costos (Solo si aplica)
-                            if (state.insCost1Year > BD_ZERO || state.insCostTotal > BD_ZERO) {
-                                Spacer(Modifier.height(20.dp))
-                                JuicyCard(
-                                    color = state.insResultColor, // Tarjeta sólida interna para el precio
-                                    shadowColor = Color.Black.copy(alpha = 0.2f)
+                            // Contenido expandible
+                            AnimatedVisibility(
+                                visible = showDetails,
+                                enter = fadeIn() + slideInVertically(),
+                                exit = fadeOut() + slideOutVertically()
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 12.dp)
                                 ) {
-                                    Row(
-                                        Modifier.padding(16.dp).fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                        shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Column {
+                                        Column(Modifier.padding(16.dp)) {
                                             Text(
-                                                "A PAGAR:",
-                                                color = Color.White.copy(alpha = 0.8f),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold
+                                                text = "Análisis del Dictamen",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                                fontSize = 11.sp,
+                                                letterSpacing = 1.sp
                                             )
-                                            val finalCost = if (state.insCostTotal > BD_ZERO) state.insCostTotal else state.insCost1Year
+                                            Spacer(Modifier.height(8.dp))
                                             Text(
-                                                "$${finalCost.toCurrency()}",
-                                                style = MaterialTheme.typography.headlineSmall,
-                                                fontWeight = FontWeight.Black,
-                                                color = Color.White
+                                                text = state.insResultStatus,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                                lineHeight = 20.sp
                                             )
                                         }
-                                        Icon(
-                                            Icons.Rounded.AttachMoney,
-                                            contentDescription = null,
-                                            tint = Color.White.copy(alpha = 0.3f),
-                                            modifier = Modifier.size(48.dp)
-                                        )
                                     }
                                 }
                             }
@@ -3717,6 +3951,7 @@ fun InsuranceScreen(
                 }
             }
         }
+
         
         item { Spacer(Modifier.height(80.dp)) }
     }
@@ -4552,39 +4787,91 @@ private fun EmptyStateActionButton(
 // 15. OVERLAYS & DIALOGS
 // =================================================================================================
 fun SuccessOverlay(onDismiss: () -> Unit) {
-    var scale by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(-100f) }
+    var alpha by remember { mutableStateOf(0f) }
+    
     LaunchedEffect(Unit) {
+        // Animación de entrada
+        animate(
+            -100f,
+            0f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        ) { value, _ -> offsetY = value }
+        
         animate(
             0f,
             1f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-        ) { value, _ -> scale = value }
-        delay(1500)
+            animationSpec = tween(300)
+        ) { value, _ -> alpha = value }
+        
+        // Esperar antes de salir
+        delay(2000)
+        
+        // Animación de salida
+        animate(
+            0f,
+            -100f,
+            animationSpec = tween(300)
+        ) { value, _ -> offsetY = value }
+        
+        animate(
+            1f,
+            0f,
+            animationSpec = tween(200)
+        ) { value, _ -> alpha = value }
+        
         onDismiss()
     }
-    Dialog(
-        onDismissRequest = {},
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 60.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
-        Box(
-            Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)),
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = Modifier
+                .offset(y = offsetY.dp)
+                .graphicsLayer { this.alpha = alpha },
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, JuicyGreen.copy(alpha = 0.3f))
         ) {
-            Box(
-                Modifier.scale(scale).size(200.dp)
-                    .background(JuicyGreen, RoundedCornerShape(40.dp))
-                    .border(4.dp, Color.White, RoundedCornerShape(40.dp)),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    JuicyLottieSuccess(modifier = Modifier.size(150.dp))
-                    Text(
-                        "¡LISTO!",
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black
+                // Icono de check con fondo circular
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            JuicyGreen.copy(alpha = 0.15f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = "Éxito",
+                        tint = JuicyGreen,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
+                
+                // Texto
+                Text(
+                    text = "Copiado al portapapeles",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
