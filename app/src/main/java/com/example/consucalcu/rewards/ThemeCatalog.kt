@@ -16,18 +16,19 @@ object ThemeCatalog {
     // THEME COLORS DEFINITIONS
     // =================================================================================================
     
+    // TEMA DEFAULT - PALETA PREMIUM REFINADA
     private val DefaultColors = ThemeColors(
-        primary = Color(0xFF0A84FF),
-        primaryShadow = Color(0xFF0055CC),
-        primaryGlow = Color(0xFF64B5F6),
-        secondary = Color(0xFF00E676),
-        secondaryShadow = Color(0xFF00C853),
-        secondaryGlow = Color(0xFF69F0AE),
-        accent = Color(0xFF7C4DFF),
-        background = Color(0xFF0A0E27),
-        surface = Color(0xFF1A1F3A),
+        primary = Color(0xFF2563EB),      // Azul premium
+        primaryShadow = Color(0xFF1D4ED8),
+        primaryGlow = Color(0xFF60A5FA),
+        secondary = Color(0xFF10B981),     // Verde esmeralda
+        secondaryShadow = Color(0xFF059669),
+        secondaryGlow = Color(0xFF34D399),
+        accent = Color(0xFF8B5CF6),        // Púrpura refinado
+        background = Color(0xFF0F172A),    // Fondo más cálido
+        surface = Color(0xFF1E293B),       // Superficie más integrada
         gradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF0A84FF), Color(0xFF00D4FF))
+            colors = listOf(Color(0xFF2563EB), Color(0xFF06B6D4))
         )
     )
     

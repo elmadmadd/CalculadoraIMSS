@@ -1,5 +1,7 @@
 package com.example.consucalcu
 
+import kotlinx.coroutines.Job
+import androidx.compose.material.icons.rounded.Share
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -14,11 +16,15 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.MediaStore
 import android.widget.Toast
+import java.io.File
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import kotlinx.parcelize.Parcelize
+import android.os.Parcelable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
@@ -36,6 +42,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -78,6 +86,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Loop
@@ -89,6 +99,9 @@ import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.AttachMoney
 import androidx.compose.material.icons.rounded.Badge
 import androidx.compose.material.icons.rounded.Business
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -98,11 +111,15 @@ import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeleteSweep
+import androidx.compose.material.icons.rounded.CompareArrows
+import androidx.compose.material.icons.rounded.TableChart
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.EmojiEmotions
 import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.HourglassEmpty
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.LocalFireDepartment
@@ -129,11 +146,28 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.automirrored.rounded.CompareArrows
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.automirrored.rounded.TrendingDown
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.ContentPaste
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -157,9 +191,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -169,6 +205,9 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -178,8 +217,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -236,9 +275,13 @@ import com.example.consucalcu.rewards.ui.*
 
 // ========== ACADEMY SYSTEM IMPORTS ==========
 import com.example.consucalcu.academy.*
-// ============================================
 
+// ========== HAPTIC FEEDBACK SYSTEM ==========
+val LocalHapticManager = compositionLocalOf<HapticManager?> { null }
 
+// =================================================================================================
+// MAIN ACTIVITY
+// =================================================================================================
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -246,10 +289,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
+            // Inicializar Sistemas Premium
+            val context = LocalContext.current
+            val hapticManager = remember { HapticManager(context) }
+            
+            // Pre-load Lottie
+            LaunchedEffect(Unit) {
+               LottieCache.preload(context, listOf(
+                   R.raw.lottie_success, 
+                   R.raw.lottie_fire, 
+                   R.raw.lottie_levelup,
+                   R.raw.pop, // Sound but maybe user meant lottie? No, pop is mp3.
+                   R.raw.lottie_loading
+               ))
+            }
+
             val systemDark = isSystemInDarkTheme()
             var isDarkTheme by remember { mutableStateOf(systemDark) }
-            
-            // ========== DYNAMIC THEME SYSTEM ==========
+
+            androidx.compose.runtime.CompositionLocalProvider(
+                LocalHapticManager provides hapticManager
+            ) {
+
             // Create ViewModel instance
             val viewModel: CalculatorViewModel = viewModel()
             
@@ -386,9 +447,11 @@ class MainActivity : ComponentActivity() {
                     onToggleTheme = { isDarkTheme = !isDarkTheme }
                 )
             }
+            }
         }
     }
 }
+
 
 
 // =================================================================================================
@@ -412,67 +475,156 @@ fun String.toBD(): BigDecimal = this.replace(",", "").replace("$", "").trim().to
 fun Double.toBD(): BigDecimal = BigDecimal.valueOf(this)
 fun BigDecimal.toCurrency(): String = DecimalFormat("#,###.00").format(this)
 
+// =================================================================================================
+// 1.1 NSS VALIDATION UTILITY
+// =================================================================================================
+/**
+ * Valida un Número de Seguridad Social (NSS) mexicano usando el algoritmo Luhn modificado.
+ * @return true si el NSS es válido, false en caso contrario.
+ */
+fun String.isValidNSS(): Boolean {
+    if (this.length != 11) return false
+    if (!this.all { it.isDigit() }) return false
+    
+    val digits = this.map { it.toString().toInt() }
+    var sum = 0
+    
+    // Algoritmo Luhn (usado por IMSS)
+    for (i in 0..9) {
+        var digit = digits[i]
+        if (i % 2 == 0) digit *= 2
+        if (digit > 9) digit -= 9
+        sum += digit
+    }
+    
+    val checkDigit = (10 - (sum % 10)) % 10
+    return checkDigit == digits[10]
+}
 
 // =================================================================================================
-// 2. DESIGN SYSTEM & THEME
+// 1.2 AMORTIZATION CALCULATOR
 // =================================================================================================
-val JuicyBlue = Color(0xFF0A84FF)
-val JuicyBlueShadow = Color(0xFF0055CC)
-val JuicyBlueGlow = Color(0xFF64B5F6)
+data class AmortizationRow(
+    val month: Int,
+    val payment: BigDecimal,
+    val interest: BigDecimal,
+    val principal: BigDecimal,
+    val balance: BigDecimal
+)
 
-val JuicyGreen = Color(0xFF00E676)
-val JuicyGreenShadow = Color(0xFF00C853)
-val JuicyGreenGlow = Color(0xFF69F0AE)
+/**
+ * Calcula la tabla de amortización francesa para un crédito.
+ * @param amount Monto del préstamo
+ * @param annualRate Tasa de interés anual (ej. 0.24 para 24%)
+ * @param term Plazo en meses
+ * @return Lista de filas de amortización
+ */
+fun calculateAmortizationTable(
+    amount: BigDecimal,
+    annualRate: BigDecimal,
+    term: Int
+): List<AmortizationRow> {
+    if (amount <= BigDecimal.ZERO || term <= 0) return emptyList()
+    
+    val monthlyRate = annualRate.divide(BigDecimal("12"), 10, RoundingMode.HALF_UP)
+    val rows = mutableListOf<AmortizationRow>()
+    var balance = amount
+    
+    // Cálculo del pago mensual fijo (Fórmula Francesa)
+    val onePlusRate = BigDecimal.ONE.add(monthlyRate)
+    val numerator = amount.multiply(monthlyRate).multiply(onePlusRate.pow(term))
+    val denominator = onePlusRate.pow(term).subtract(BigDecimal.ONE)
+    val payment = numerator.divide(denominator, 2, RoundingMode.HALF_UP)
+    
+    for (month in 1..term) {
+        val interest = balance.multiply(monthlyRate).setScale(2, RoundingMode.HALF_UP)
+        val principal = payment.subtract(interest)
+        balance = balance.subtract(principal).max(BigDecimal.ZERO)
+        
+        rows.add(
+            AmortizationRow(
+                month = month,
+                payment = payment,
+                interest = interest,
+                principal = principal,
+                balance = balance
+            )
+        )
+    }
+    
+    return rows
+}
 
-val JuicyOrange = Color(0xFFFF6D00)
-val JuicyOrangeShadow = Color(0xFFE65100)
-val JuicyOrangeGlow = Color(0xFFFF9E40)
 
-val JuicyRed = Color(0xFFFF1744)
-val JuicyRedShadow = Color(0xFFD50000)
-val JuicyRedGlow = Color(0xFFFF5252)
+// =================================================================================================
+// 2. DESIGN SYSTEM & THEME - PALETA PREMIUM REFINADA
+// =================================================================================================
 
-val JuicyPurple = Color(0xFF7C4DFF)
-val JuicyPurpleShadow = Color(0xFF651FFF)
-val JuicyPurpleGlow = Color(0xFFB388FF)
+// AZUL PREMIUM - Más profundo y profesional
+val JuicyBlue = Color(0xFF2563EB)        // Azul más sofisticado (de 0xFF0A84FF)
+val JuicyBlueShadow = Color(0xFF1D4ED8)  // Sombra más integrada
+val JuicyBlueGlow = Color(0xFF60A5FA)    // Glow más suave
 
-val JuicyCyan = Color(0xFF00E5FF)
-val JuicyPink = Color(0xFFFF4081)
-val JuicyYellow = Color(0xFFFFEA00)
-val JuicyLime = Color(0xFFC6FF00)
+// VERDE ESMERALDA - Menos neón, más premium
+val JuicyGreen = Color(0xFF10B981)       // Verde esmeralda (de 0xFF00E676)
+val JuicyGreenShadow = Color(0xFF059669) // Sombra profunda
+val JuicyGreenGlow = Color(0xFF34D399)   // Glow refinado
 
+// NARANJA CÁLIDO - Más sofisticado
+val JuicyOrange = Color(0xFFF97316)      // Naranja cálido (de 0xFFFF6D00)
+val JuicyOrangeShadow = Color(0xFFEA580C) // Sombra más rica
+val JuicyOrangeGlow = Color(0xFFFB923C)  // Glow suave
+
+// ROJO CORAL - Más elegante
+val JuicyRed = Color(0xFFEF4444)         // Rojo coral (de 0xFFFF1744)
+val JuicyRedShadow = Color(0xFFDC2626)   // Sombra integrada
+val JuicyRedGlow = Color(0xFFF87171)     // Glow suave
+
+// PÚRPURA REFINADO - Más profundo
+val JuicyPurple = Color(0xFF8B5CF6)      // Púrpura refinado (de 0xFF7C4DFF)
+val JuicyPurpleShadow = Color(0xFF7C3AED) // Sombra rica
+val JuicyPurpleGlow = Color(0xFFA78BFA)  // Glow elegante
+
+// COLORES SECUNDARIOS - También refinados
+val JuicyCyan = Color(0xFF06B6D4)        // Cyan más premium (de 0xFF00E5FF)
+val JuicyPink = Color(0xFFEC4899)        // Rosa más elegante (de 0xFFFF4081)
+val JuicyYellow = Color(0xFFFACC15)      // Amarillo dorado (de 0xFFFFEA00)
+val JuicyLime = Color(0xFF84CC16)        // Lima más natural (de 0xFFC6FF00)
+
+// GRADIENTES REFINADOS
 val GradientBlue = Brush.linearGradient(
-    colors = listOf(Color(0xFF0A84FF), Color(0xFF00D4FF))
+    colors = listOf(Color(0xFF2563EB), Color(0xFF06B6D4))
 )
 val GradientGreen = Brush.linearGradient(
-    colors = listOf(Color(0xFF00E676), Color(0xFF00BFA5))
+    colors = listOf(Color(0xFF10B981), Color(0xFF14B8A6))
 )
 val GradientOrange = Brush.linearGradient(
-    colors = listOf(Color(0xFFFF6D00), Color(0xFFFF9100))
+    colors = listOf(Color(0xFFF97316), Color(0xFFFB923C))
 )
 val GradientPurple = Brush.linearGradient(
-    colors = listOf(Color(0xFF7C4DFF), Color(0xFFE040FB))
+    colors = listOf(Color(0xFF8B5CF6), Color(0xFFD946EF))
 )
 val GradientSunset = Brush.linearGradient(
-    colors = listOf(Color(0xFFFF6D00), Color(0xFFFF1744), Color(0xFFE040FB))
+    colors = listOf(Color(0xFFF97316), Color(0xFFEF4444), Color(0xFFD946EF))
 )
 
 val BgLight = Color(0xFFF5F7FA)
-val BgDark = Color(0xFF0A0E27)
+val BgDark = Color(0xFF0F172A)        // Actualizado para coincidir con tema premium
 
 val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0xFF1A1F3A)
+val SurfaceDark = Color(0xFF1E293B)   // Actualizado para coincidir con tema premium
 
 val TextDark = Color(0xFF0D1B2A)
 val TextLight = Color(0xFFF0F4F8)
 
 val BorderLight = Color(0xFFD0D7E2)
-val BorderDark = Color(0xFF2D3E5F)
+val BorderDark = Color(0xFF334155)    // Más claro para mejor contraste
 
-val SuccessGreen = Color(0xFF00E676)
-val WarningOrange = Color(0xFFFF9100)
-val ErrorRed = Color(0xFFFF1744)
-val InfoBlue = Color(0xFF0A84FF)
+// COLORES DE ESTADO - Actualizados a paleta premium
+val SuccessGreen = Color(0xFF10B981)  // Verde esmeralda (de 0xFF00E676)
+val WarningOrange = Color(0xFFF97316) // Naranja cálido (de 0xFFFF9100)
+val ErrorRed = Color(0xFFEF4444)      // Rojo coral (de 0xFFFF1744)
+val InfoBlue = Color(0xFF2563EB)      // Azul premium (de 0xFF0A84FF)
 
 private val LightColorScheme = lightColorScheme(
     primary = JuicyBlue,
@@ -574,9 +726,9 @@ class CurrencyVisualTransformation : VisualTransformation {
         }
 
         val newTextString = if (decimalPart != null) {
-            "$$formattedInteger.$decimalPart"
+            "$formattedInteger.$decimalPart" // Sin $ inicial - ícono lo muestra
         } else {
-            "$$formattedInteger"
+            formattedInteger // Sin $ inicial - ícono lo muestra
         }
 
         val newText = AnnotatedString(newTextString)
@@ -587,7 +739,7 @@ class CurrencyVisualTransformation : VisualTransformation {
              * Counts exactly how many commas are inserted before the cursor
              */
             override fun originalToTransformed(offset: Int): Int {
-                if (offset <= 0) return 1
+                if (offset <= 0) return 0 // Sin $ inicial
                 
                 val beforeCursor = originalText.take(offset)
                 
@@ -602,7 +754,7 @@ class CurrencyVisualTransformation : VisualTransformation {
                     0
                 }
                 
-                return minOf(1 + offset + commasBeforeCursor, newText.length)
+                return minOf(offset + commasBeforeCursor, newText.length) // Sin +1 porque no hay $
             }
 
             /**
@@ -610,7 +762,7 @@ class CurrencyVisualTransformation : VisualTransformation {
              * Strips out visual-only characters ($ and ,)
              */
             override fun transformedToOriginal(offset: Int): Int {
-                if (offset <= 1) return 0
+                if (offset <= 0) return 0 // Sin $ inicial
                 
                 val visualText = newTextString.take(offset)
                 val dataChars = visualText.count { it.isDigit() || it == '.' }
@@ -625,15 +777,29 @@ class CurrencyVisualTransformation : VisualTransformation {
 
 fun Modifier.bouncyClick(soundManager: SoundManager? = null, onClick: () -> Unit) = composed {
     var isPressed by remember { mutableStateOf(false) }
+    
+    // Optimización: Cachear animationSpec
+    val animSpec = remember { 
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh // Más rápido para mejor respuesta
+        )
+    }
+    
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.97f else 1f, // Más sutil: 0.97f en lugar de 0.95f
         label = "scale",
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+        animationSpec = animSpec
     )
+    
     val haptic = LocalHapticFeedback.current
 
     this
-        .scale(scale)
+        .graphicsLayer {
+            // Optimización: graphicsLayer es más eficiente que Modifier.scale
+            scaleX = scale
+            scaleY = scale
+        }
         .pointerInput(Unit) {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false)
@@ -647,6 +813,44 @@ fun Modifier.bouncyClick(soundManager: SoundManager? = null, onClick: () -> Unit
                 }
             }
         }
+}
+
+/**
+ * Modifier para efecto 3D de "hundirse" en botones
+ * En lugar de escalar, mueve el botón hacia abajo y reduce la sombra
+ * Retorna el estado isPressed para que el Composable pueda ajustar la sombra
+ */
+@Composable
+fun rememberPressable3DState(): Pair<Boolean, Modifier> {
+    var isPressed by remember { mutableStateOf(false) }
+    
+    val animSpec = remember { 
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        )
+    }
+    
+    val pressDepth by animateFloatAsState(
+        targetValue = if (isPressed) 4f else 0f, // Cuánto se "hunde"
+        label = "pressDepth",
+        animationSpec = animSpec
+    )
+    
+    val modifier = Modifier
+        .graphicsLayer {
+            translationY = pressDepth // Mueve hacia abajo, no escala
+        }
+        .pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false)
+                isPressed = true
+                waitForUpOrCancellation()
+                isPressed = false
+            }
+        }
+    
+    return Pair(isPressed, modifier)
 }
 
 fun Modifier.shimmerEffect(): Modifier = composed {
@@ -687,7 +891,13 @@ fun Modifier.shimmerEffect(): Modifier = composed {
 // 4. HAPTICS SYSTEM
 // =================================================================================================
 fun triggerHapticTexture(context: Context, pattern: LongArray, useComposition: Boolean = true) {
-    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+        vibratorManager?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    }
     vibrator?.let {
         if (!it.hasVibrator()) return
         
@@ -733,46 +943,31 @@ fun AnimatedResultItem(
     index: Int,
     content: @Composable () -> Unit
 ) {
-    var isVisible by remember { mutableStateOf(false) }
+    // Optimización: Usar Animatable para animación más eficiente
+    val animProgress = remember { Animatable(0f) }
     
-    LaunchedEffect(Unit) {
-        delay(index * 50L)
-        isVisible = true
+    // Spec de animación cacheado para evitar recreación
+    val animSpec = remember {
+        tween<Float>(
+            durationMillis = 400,
+            delayMillis = index * 40, // Stagger más rápido
+            easing = FastOutSlowInEasing
+        )
     }
     
-    val alpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "alpha"
-    )
+    LaunchedEffect(Unit) {
+        animProgress.animateTo(1f, animSpec)
+    }
     
-    val translationY by animateFloatAsState(
-        targetValue = if (isVisible) 0f else 50f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "translationY"
-    )
-    
-    val scale by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0.8f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "scale"
-    )
+    val progress = animProgress.value
     
     Box(
         modifier = Modifier.graphicsLayer {
-            this.alpha = alpha
-            this.translationY = translationY
-            this.scaleX = scale
-            this.scaleY = scale
+            alpha = progress
+            translationY = (1f - progress) * 30f // Reducido de 50f para más sutileza
+            val scale = 0.92f + (progress * 0.08f) // De 0.92 a 1.0
+            scaleX = scale
+            scaleY = scale
         }
     ) {
         content()
@@ -788,49 +983,31 @@ fun AnimatedTabContent(
     tabKey: Int,
     content: @Composable () -> Unit
 ) {
-    var isVisible by remember(tabKey) { mutableStateOf(false) }
+    // Optimización: Animatable para control preciso y mejor rendimiento
+    val animProgress = remember { Animatable(0f) }
     
-    LaunchedEffect(tabKey) {
-        isVisible = false
-        delay(50L) // Small delay for smooth transition
-        isVisible = true
+    // Spec cacheado - tween es más eficiente que spring para transiciones de página
+    val animSpec = remember {
+        tween<Float>(
+            durationMillis = 350,
+            easing = FastOutSlowInEasing
+        )
     }
     
-    val alpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "tabAlpha"
-    )
+    LaunchedEffect(tabKey) {
+        animProgress.snapTo(0f)
+        animProgress.animateTo(1f, animSpec)
+    }
     
-    val translationY by animateFloatAsState(
-        targetValue = if (isVisible) 0f else 30f, // Más sutil: 30f en lugar de 80f
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "tabTranslationY"
-    )
-    
-    val scale by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0.96f, // Más sutil: 0.96f en lugar de 0.92f
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "tabScale"
-    )
+    val progress = animProgress.value
     
     Box(
         modifier = Modifier
             .fillMaxSize()
             .graphicsLayer {
-                this.alpha = alpha
-                this.translationY = translationY
-                this.scaleX = scale
-                this.scaleY = scale
+                // Solo alpha y translationY - eliminar scale para mejor rendimiento
+                alpha = progress
+                translationY = (1f - progress) * 20f
             }
     ) {
         content()
@@ -838,7 +1015,7 @@ fun AnimatedTabContent(
 }
 
 /**
- * Custom Navigation Bar Item con animaciones suaves
+ * Custom Navigation Bar Item con animaciones suaves y haptic feedback
  */
 @Composable
 fun NavBarItem(
@@ -849,31 +1026,52 @@ fun NavBarItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Optimización: Cachear animationSpec
+    val colorAnimSpec = remember { tween<Color>(250) }
+    val floatAnimSpec = remember { tween<Float>(200, easing = FastOutSlowInEasing) }
+    
+    // 🎮 NUEVO: Haptic Manager
+    val hapticManager = LocalHapticManager.current
+    
+    val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+    
     val animatedColor by animateColorAsState(
-        targetValue = if (selected) color else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-        animationSpec = tween(300),
+        targetValue = if (selected) color else unselectedColor,
+        animationSpec = colorAnimSpec,
         label = "navItemColor"
     )
     
     val animatedScale by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.9f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
+        targetValue = if (selected) 1f else 0.85f,
+        animationSpec = floatAnimSpec,
         label = "navItemScale"
     )
     
     val animatedBackgroundAlpha by animateFloatAsState(
         targetValue = if (selected) 0.15f else 0f,
-        animationSpec = tween(300),
+        animationSpec = floatAnimSpec,
         label = "navItemBgAlpha"
     )
+    
+    // Optimización: Usar remember para interactionSource
+    val interactionSource = remember { MutableInteractionSource() }
     
     Column(
         modifier = modifier
             .height(80.dp)
-            .clickable(onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null, // Sin ripple para mejor rendimiento
+                onClick = {
+                    // ✨ Haptic diferenciado según estado
+                    if (selected) {
+                        hapticManager?.light() // Ya seleccionado = light
+                    } else {
+                        hapticManager?.medium() // Nuevo = medium
+                    }
+                    onClick()
+                }
+            )
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -882,11 +1080,15 @@ fun NavBarItem(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(40.dp)
+                .graphicsLayer {
+                    // Optimización: graphicsLayer es más eficiente que Modifier.scale
+                    scaleX = animatedScale
+                    scaleY = animatedScale
+                }
                 .background(
                     color = color.copy(alpha = animatedBackgroundAlpha),
                     shape = CircleShape
                 )
-                .scale(animatedScale)
         ) {
             Icon(
                 imageVector = icon,
@@ -930,6 +1132,7 @@ class SoundManager(context: Context) {
             soundMap["pop"] = soundPool.load(context, R.raw.pop, 1)
             soundMap["cash"] = soundPool.load(context, R.raw.cash, 1)
             soundMap["magic"] = soundPool.load(context, R.raw.magic, 1)
+            soundMap["wrong"] = soundPool.load(context, R.raw.wrong, 1)
 
             soundMap["villager"] = soundPool.load(context, R.raw.villager_blip, 1)
 
@@ -949,6 +1152,77 @@ class SoundManager(context: Context) {
     }
 }
 
+// =================================================================================================
+// HAPTIC FEEDBACK MANAGER - Premium Tactile Experience
+// =================================================================================================
+class HapticManager(context: Context) {
+    private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+        vibratorManager?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    }
+
+    /**
+     * Light haptic - Para hover, focus, interacciones sutiles
+     */
+    fun light() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(10, 50))
+        }
+    }
+
+    /**
+     * Medium haptic - Para clicks, toggles, acciones estándar
+     */
+    fun medium() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(20, 100))
+        }
+    }
+
+    /**
+     * Heavy haptic - Para confirmaciones importantes, errores
+     */
+    fun heavy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(40, 200))
+        }
+    }
+
+    /**
+     * Success haptic - Patrón de doble pulse para acciones exitosas
+     */
+    fun success() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val pattern = longArrayOf(0, 20, 50, 20)
+            val amplitudes = intArrayOf(0, 100, 0, 150)
+            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, amplitudes, -1))
+        }
+    }
+
+    /**
+     * Error haptic - Patrón de triple pulse para errores
+     */
+    fun error() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val pattern = longArrayOf(0, 15, 30, 15, 30, 20)
+            val amplitudes = intArrayOf(0, 80, 0, 80, 0, 120)
+            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, amplitudes, -1))
+        }
+    }
+
+    /**
+     * Tick haptic - Para sliders, incrementos numéricos
+     */
+    fun tick() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(5, 40))
+        }
+    }
+}
+
 object TicketGenerator {
     suspend fun generateAndShare(
         context: Context,
@@ -956,91 +1230,224 @@ object TicketGenerator {
         client: ClientData,
         advisor: String
     ) = withContext(Dispatchers.IO) {
-        val width = 1080;
+        val width = 1080
         val height = 1920
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val bgPaint = Paint().apply {
-            color = android.graphics.Color.parseColor("#1CB0F6"); style = Paint.Style.FILL
-        }
+
+        // --- PALETA DE COLORES PREMIUM ---
+        val colorDarkBg = android.graphics.Color.parseColor("#0F172A") // Slate 900
+        val colorCard = android.graphics.Color.WHITE
+        val colorPrimary = android.graphics.Color.parseColor("#3B82F6") // Blue 500
+        val colorSuccess = android.graphics.Color.parseColor("#22C55E") // Green 500
+        val colorAccent = android.graphics.Color.parseColor("#F59E0B") // Amber 500
+        val colorTextMain = android.graphics.Color.parseColor("#1E293B") // Slate 800
+        val colorTextSec = android.graphics.Color.parseColor("#64748B") // Slate 500
+        val colorDivider = android.graphics.Color.parseColor("#E2E8F0") // Slate 200
+
+        // --- PINCELES ---
+        val bgPaint = Paint().apply { color = colorDarkBg; style = Paint.Style.FILL }
         val cardPaint = Paint().apply {
-            color = android.graphics.Color.WHITE; style = Paint.Style.FILL; setShadowLayer(
-            20f,
-            0f,
-            10f,
-            android.graphics.Color.DKGRAY
-        )
-        }
-        val textPaint = Paint().apply {
-            color = android.graphics.Color.parseColor("#4B4B4B"); textSize = 50f; typeface =
-            Typeface.DEFAULT_BOLD; isAntiAlias = true
-        }
-        val titlePaint = Paint().apply {
-            color = android.graphics.Color.parseColor("#58CC02"); textSize = 80f; typeface =
-            Typeface.DEFAULT_BOLD; isAntiAlias = true; textAlign = Paint.Align.CENTER
-        }
-        val labelPaint = Paint().apply {
-            color = android.graphics.Color.GRAY; textSize = 40f; typeface =
-            Typeface.DEFAULT; isAntiAlias = true
+            color = colorCard
+            style = Paint.Style.FILL
+            setShadowLayer(40f, 0f, 20f, android.graphics.Color.parseColor("#88000000"))
         }
 
+        val textTitle = Paint().apply {
+            color = android.graphics.Color.WHITE
+            textSize = 60f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+        }
+        
+        val textSubtitle = Paint().apply {
+            color = android.graphics.Color.parseColor("#94A3B8") // Slate 400
+            textSize = 36f
+            typeface = Typeface.DEFAULT
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+        }
+
+        val textLabel = Paint().apply {
+            color = colorTextSec
+            textSize = 34f
+            typeface = Typeface.DEFAULT
+            isAntiAlias = true
+        }
+
+        val textValue = Paint().apply {
+            color = colorTextMain
+            textSize = 42f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+            textAlign = Paint.Align.RIGHT
+        }
+
+        val textGold = Paint().apply {
+            color = colorAccent
+            textSize = 32f
+            typeface = Typeface.DEFAULT_BOLD
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+        }
+        
+        val dividerPaint = Paint().apply {
+            color = colorDivider
+            strokeWidth = 2f
+            style = Paint.Style.STROKE
+        }
+
+        // 1. FONDO
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
-        val cardMargin = 80f
-        canvas.drawRoundRect(
-            cardMargin,
-            300f,
-            width - cardMargin,
-            height - 300f,
-            60f,
-            60f,
-            cardPaint
-        )
-        canvas.drawText("PROPUESTA APROBADA", width / 2f, 450f, titlePaint)
-        var y = 600f;
-        val xLabel = 150f;
-        val xValue = width - 150f;
-        val rightAlign = Paint(textPaint).apply { textAlign = Paint.Align.RIGHT }
 
-        fun drawRow(label: String, value: String, isBig: Boolean = false) {
-            canvas.drawText(label, xLabel, y, labelPaint)
-            rightAlign.textSize = if (isBig) 90f else 50f
-            if (isBig) rightAlign.color = android.graphics.Color.parseColor("#1CB0F6")
-            canvas.drawText(value, xValue, y, rightAlign)
-            y += 120f
-        }
-        drawRow("Cliente", client.name.take(15)); drawRow("Producto", offer.product); y += 50f
-        drawRow("MONTO", "$${offer.amount.toCurrency()}", true); drawRow(
-        "Plazo",
-        "${offer.term} Meses"
-    )
-        drawRow("Mensualidad", "$${offer.monthlyPayment.toCurrency()}"); drawRow(
-        "CAT",
-        offer.cat
-    )
-        y = height - 400f; titlePaint.textSize = 40f; titlePaint.color =
-        android.graphics.Color.WHITE
-        canvas.drawText(
-            "Asesor: $advisor",
-            width / 2f,
+        // 2. HEADER
+        canvas.drawText("CONSUCALCU PRO", width / 2f, 150f, textTitle)
+        canvas.drawText("Simulación Oficial de Crédito", width / 2f, 210f, textSubtitle)
+
+        // 3. TARJETA FLOTANTE
+        val cardMargin = 60f
+        val cardTop = 300f
+        val cardBottom = height - 350f
+        val cardRect = android.graphics.RectF(cardMargin, cardTop, width - cardMargin, cardBottom)
+        canvas.drawRoundRect(cardRect, 40f, 40f, cardPaint)
+
+        // 4. CONTENIDO TARJETA
+        var y = cardTop + 100f
+        val xLeft = cardMargin + 60f
+        val xRight = width - cardMargin - 60f
+
+        // Badge de Aprobado
+        val badgeWidth = 400f
+        val badgeHeight = 80f
+        val badgeRect = android.graphics.RectF(
+            (width - badgeWidth) / 2f,
             y,
-            titlePaint
-        ); canvas.drawText("Generado con ConsuCalcu Pro", width / 2f, y + 60f, titlePaint)
+            (width + badgeWidth) / 2f,
+            y + badgeHeight
+        )
+        val badgePaint = Paint().apply { color = android.graphics.Color.parseColor("#DCFCE7"); style = Paint.Style.FILL } // Green 100
+        canvas.drawRoundRect(badgeRect, 40f, 40f, badgePaint)
+        
+        val textBadge = Paint().apply {
+            color = colorSuccess // Green 600
+            textSize = 40f
+            typeface = Typeface.DEFAULT_BOLD
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+        val fontMetrics = textBadge.fontMetrics
+        val badgeTextY = badgeRect.centerY() - (fontMetrics.ascent + fontMetrics.descent) / 2
+        canvas.drawText("¡PROPUESTA APROBADA!", width / 2f, badgeTextY, textBadge)
+
+        y += 180f
+
+        // Monto Gigante (Hero)
+        val textCurrency = Paint().apply {
+            color = colorPrimary
+            textSize = 140f
+            typeface = Typeface.DEFAULT_BOLD
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+            setShadowLayer(10f, 0f, 5f, android.graphics.Color.parseColor("#443B82F6"))
+        }
+        val textCurrencyLabel = Paint().apply {
+            color = colorTextSec
+            textSize = 36f
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+        
+        canvas.drawText("MONTO AUTORIZADO", width / 2f, y, textCurrencyLabel)
+        y += 140f
+        canvas.drawText("$${offer.amount.toCurrency()}", width / 2f, y, textCurrency)
+        
+        y += 100f
+        canvas.drawLine(xLeft, y, xRight, y, dividerPaint)
+        y += 80f
+
+        // Función Helper para filas
+        fun drawDetailRow(label: String, value: String, highlight: Boolean = false) {
+            canvas.drawText(label, xLeft, y, textLabel)
+            
+            // Safe Paint Clone
+            val valPaint = Paint(textValue).apply {
+                 if(highlight) {
+                     color = colorPrimary
+                     textSize = 50f
+                 }
+            }
+            canvas.drawText(value, xRight, y, valPaint)
+            y += 90f
+        }
+
+        drawDetailRow("Cliente", client.name.take(20) + if(client.name.length>20)"..." else "")
+        drawDetailRow("Producto", offer.product)
+        drawDetailRow("Plazo", "${offer.term} Meses")
+        
+        y += 20f
+        // Caja secundaria para pago
+        val paymentBg = Paint().apply { color = android.graphics.Color.parseColor("#F1F5F9"); style = Paint.Style.FILL } // Slate 100
+        val paymentRect = android.graphics.RectF(cardMargin + 20f, y, width - cardMargin - 20f, y + 140f)
+        canvas.drawRoundRect(paymentRect, 20f, 20f, paymentBg)
+        
+        val oldY = y
+        y += 90f // Centrar verticalmente en la caja
+        val paymentLabelX = xLeft + 40f
+        val paymentValueX = xRight - 40f
+        
+        // Safe Paint Clones
+        val paymentLabelPaint = Paint(textLabel).apply { typeface = Typeface.DEFAULT_BOLD }
+        canvas.drawText("MENSUALIDAD", paymentLabelX, y, paymentLabelPaint)
+        
+        val paymentValuePaint = Paint(textValue).apply { textSize = 60f; color = colorTextMain }
+        canvas.drawText("$${offer.monthlyPayment.toCurrency()}", paymentValueX, y, paymentValuePaint)
+        
+        y = oldY + 140f + 60f // Salir de la caja + margen
+
+        drawDetailRow("CAT Promedio", offer.cat)
+        drawDetailRow("Tasa de Interés", offer.tipoTasa)
+        
+        y += 40f
+        canvas.drawLine(xLeft, y, xRight, y, dividerPaint)
+        y += 80f
+        
+        // Footer de la tarjeta
+        val textFooter = Paint().apply {
+             color = colorTextSec
+             textSize = 30f
+             textAlign = Paint.Align.CENTER
+             isAntiAlias = true
+        }
+        canvas.drawText("Oferta válida por 7 días. Sujeto a aprobación final.", width / 2f, cardBottom - 60f, textFooter)
+
+        // 5. FOOTER GLOBAL
+        val footerY = height - 150f
+        canvas.drawText("ASESOR CERTIFICADO", width / 2f, footerY, textGold)
+        
+        val footerNamePaint = Paint(textTitle).apply { textSize = 44f }
+        canvas.drawText(advisor.uppercase(), width / 2f, footerY + 60f, footerNamePaint)
+
 
         try {
             val filename = "Ticket_${System.currentTimeMillis()}.jpg"
             val contentValues = ContentValues().apply {
-                put(
-                    MediaStore.MediaColumns.DISPLAY_NAME,
-                    filename
-                ); put(
-                MediaStore.MediaColumns.MIME_TYPE,
-                "image/jpeg"
-            ); if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(
-                    MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_PICTURES + "/ConsuCalcu"
-                )
-            }
+                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ConsuCalcu")
+                } else {
+                    // Legacy Support (API < 29)
+                    @Suppress("DEPRECATION")
+                    val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                    val imageDir = File(imagesDir, "ConsuCalcu")
+                    if (!imageDir.exists()) {
+                        imageDir.mkdirs()
+                    }
+                    val imageFile = File(imageDir, filename)
+                    put(MediaStore.MediaColumns.DATA, imageFile.absolutePath)
+                }
             }
             val imageUri = context.contentResolver.insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -1088,6 +1495,7 @@ data class Debt(
     val paymentsMade: String = ""
 )
 
+@Parcelize
 data class LoanOffer(
     val product: String,
     val amount: BigDecimal,
@@ -1098,9 +1506,11 @@ data class LoanOffer(
     val reasons: List<String> = emptyList(),
     val isBest: Boolean = false,
     val cat: String = "0.0%",
-    val tipoTasa: String = "TRADICIONAL"
-)
+    val tipoTasa: String = "TRADICIONAL",
+    val rejectionReason: String? = null // Razón por la que no calificó para retención
+) : Parcelable
 
+@Parcelize
 data class ClientData(
     val name: String = "",
     val nss: String = "",
@@ -1132,7 +1542,7 @@ data class ClientData(
     val ref1Phone: String = "",
     val ref2Name: String = "",
     val ref2Phone: String = ""
-)
+) : Parcelable
 
 data class UserProfile(
     val name: String = "",
@@ -1143,6 +1553,67 @@ data class UserProfile(
     val level: Int = 1
 )
 
+
+// =================================================================================================
+// 7.1 NORMATIVA IMSS (INSURANCE RULES)
+// =================================================================================================
+enum class TipoPension { INVALIDEZ, VEJEZ, OTRO }
+enum class ResultadoSeguro { NINGUNO, UN_ANIO, PLAZO_COMPLETO, RECHAZO }
+
+object NormativaIMSS {
+    fun calcularReglaSeguro(
+        edad: Int,
+        plazoMeses: Int,
+        tipoPension: TipoPension,
+        esNuevo: Boolean,
+        antiguedadMeses: Int
+    ): ResultadoSeguro {
+        val plazoAnios = plazoMeses / 12.0
+        val edadFinal = edad + plazoAnios
+
+        // Validación Global Actualizada:
+        // 1. Si edadFinal > 85, es RECHAZO absouto.
+        if (edadFinal > 85) return ResultadoSeguro.RECHAZO
+        
+        // 2. Si edadFinal está entre 80.01 y 85 (TODO TIPO DE PENSIÓN):
+        // "Se puede considerar una edad máxima de 85 años... si el cliente realiza el pago del seguro por el primer año"
+        if (edadFinal > 80) return ResultadoSeguro.UN_ANIO
+
+        return when (tipoPension) {
+            TipoPension.INVALIDEZ -> {
+                // Caso INVALIDEZ
+                if (edad in 51..70) {
+                    // Si edad entre 51-70: Cobrar UN_ANIO si es nuevo o antigüedad <= 24 meses
+                    if (esNuevo || antiguedadMeses <= 24) ResultadoSeguro.UN_ANIO else ResultadoSeguro.NINGUNO
+                } else {
+                    // Si edad fuera de rango pero (edad + plazo/12) > 75: Cobrar UN_ANIO
+                    if (edadFinal > 75) ResultadoSeguro.UN_ANIO else ResultadoSeguro.NINGUNO
+                }
+            }
+            TipoPension.VEJEZ -> {
+                // Caso VEJEZ
+                if (edad in 66..75) {
+                    if (edadFinal > 75) {
+                        // Si (edad + plazo/12) > 75: Cobrar PLAZO_COMPLETO
+                        ResultadoSeguro.PLAZO_COMPLETO
+                    } else if (esNuevo || antiguedadMeses <= 24) {
+                        // Si no excede 75 y (es nuevo o antigüedad <= 24): Cobrar UN_ANIO
+                        ResultadoSeguro.UN_ANIO
+                    } else {
+                        // Si no excede 75 y antigüedad > 24: NINGUNO
+                        ResultadoSeguro.NINGUNO
+                    }
+                } else if (edad >= 76) {
+                    // Si edad >= 76: NINGUNO (siempre que no viole la regla global de 80 años)
+                    ResultadoSeguro.NINGUNO
+                } else {
+                    ResultadoSeguro.NINGUNO
+                }
+            }
+            TipoPension.OTRO -> ResultadoSeguro.NINGUNO
+        }
+    }
+}
 
 // =================================================================================================
 // 8. FINANCIAL CONFIGURATION
@@ -1163,13 +1634,14 @@ object FinancialConfig {
         "CONSUBANCO" to ProductData(
             mapOf(
                 60 to BigDecimal("34.47785"),
+                54 to BigDecimal("36.50000"),
                 48 to BigDecimal("38.34620"),
                 36 to BigDecimal("45.48000"),
                 12 to BigDecimal("105.00000")
             ),
             RetentionRule(
-                mapOf(60 to BigDecimal("1.8572508")),
-                BigDecimal("100000.0")
+                mapOf(60 to BigDecimal("30.95418")),  // Factor de Pago Preferencial 60m
+                BigDecimal("100000.0")  // Monto mínimo CNCA Refinanciamiento
             ),
             ProductMeta(2.50, "39.03%", "31.50%"),
             BigDecimal("5000"),
@@ -1185,15 +1657,15 @@ object FinancialConfig {
         "CONSUPAGO" to ProductData(
             factorsTrad = mapOf(
                 60 to BigDecimal("36.88917"),
-                54 to BigDecimal("38.44675"),
+                54 to BigDecimal("38.35000"),
                 48 to BigDecimal("40.37447"),
                 36 to BigDecimal("46.54880"),
                 24 to BigDecimal("59.77820"),
                 12 to BigDecimal("101.15000")
             ),
             retention = RetentionRule(
-                mapOf(60 to BigDecimal("1.9954356")),
-                BigDecimal("50000.0")
+                 mapOf(60 to BigDecimal("33.25726")),  // Factor de Pago Preferencial 60m
+                 BigDecimal("50000.0")  // Monto mínimo CNCA Refinanciamiento
             ),
             meta = ProductMeta(2.73, "44.20%", "36.42%"),
             minGlobal = BigDecimal("5000"),
@@ -1214,8 +1686,8 @@ object FinancialConfig {
                 12 to BigDecimal("105.0000")
             ),
             RetentionRule(
-                mapOf(60 to BigDecimal("1.9333700")),
-                BigDecimal("75000.0")
+                mapOf(60 to BigDecimal("32.22283")),  // Factor de Pago Preferencial 60m
+                BigDecimal("75000.0")  // Monto mínimo CNCA Refinanciamiento
             ),
             ProductMeta(2.67, "42.26%", "34.21%"),
             BigDecimal("5000"),
@@ -1294,13 +1766,29 @@ object FinancialEngine {
         return value.divide(step, 0, RoundingMode.FLOOR).multiply(step)
     }
 
-    // ACTUALIZACIÓN TEMPORAL (22-31 Dic 2025) - Comunicado D695-AC2212
-    // Reducción de montos mínimos para tasa preferencial en Crédito Nuevo
+    // REGLAS ESTÁNDAR 2026
+    // Montos mínimos para Tasa Preferencial - CRÉDITO NUEVO (Sin deuda)
     val MIN_RET_NUEVO = mapOf(
-        "CONSUBANCO" to BigDecimal("100000"),  // Antes 200,000
-        "OPCIPRES" to BigDecimal("75000"),     // Antes 125,000
-        "CONSUPAGO" to BigDecimal("50000"),    // Antes 100,000
-        "MASNOMINA" to BigDecimal("999999999") // Sin cambios (No aplica)
+        "CONSUBANCO" to BigDecimal("200000"),
+        "OPCIPRES" to BigDecimal("125000"),
+        "CONSUPAGO" to BigDecimal("100000"),
+        "MASNOMINA" to BigDecimal("999999999")
+    )
+    
+    // Montos mínimos para Tasa Preferencial - REFINANCIAMIENTO (CNCA)
+    // Requiere además: 24 pagos mínimos realizados
+    val MIN_RET_CNCA = mapOf(
+        "CONSUBANCO" to BigDecimal("100000"),
+        "OPCIPRES" to BigDecimal("75000"),
+        "CONSUPAGO" to BigDecimal("50000"),
+        "MASNOMINA" to BigDecimal("999999999")
+    )
+    
+    // Factores Globales SIPRE para Liquidación de Deuda
+    val SIPRE_FACTORS = mapOf(
+        "CONSUBANCO" to BigDecimal("1.857251"),
+        "OPCIPRES" to BigDecimal("1.933371"),
+        "CONSUPAGO" to BigDecimal("1.9954353")
     )
 
     fun calculate(
@@ -1317,7 +1805,7 @@ object FinancialEngine {
         if (limit == null && config.minTermMap.isNotEmpty()) {
              limit = BigDecimal("999999999")
         }
-        if (limit == null || (config.minTermMap.isEmpty() && limit == null)) {
+        if (limit == null) {
             limit = config.minGlobal
         }
 
@@ -1335,7 +1823,7 @@ object FinancialEngine {
             if (globalFactor != null) {
                 factor = globalFactor
                 tipoTasa = "RETENCION"
-                isSipreGlobal = true
+                // isSipreGlobal = true // ERROR: Los factores de retención son "por mil", no globales. Usar lógica estándar.
                 
             }
         } else if (useRetention) {
@@ -1417,75 +1905,80 @@ object FinancialEngine {
         val remnant = offer.amount.subtract(totalDebts)
         val increase = remnant
         
-        if (prodKey == "MASNOMINA") {
-             return if (remnant > BigDecimal.ZERO) Pair(true, listOf("Liquidez Positiva")) 
-                    else Pair(false, emptyList())
-        }
-        
+        // Validación de liquidez positiva (obligatoria para todos)
         if (remnant <= BigDecimal.ZERO) return Pair(false, listOf("Rechazo: Sin Liquidez"))
         if (debts.isEmpty()) return Pair(true, listOf("Crédito Nuevo"))
 
-        val total = debts.size
-        
-        var cTasa = 0
-        var cLiq = 0
-        var cAnt = 0
-        var cPlazo = 0
-        
-        val plazoNuevo = offer.term
-        val tasaRef = config.meta.tasaRef
-        
-        
-        val limitTasa = when(prodKey) {
-            "CONSUPAGO" -> 2.69
-            "OPCIPRES" -> 2.69
-            "CONSUBANCO" -> 2.40
-            else -> 100.0
+        // MASNOMINA: Sin restricciones, solo requiere liquidez positiva
+        if (prodKey == "MASNOMINA") {
+             return Pair(true, listOf("✓ Viable: Liquidez Positiva")) 
         }
 
-        val limitLiq = when(prodKey) {
-            "CONSUPAGO" -> BigDecimal("500")
-            "OPCIPRES" -> BigDecimal("750")
-            "CONSUBANCO" -> BigDecimal("1000")
-            else -> BigDecimal("0")
-        }
+        val total = debts.size
+        var cVal1 = 0  // Validación 1: Incremento de Tasa
+        var cVal2 = 0  // Validación 2: Pagos Acumulados + Tasa Referencia
+        var cVal3 = 0  // Validación 3: Incremento de Descuento
+        var cVal4 = 0  // Validación 4: Incremento de Plazo
+        
+        val plazoNuevo = offer.term
         
         for (d in debts) {
             val dRate = d.rate.toDoubleOrNull() ?: 0.0
             val dPaid = d.paymentsMade.toIntOrNull() ?: 0
             val dTerm = d.originalTerm.toIntOrNull() ?: 0
             
-            if (prodKey == "OPCIPRES" && dRate <= 2.57) cTasa++
-            else if (prodKey == "CONSUBANCO" && dRate <= 2.40) cTasa++
-            else if (prodKey == "CONSUPAGO" && dRate <= 2.69) cTasa++
+            // ========== VALIDACIÓN 1: INCREMENTO DE TASA ==========
+            var v1Ok = false
+            when (prodKey) {
+                "CONSUPAGO" -> v1Ok = true  // Sin restricción de tasa
+                "OPCIPRES" -> if (dRate <= 2.57) v1Ok = true
+                "CONSUBANCO" -> if (dRate <= 2.40) v1Ok = true
+            }
+            if (v1Ok) cVal1++
 
+            // ========== VALIDACIÓN 2: PAGOS ACUMULADOS Y TASA DE REFERENCIA ==========
+            // Requiere 16 pagos aplicados independientemente del plazo original
+            var v2Ok = false
+            when (prodKey) {
+                "CONSUPAGO" -> v2Ok = true  // Sin restricción de tasa ni pagos
+                "OPCIPRES" -> if (dPaid >= 16 && dRate <= 2.67) v2Ok = true
+                "CONSUBANCO" -> if (dPaid >= 16 && dRate <= 2.57) v2Ok = true
+            }
+            if (v2Ok) cVal2++
+
+            // ========== VALIDACIÓN 3: INCREMENTO DE DESCUENTO ==========
+            // Incremento de descuento = Ajuste de liquidez
+            var v3Ok = false
+            when (prodKey) {
+                "CONSUPAGO" -> v3Ok = true  // Sin restricción
+                "OPCIPRES" -> if (increase >= BigDecimal("750") && dRate <= 2.67) v3Ok = true
+                "CONSUBANCO" -> if (increase >= BigDecimal("1000") && dRate <= 2.57) v3Ok = true
+            }
+            if (v3Ok) cVal3++
+
+            // ========== VALIDACIÓN 4: INCREMENTO DE PLAZO ==========
+            // Aplica a todos los productos (CONSUBANCO, OPCIPRES, MASNOMINA, CONSUPAGO)
+            var v4Ok = false
+            if (dTerm == 12 && plazoNuevo >= 36) v4Ok = true
+            else if (dTerm == 24 && plazoNuevo >= 48) v4Ok = true
+            else if ((dTerm == 36 || dTerm == 48) && plazoNuevo >= 54) v4Ok = true
+            else if (dTerm == 54 && plazoNuevo >= 60) v4Ok = true
             
-            var liqOk = false
-            if (prodKey == "CONSUPAGO" && increase >= BigDecimal("500")) liqOk = true
-            if (prodKey == "OPCIPRES" && increase >= BigDecimal("750") && dRate <= 2.69) liqOk = true
-            if (prodKey == "CONSUBANCO" && increase >= BigDecimal("1000") && dRate <= 2.57) liqOk = true
-            if (liqOk) cLiq++
-
-            var antOk = false
-            if (prodKey == "CONSUPAGO" && dPaid >= 16) antOk = true
-            if (prodKey == "OPCIPRES" && dPaid >= 16 && dRate <= 2.69) antOk = true
-            if (prodKey == "CONSUBANCO" && dPaid >= 16 && dRate <= 2.57) antOk = true
-            if (antOk) cAnt++
-
-            var plazoOk = false
-            if (dTerm <= 12 && plazoNuevo >= 36) plazoOk = true
-            if (dTerm <= 24 && plazoNuevo >= 48) plazoOk = true
-            if ((dTerm == 36 || dTerm == 48) && plazoNuevo >= 54) plazoOk = true
-            if (dTerm == 54 && plazoNuevo == 60) plazoOk = true
-            if (plazoOk) cPlazo++
+            if (v4Ok) cVal4++
         }
 
-        if (cTasa == total) reasons.add("Mejora Tasa (Global)")
-        if (cLiq == total) reasons.add("Incremento Liquidez (Global)")
-        if (cAnt == total) reasons.add("Antigüedad 16+ (Global)")
-        if (cPlazo == total) reasons.add("Extensión Plazo (Global)")
+        // Agregar razones para validaciones que TODAS las deudas cumplieron
+        if (cVal1 == total) reasons.add("✓ Validación 1: Mejora de Tasa")
+        if (cVal2 == total) reasons.add("✓ Validación 2: Antigüedad (16+ pagos)")
+        if (cVal3 == total) reasons.add("✓ Validación 3: Incremento de Liquidez")
+        if (cVal4 == total) reasons.add("✓ Validación 4: Extensión de Plazo")
 
-        return if (reasons.isNotEmpty()) Pair(true, reasons) else Pair(false, listOf("No cumple normativa completa."))
+        // Viable si cumple AL MENOS UNA de las 4 validaciones
+        return if (reasons.isNotEmpty()) {
+            Pair(true, reasons)
+        } else {
+            Pair(false, listOf("No cumple ninguna validación CNCA (1-4)"))
+        }
     }
 }
 
@@ -1521,6 +2014,9 @@ data class CalculatorUiState(
     val unlockedTitle: String? = null,
     val mandatoryConfigNeeded: Boolean = false,
     
+    // Ticket Generation State
+    val isGeneratingTicket: Boolean = false,
+    
     // ========== REWARDS SYSTEM STATE ==========
     val showRewardUnlockOverlay: Boolean = false,
     val showRewardsGallery: Boolean = false,
@@ -1533,10 +2029,23 @@ data class CalculatorUiState(
     val insTerm: Int = 60,
     val insProvider: String = "CONSUBANCO",
     val insIsNewClient: Boolean = false,
+    val insAntiquity: String = "", // Added antiquity field
     val insResultStatus: String = "",
     val insResultColor: Color = Color.Transparent,
     val insCost1Year: BigDecimal = BD_ZERO,
-    val insCostTotal: BigDecimal = BD_ZERO
+    val insCostTotal: BigDecimal = BD_ZERO,
+    val insMonthlyPayment: BigDecimal = BD_ZERO, // Added PMT field
+    
+    // ========== NEW FEATURES STATE ==========
+    // Comparador de Ofertas
+    val showOffersComparator: Boolean = false,
+    
+    // Simulador de Amortización
+    val showAmortizationSimulator: Boolean = false,
+    val selectedOfferForAmortization: LoanOffer? = null,
+    val amortizationTable: List<AmortizationRow> = emptyList(),
+    
+
 )
 
 
@@ -1548,6 +2057,7 @@ class CalculatorViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(CalculatorUiState())
     val uiState = _uiState.asStateFlow()
     private val gson = Gson()
+    private var saveJob: Job? = null
     
     // ========== REWARDS SYSTEM ==========
     private lateinit var rewardsManager: RewardsManager
@@ -1638,6 +2148,11 @@ class CalculatorViewModel : ViewModel() {
                 insProvider = prefs.getString("insProvider", "CONSUBANCO") ?: "CONSUBANCO",
                 insPensionType = prefs.getString("insPensionType", "Invalidez") ?: "Invalidez",
                 insIsNewClient = prefs.getBoolean("insIsNew", false),
+                insAntiquity = prefs.getString("insAntiquity", "") ?: "",
+                
+
+
+
                 
                 // Verificar si falta configuración obligatoria
                 mandatoryConfigNeeded = p.name.isBlank() || p.username.isBlank() || p.password.isBlank() || p.supervisor.isBlank()
@@ -1646,20 +2161,26 @@ class CalculatorViewModel : ViewModel() {
     }
 
     fun saveData(ctx: Context) {
-        val s = _uiState.value;
-        val prefs = ctx.getSharedPreferences("ConsuCalcuPrefs", Context.MODE_PRIVATE)
-        prefs.edit()
-            .putString("debts", gson.toJson(s.debts))
-            .putString("client", gson.toJson(s.clientData))
-            .putString("capCNCA", s.capacityCNCA)
-            // --- NUEVOS CAMPOS SEGURO ---
-            .putString("insAge", s.insAge)
-            .putString("insAmount", s.insAmount)
-            .putInt("insTerm", s.insTerm)
-            .putString("insProvider", s.insProvider)
-            .putString("insPensionType", s.insPensionType)
-            .putBoolean("insIsNew", s.insIsNewClient)
-            .apply()
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch(Dispatchers.IO) {
+            delay(1000) // Debounce de 1 segundo para no saturar disco
+            val s = _uiState.value;
+            val prefs = ctx.getSharedPreferences("ConsuCalcuPrefs", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putString("debts", gson.toJson(s.debts))
+                .putString("client", gson.toJson(s.clientData))
+                .putString("capCNCA", s.capacityCNCA)
+                // --- NUEVOS CAMPOS SEGURO ---
+                .putString("insAge", s.insAge)
+                .putString("insAmount", s.insAmount)
+                .putInt("insTerm", s.insTerm)
+                .putString("insProvider", s.insProvider)
+                .putString("insPensionType", s.insPensionType)
+                .putBoolean("insIsNew", s.insIsNewClient)
+                .putString("insAntiquity", s.insAntiquity)
+
+                .apply()
+        }
     }
 
     fun saveProfile(ctx: Context, p: UserProfile) {
@@ -1913,7 +2434,7 @@ class CalculatorViewModel : ViewModel() {
             
             if (totalDebts <= BD_ZERO && cap == BD_ZERO) {
                  _uiState.update { it.copy(inputError = true) }
-                 soundManager.play("pop")
+                 soundManager.play("wrong")
                  triggerHapticTexture(ctx, HapticPatterns.ERROR)
                  delay(500)
                  _uiState.update { it.copy(inputError = false) }
@@ -1941,58 +2462,67 @@ class CalculatorViewModel : ViewModel() {
                 val capacidadTotal = totalPagosDeudas.add(cap)
 
                 if (capacidadTotal > BD_ZERO && debts.isNotEmpty()) {
-                    FinancialConfig.PRODUCTS.forEach { (prodKey, config) ->
-                        FinancialConfig.STANDARD_TERMS.forEach { termStr ->
-                            val term = termStr.toInt()
-                            val calcData = FinancialEngine.calculate(
-                                prodKey,
-                                capacidadTotal,
-                                term,
-                                false,
-                                false,
-                                BD_500
-                            )
-                            if (calcData != null) {
-                                val (res, tipo) = calcData;
-                                val offer = LoanOffer(
-                                    prodKey,
-                                    res.amount,
-                                    res.payment,
-                                    term,
-                                    cat = config.meta.catTrad,
-                                    tipoTasa = tipo
-                                )
-                                if (offer.amount >= config.minGlobal) {
-                                    val (viable, reasons) = FinancialEngine.checkNormative(
-                                        prodKey,
-                                        debts,
-                                        offer,
-                                        config
-                                    ); 
-                                    if (viable && offer.amount >= debtBalance) {
-                                        val remnant = offer.amount.subtract(debtBalance)
-                                        results.add(
-                                            offer.copy(
-                                                mainValue = remnant,
-                                                mainLabel = "REMANENTE",
-                                                reasons = reasons
-                                            )
-                                        )
-                                    }
-                                }
+                    // Detectar plazos originales de las deudas
+                    val originalTerms = debts.mapNotNull { it.originalTerm.toIntOrNull() }.distinct()
+                    
+                    // Determinar qué plazos calcular según las reglas de extensión de plazo
+                    // Reglas CNCA:
+                    // - 12 meses → 36+
+                    // - 24 meses → 48+
+                    // - 36/48 meses → 54+
+                    // - 54 meses → 60
+                    val termsToCalculate = mutableSetOf<Int>()
+                    
+                    originalTerms.forEach { origTerm ->
+                        when (origTerm) {
+                            12 -> {
+                                // Puede ir a 36, 48, 54, 60
+                                termsToCalculate.addAll(listOf(36, 48, 54, 60))
                             }
+                            24 -> {
+                                // Puede ir a 48, 54, 60
+                                termsToCalculate.addAll(listOf(48, 54, 60))
+                            }
+                            36, 48 -> {
+                                // Puede ir a 54 o 60
+                                termsToCalculate.addAll(listOf(54, 60))
+                            }
+                            54 -> {
+                                // Solo puede ir a 60
+                                termsToCalculate.add(60)
+                            }
+                            else -> {
+                                // Plazo no estándar, por defecto 60
+                                termsToCalculate.add(60)
+                            }
+                        }
+                    }
+                    
+                    // Si no hay plazos determinados, usar 60 por defecto
+                    if (termsToCalculate.isEmpty()) {
+                        termsToCalculate.add(60)
+                    }
+                    
+                    FinancialConfig.PRODUCTS.forEach { (prodKey, config) ->
+                        termsToCalculate.forEach { term ->
+                            var retencionAplicada = false
                             
-                            if (state.useRetention) {
+                            // Validar 24 pagos mínimos para Retención en CNCA
+                            val minPagosRetencion = 24
+                            val minPagosActuales = debts.minOfOrNull { it.paymentsMade.toIntOrNull() ?: 0 } ?: 0
+                            val cumplePagos = minPagosActuales >= minPagosRetencion
+
+                            if (cumplePagos) {
                                 val calcRet = FinancialEngine.calculate(
                                     prodKey,
                                     capacidadTotal,
                                     term,
                                     false,
-                                    true,
+                                    true, // useRetention = true
                                     BD_500
                                 )
                                 if (calcRet != null && calcRet.second == "RETENCION") {
-                                    val (res, tipo) = calcRet;
+                                    val (res, tipo) = calcRet
                                     val offerRet = LoanOffer(
                                         prodKey,
                                         res.amount,
@@ -2000,22 +2530,69 @@ class CalculatorViewModel : ViewModel() {
                                         term,
                                         cat = config.meta.catRet,
                                         tipoTasa = tipo
-                                    );
-                                    if (offerRet.amount >= FinancialConfig.PRODUCTS[prodKey]?.retention?.minAmount ?: BigDecimal.ZERO) {
+                                    )
+                                    // Usar MIN_RET_CNCA para refinanciamiento
+                                    val minRetCNCA = FinancialEngine.MIN_RET_CNCA[prodKey] ?: BigDecimal.ZERO
+                                    if (offerRet.amount >= minRetCNCA) {
                                         val (viable, reasons) = FinancialEngine.checkNormative(
                                             prodKey,
                                             debts,
                                             offerRet,
                                             config
-                                        );
+                                        )
                                         if (viable && offerRet.amount >= debtBalance) {
-                                            val remnant = offerRet.amount.subtract(debtBalance);
-                                            val finalReasons = reasons.toMutableList().apply { add("Tasa Preferencial") };
+                                            val remnant = offerRet.amount.subtract(debtBalance)
+                                            val finalReasons = reasons.toMutableList().apply {
+                                                add("Tasa Preferencial (24+ pagos)")
+                                            }
                                             results.add(
                                                 offerRet.copy(
                                                     mainValue = remnant,
                                                     mainLabel = "REMANENTE",
-                                                    reasons = finalReasons
+                                                    reasons = finalReasons,
+                                                    isBest = true
+                                                )
+                                            )
+                                            retencionAplicada = true
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // FALLBACK: Si no aplicó retención, calcular tradicional
+                            if (!retencionAplicada) {
+                                val calcData = FinancialEngine.calculate(
+                                    prodKey,
+                                    capacidadTotal,
+                                    term,
+                                    false,
+                                    false, // useRetention = false
+                                    BD_500
+                                )
+                                if (calcData != null) {
+                                    val (res, tipo) = calcData
+                                    val offer = LoanOffer(
+                                        prodKey,
+                                        res.amount,
+                                        res.payment,
+                                        term,
+                                        cat = config.meta.catTrad,
+                                        tipoTasa = tipo
+                                    )
+                                    if (offer.amount >= config.minGlobal) {
+                                        val (viable, reasons) = FinancialEngine.checkNormative(
+                                            prodKey,
+                                            debts,
+                                            offer,
+                                            config
+                                        )
+                                        if (viable && offer.amount >= debtBalance) {
+                                            val remnant = offer.amount.subtract(debtBalance)
+                                            results.add(
+                                                offer.copy(
+                                                    mainValue = remnant,
+                                                    mainLabel = "REMANENTE",
+                                                    reasons = reasons
                                                 )
                                             )
                                         }
@@ -2025,12 +2602,19 @@ class CalculatorViewModel : ViewModel() {
                         }
                     }
                 }
+                // Ordenar y marcar ofertas de retención como "mejor opción"
                 results.sortedByDescending { it.mainValue }
-                    .mapIndexed { i, o -> o.copy(isBest = i == 0) }
+                    .mapIndexed { i, offer ->
+                        offer.copy(isBest = offer.tipoTasa == "RETENCION" || i == 0)
+                    }
             }
             if (calculatedOffers.isNotEmpty()) {
                 soundManager.play("cash"); addXp(ctx); triggerConfetti()
                 triggerHapticTexture(ctx, HapticPatterns.SUCCESS)
+            } else {
+                // Sin ofertas disponibles
+                soundManager.play("wrong")
+                triggerHapticTexture(ctx, HapticPatterns.ERROR)
             }
             _uiState.update { it.copy(isLoading = false, offersCNCA = calculatedOffers) }
         }
@@ -2041,7 +2625,7 @@ class CalculatorViewModel : ViewModel() {
             val current = _uiState.value
             if (current.newCreditInput.toBD() <= BD_ZERO) {
                  _uiState.update { it.copy(inputError = true) }
-                 soundManager.play("pop")
+                 soundManager.play("wrong")
                  triggerHapticTexture(ctx, HapticPatterns.ERROR)
                  delay(500)
                  _uiState.update { it.copy(inputError = false) }
@@ -2055,19 +2639,22 @@ class CalculatorViewModel : ViewModel() {
                 val results = mutableListOf<LoanOffer>()
                 if (inputVal > BD_ZERO) {
                     FinancialConfig.PRODUCTS.forEach { (prodKey, config) ->
-                        config.factorsTrad.keys.forEach { term ->
-                            val calcTrad = FinancialEngine.calculate(
+                        if (state.useRetention) {
+                            // MODO RETENCIÓN: Solo calcular ofertas de retención para 60 meses
+                            // NO SE MUESTRAN OFERTAS TRADICIONALES cuando este modo está activo
+                            val term = 60
+                            val calcRet = FinancialEngine.calculate(
                                 prodKey,
                                 inputVal,
                                 term,
                                 state.isByAmount,
-                                false,
+                                true,
                                 BigDecimal("100")
                             )
-                            if (calcTrad != null) {
-                                val (res, tipo) = calcTrad;
-                                val minRequired = config.minTermMap[term] ?: config.minGlobal
-                                if (res.amount >= minRequired && res.amount >= config.minGlobal) {
+                            if (calcRet != null && calcRet.second == "RETENCION") {
+                                val (res, tipo) = calcRet
+                                val minRetNuevo = FinancialEngine.MIN_RET_NUEVO[prodKey] ?: BigDecimal("999999999")
+                                if (res.amount >= minRetNuevo) {
                                     results.add(
                                         LoanOffer(
                                             prodKey,
@@ -2076,26 +2663,29 @@ class CalculatorViewModel : ViewModel() {
                                             term,
                                             mainValue = res.amount,
                                             mainLabel = "MONTO PRÉSTAMO",
-                                            cat = config.meta.catTrad,
-                                            tipoTasa = tipo
+                                            cat = config.meta.catRet,
+                                            tipoTasa = tipo,
+                                            isBest = true
                                         )
                                     )
                                 }
                             }
-                            
-                            if (state.useRetention && term == 60) {
-                                val calcRet = FinancialEngine.calculate(
+                            // No hay fallback a tradicional - solo ofertas preferenciales
+                        } else {
+                            // MODO TRADICIONAL: Calcular todas las ofertas tradicionales
+                            config.factorsTrad.keys.forEach { term ->
+                                val calcTrad = FinancialEngine.calculate(
                                     prodKey,
                                     inputVal,
                                     term,
                                     state.isByAmount,
-                                    true,
+                                    false,
                                     BigDecimal("100")
                                 )
-                                if (calcRet != null && calcRet.second == "RETENCION") {
-                                    val (res, tipo) = calcRet;
-                                    val minRetNuevo = FinancialEngine.MIN_RET_NUEVO[prodKey] ?: BigDecimal("999999999")
-                                    if (res.amount >= minRetNuevo) {
+                                if (calcTrad != null) {
+                                    val (res, tipo) = calcTrad
+                                    val minRequired = config.minTermMap[term] ?: config.minGlobal
+                                    if (res.amount >= minRequired && res.amount >= config.minGlobal) {
                                         results.add(
                                             LoanOffer(
                                                 prodKey,
@@ -2104,7 +2694,7 @@ class CalculatorViewModel : ViewModel() {
                                                 term,
                                                 mainValue = res.amount,
                                                 mainLabel = "MONTO PRÉSTAMO",
-                                                cat = config.meta.catRet,
+                                                cat = config.meta.catTrad,
                                                 tipoTasa = tipo
                                             )
                                         )
@@ -2114,12 +2704,20 @@ class CalculatorViewModel : ViewModel() {
                         }
                     }
                 }
-                results.sortedWith(compareByDescending<LoanOffer> { it.amount }.thenBy { it.monthlyPayment })
-                    .mapIndexed { i, o -> o.copy(isBest = i == 0) }
+                // Ordenar y marcar ofertas de retención como "mejor opción"
+                results.sortedWith(
+                    compareByDescending<LoanOffer> { it.amount }.thenBy { it.monthlyPayment }
+                ).mapIndexed { i, offer ->
+                    offer.copy(isBest = offer.tipoTasa == "RETENCION" || i == 0)
+                }
             }
             if (calculatedOffers.isNotEmpty()) {
                 soundManager.play("cash"); addXp(ctx); triggerConfetti()
                 triggerHapticTexture(ctx, HapticPatterns.SUCCESS)
+            } else {
+                // Sin ofertas disponibles
+                soundManager.play("wrong")
+                triggerHapticTexture(ctx, HapticPatterns.ERROR)
             }
             _uiState.update { it.copy(isLoading = false, offersNew = calculatedOffers) }
         }
@@ -2190,8 +2788,15 @@ CAT: ${o.cat}
         val o = _uiState.value.selectedOfferForLayout ?: return
         val c = _uiState.value.clientData
         val u = _uiState.value.userProfile
+        
+        _uiState.update { it.copy(isGeneratingTicket = true) }
+        
         viewModelScope.launch {
-            TicketGenerator.generateAndShare(ctx, o, c, u.name)
+            try {
+                TicketGenerator.generateAndShare(ctx, o, c, u.name)
+            } finally {
+                _uiState.update { it.copy(isGeneratingTicket = false) }
+            }
         }
     }
     
@@ -2220,6 +2825,10 @@ CAT: ${o.cat}
         _uiState.update { it.copy(insIsNewClient = isNew) }
     }
     
+    fun updateInsAntiquity(v: String) {
+        _uiState.update { it.copy(insAntiquity = v) }
+    }
+    
     fun calculateInsurance(ctx: Context, soundManager: SoundManager) {
         viewModelScope.launch {
             val current = _uiState.value
@@ -2235,7 +2844,7 @@ CAT: ${o.cat}
                         insResultColor = ErrorRed
                     ) 
                 }
-                soundManager.play("pop")
+                soundManager.play("wrong")
                 triggerHapticTexture(ctx, HapticPatterns.ERROR)
                 delay(500)
                 _uiState.update { it.copy(inputError = false) }
@@ -2259,7 +2868,7 @@ CAT: ${o.cat}
                         insCostTotal = BD_ZERO
                     ) 
                 }
-                soundManager.play("pop") // Sonido de error/alerta
+                soundManager.play("wrong") // Sonido de error/alerta
                 triggerHapticTexture(ctx, HapticPatterns.ERROR)
                 delay(500)
                 _uiState.update { it.copy(inputError = false) }
@@ -2272,75 +2881,58 @@ CAT: ${o.cat}
             
             val result = withContext(Dispatchers.Default) {
                 val state = _uiState.value
-                val pensionType = state.insPensionType
+                val pensionTypeStr = state.insPensionType
                 val term = state.insTerm
                 val provider = state.insProvider
                 val isNewClient = state.insIsNewClient
+                val antiquity = state.insAntiquity.toIntOrNull() ?: 0
                 
-                // Cálculo de edad final
-                val edadFinal = age + (term / 12.0)
+                // Mapear String a Enum TipoPension
+                val tipoPension = when(pensionTypeStr) {
+                    "Invalidez" -> TipoPension.INVALIDEZ
+                    "Vejez" -> TipoPension.VEJEZ
+                    else -> TipoPension.OTRO
+                }
                 
-                var status = "NO APLICA SEGURO" // Default: El cliente se salva
+                // === EJECUTAR MOTOR DE REGLAS ===
+                val resultadoRegla = NormativaIMSS.calcularReglaSeguro(
+                    edad = age,
+                    plazoMeses = term,
+                    tipoPension = tipoPension,
+                    esNuevo = isNewClient,
+                    antiguedadMeses = antiquity
+                )
+                
+                var status = "NO APLICA SEGURO" // Default
                 var color = SuccessGreen
                 var applyOneYear = false
                 var applyTotal = false
                 
-                // === REGLA 1: EXCLUSIÓN GLOBAL ===
-                // PDF Pag 5: "Se puede considerar una edad máxima de 85 años"
-                if (edadFinal > 85) {
-                    status = "RECHAZADO: Edad Final > 85 años"
-                    color = ErrorRed
-                } 
-                
-                // === REGLA 2: PENSIONADOS POR INVALIDEZ ===
-                else if (pensionType == "Invalidez") {
-                    if (age in 51..70) {
-                        // PDF Pag 3: Dentro del rango 51-70
-                        if (isNewClient) {
-                            status = "APLICA 1 AÑO (Rango 51-70 + Nuevo)"
-                            color = WarningOrange
-                            applyOneYear = true
-                        }
-                        // Si es cliente viejo (antigüedad > 24m), NO APLICA (se mantiene el default)
-                    } else {
-                        // PDF Pag 3: Fuera del rango
-                        if (edadFinal > 75) {
-                            status = "APLICA 1 AÑO (Excede 75 años)"
-                            color = WarningOrange
-                            applyOneYear = true
-                        }
-                        // Si no excede 75, NO APLICA (se mantiene el default)
+                when(resultadoRegla) {
+                    ResultadoSeguro.RECHAZO -> {
+                        status = "RECHAZADO: Edad Total Excede Límite (80 años)"
+                        color = ErrorRed
                     }
-                } 
-                
-                // === REGLA 3: PENSIONADOS POR VEJEZ ===
-                else { // Vejez
-                    if (age >= 76) {
-                        // PDF Pag 4: 76 años en adelante
-                        if (edadFinal > 80) {
-                            status = "RECHAZADO: Edad Final > 80 años"
-                            color = ErrorRed
-                        }
-                        // Si no excede 80, NO APLICA (se mantiene el default)
-                    } else if (age in 66..75) {
-                        // PDF Pag 4: Rango 66-75
-                        if (edadFinal > 75) {
-                            status = "APLICA PLAZO TOTAL (Excede 75 años)"
-                            color = JuicyOrange
-                            applyTotal = true
-                        } else if (isNewClient) {
-                            status = "APLICA 1 AÑO (Rango 66-75 + Nuevo)"
-                            color = WarningOrange
-                            applyOneYear = true
-                        }
-                        // Si es cliente viejo y no excede 75, NO APLICA
+                    ResultadoSeguro.UN_ANIO -> {
+                        status = "APLICA 1 AÑO DE SEGURO"
+                        color = WarningOrange
+                        applyOneYear = true
                     }
-                    // Si es menor de 66, NO APLICA
+                    ResultadoSeguro.PLAZO_COMPLETO -> {
+                        status = "APLICA SEGURO PLAZO COMPLETO"
+                        color = JuicyOrange
+                        applyTotal = true
+                    }
+                    ResultadoSeguro.NINGUNO -> {
+                        status = "NO APLICA SEGURO (Aprobado)"
+                        color = SuccessGreen
+                    }
                 }
                 
                 // === CÁLCULO DE COSTOS ===
                 var cost1Year = BD_ZERO
                 var costTotal = BD_ZERO
+                var monthlyPayment = BD_ZERO
                 
                 // Solo calculamos si aplica algún cobro
                 if (applyOneYear || applyTotal) {
@@ -2373,17 +2965,33 @@ CAT: ${o.cat}
                             costTotal = calculatedTotal
                             status += "\nCosto Total: $${costTotal.toCurrency()}"
                         }
+                        
+                        // CÁLCULO DE MENSUALIDAD (PMT)
+                        // Sumar costo al monto principal
+                        val totalAmountWithIns = amount.add(if(applyOneYear) cost1Year else costTotal)
+                        
+                        // Obtener factor de pago tradicional
+                        val paymentFactor = FinancialConfig.PRODUCTS[provider]?.factorsTrad?.get(term)
+                        if (paymentFactor != null) {
+                            // PMT = (TotalAmount * Factor) / 1000
+                            monthlyPayment = totalAmountWithIns.multiply(paymentFactor)
+                                .divide(BigDecimal(1000), 2, RoundingMode.HALF_UP)
+                        }
                     } else {
                         status = "ERROR: Sin factor para $provider ($term m)"
                         color = ErrorRed
                     }
                 }
                 
-                Triple(status, color, Pair(cost1Year, costTotal))
+                Triple(status, color, Triple(cost1Year, costTotal, monthlyPayment))
             }
             
-            val (status, color, costs) = result
-            val (cost1Year, costTotal) = costs
+            val status = result.first
+            val color = result.second
+            val costResult = result.third
+            val cost1Year = costResult.first
+            val costTotal = costResult.second
+            val monthlyPayment = costResult.third
             
             _uiState.update { 
                 it.copy(
@@ -2391,7 +2999,8 @@ CAT: ${o.cat}
                     insResultStatus = status,
                     insResultColor = color,
                     insCost1Year = cost1Year,
-                    insCostTotal = costTotal
+                    insCostTotal = costTotal,
+                    insMonthlyPayment = monthlyPayment
                 ) 
             }
             
@@ -2412,6 +3021,54 @@ CAT: ${o.cat}
             ) 
         }
     }
+    
+    // =================================================================================================
+    // NEW FEATURES FUNCTIONS
+    // =================================================================================================
+    
+    /**
+     * Muestra/oculta el comparador de ofertas
+     */
+    fun toggleOffersComparator(show: Boolean) {
+        _uiState.update { it.copy(showOffersComparator = show) }
+    }
+    
+    /**
+     * Abre el simulador de amortización para una oferta específica
+     * Calcula automáticamente la tabla usando una tasa estimada del 24% anual
+     */
+    fun showAmortizationFor(offer: LoanOffer) {
+        // Estimamos una tasa anual del 24% (ajustar según producto si es necesario)
+        val estimatedAnnualRate = BigDecimal("0.24")
+        val table = calculateAmortizationTable(
+            amount = offer.amount,
+            annualRate = estimatedAnnualRate,
+            term = offer.term
+        )
+        
+        _uiState.update {
+            it.copy(
+                showAmortizationSimulator = true,
+                selectedOfferForAmortization = offer,
+                amortizationTable = table
+            )
+        }
+    }
+    
+    /**
+     * Cierra el simulador de amortización
+     */
+    fun dismissAmortizationSimulator() {
+        _uiState.update {
+            it.copy(
+                showAmortizationSimulator = false,
+                selectedOfferForAmortization = null,
+                amortizationTable = emptyList()
+            )
+        }
+    }
+    
+
 }
 
 
@@ -2429,6 +3086,7 @@ fun ConsuCalcuApp(
     val state by viewModel.uiState.collectAsState()
     val rewardsState by viewModel.rewardsState.collectAsState() // NUEVO: Para sistema de recompensas
     val ctx = LocalContext.current
+    @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
     val soundManager = remember { SoundManager(ctx) }
@@ -2589,7 +3247,7 @@ fun ConsuCalcuApp(
                                                 fontWeight = FontWeight.Bold
                                             )
                                         },
-                                        leadingIcon = { Icon(Icons.Rounded.HelpOutline, null) },
+                                        leadingIcon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null) },
                                         onClick = {
                                             showMenu = false
                                             viewModel.resetTutorial()
@@ -2693,7 +3351,7 @@ fun ConsuCalcuApp(
                             
                             // Barra indicadora deslizante
                             Box(
-                                modifier = Modifier
+                                    modifier = Modifier
                                     .align(Alignment.BottomStart)
                                     .offset(x = (indicatorOffset * (LocalContext.current.resources.displayMetrics.widthPixels / 4f / LocalContext.current.resources.displayMetrics.density)).dp)
                                     .width((LocalContext.current.resources.displayMetrics.widthPixels / 4f / LocalContext.current.resources.displayMetrics.density).dp)
@@ -2774,10 +3432,10 @@ fun ConsuCalcuApp(
                                     },
                                     modifier = Modifier.weight(1f)
                                 )
+                                
                             }
                         }
                     }
-                    // ====================================================================
                 }
             ) { padding ->
                 // ========== HORIZONTAL PAGER CON EFECTO LIQUID GLASS ==========
@@ -2790,13 +3448,40 @@ fun ConsuCalcuApp(
                     pageSpacing = 0.dp, // Sin espacio entre páginas para transición suave
                     userScrollEnabled = true
                 ) { page ->
-                    // Efecto de transformación de página (Liquid Glass)
+                    // Efecto de transformación de página (Liquid Glass Enhanced)
                     val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                     val absoluteOffset = kotlin.math.abs(pageOffset)
+                    
+                    // 🎨 NUEVO: Gradiente dinámico basado en la tab activa
+                    val tabColor = when (page) {
+                        0 -> JuicyBlue
+                        1 -> JuicyGreen
+                        2 -> JuicyPurple
+                        3 -> JuicyOrange
+                        else -> JuicyBlue
+                    }
+                    
+                    val gradientAlpha by animateFloatAsState(
+                        targetValue = if (absoluteOffset < 0.5f) 0.05f else 0f,
+                        animationSpec = tween(300, easing = FastOutSlowInEasing),
+                        label = "gradientAlpha"
+                    )
                     
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            // 🎨 Gradiente de fondo dinámico por tab
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        tabColor.copy(alpha = gradientAlpha),
+                                        Color.Transparent,
+                                        Color.Transparent
+                                    ),
+                                    startY = 0f,
+                                    endY = 400f
+                                )
+                            )
                             .graphicsLayer {
                                 // Escala suave: la página actual es 1.0, las demás se reducen ligeramente
                                 val scale = 1f - (absoluteOffset * 0.05f).coerceIn(0f, 0.05f)
@@ -2809,6 +3494,14 @@ fun ConsuCalcuApp(
                                 // Translación suave en Y para efecto de profundidad
                                 translationY = absoluteOffset * 20f
                             }
+                            // ✨ NUEVO: Blur sutil en páginas no activas
+                            .then(
+                                if (absoluteOffset > 0.1f) {
+                                    Modifier.blur(
+                                        radius = (absoluteOffset * 8f).coerceIn(0f, 8f).dp
+                                    )
+                                } else Modifier
+                            )
                     ) {
                         AnimatedTabContent(tabKey = page) {
                             when (page) {
@@ -2816,6 +3509,7 @@ fun ConsuCalcuApp(
                                 1 -> NewCreditScreen(viewModel, state, soundManager, ctx, rewardsState)
                                 2 -> InsuranceScreen(viewModel, state, soundManager, ctx)
                                 3 -> AcademyScreen(soundManager = soundManager)
+                            }
                             }
                         }
                     }
@@ -2970,6 +3664,39 @@ fun ConsuCalcuApp(
                     }
                 }
                 // ===========================================
+                
+                // ========== NEW FEATURES MODALS ==========
+                // Comparador de Ofertas
+                if (state.showOffersComparator) {
+                    val offers = if (state.selectedTab == 0) state.offersCNCA else state.offersNew
+                    if (offers.isNotEmpty()) {
+                        OffersComparator(
+                            offers = offers,
+                            onDismiss = {
+                                soundManager.play("pop")
+                                viewModel.toggleOffersComparator(false)
+                            },
+                            onSelectOffer = { offer ->
+                                soundManager.play("magic")
+                                viewModel.onSelectOffer(offer)
+                                viewModel.toggleOffersComparator(false)
+                            }
+                        )
+                    }
+                }
+                
+                // Simulador de Amortización
+                if (state.showAmortizationSimulator && state.selectedOfferForAmortization != null) {
+                    AmortizationSimulator(
+                        offer = state.selectedOfferForAmortization!!,
+                        amortizationTable = state.amortizationTable,
+                        onDismiss = {
+                            soundManager.play("pop")
+                            viewModel.dismissAmortizationSimulator()
+                        }
+                    )
+                }
+                // =========================================
             }
 
             if (state.showSuccessAnim) SuccessOverlay { viewModel.hideSuccess() }
@@ -3029,9 +3756,8 @@ fun ConsuCalcuApp(
             }
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 
 // =================================================================================================
@@ -3052,46 +3778,54 @@ fun RefinanceScreen(
         modifier = Modifier.fillMaxSize().padding(16.dp).imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 🔽 REDUNDANCY FIX: Ocultar tarjeta de resumen si solo hay 1 deuda
         item {
-            JuicyGradientCard(
-                brush = Brush.horizontalGradient(
-                    listOf(JuicyPurple, Color(0xFF9C27B0))
-                ), shadowColor = JuicyPurpleShadow
+            AnimatedVisibility(
+                visible = state.debts.size > 1,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
             ) {
-                Row(
-                    Modifier.padding(20.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                JuicyGradientCard(
+                    brush = Brush.horizontalGradient(
+                        listOf(JuicyPurple, Color(0xFF9C27B0))
+                    ), shadowColor = JuicyPurpleShadow
                 ) {
-                    Column {
+                    Row(
+                        Modifier.padding(20.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "SUMA DEUDAS",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White.copy(alpha = 0.8f)
+                            ); Text(
+                            "$${totalDebt.toCurrency()}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        }; Box(
+                        Modifier.height(40.dp).width(1.dp)
+                            .background(Color.White.copy(alpha = 0.3f))
+                    ); Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            "SUMA DEUDAS",
+                            "MENSUALIDAD",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White.copy(alpha = 0.8f)
                         ); Text(
-                        "$${totalDebt.toCurrency()}",
-                        style = MaterialTheme.typography.headlineMedium,
+                        "$${totalPayment.toCurrency()}",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White
                     )
-                    }; Box(
-                    Modifier.height(40.dp).width(1.dp)
-                        .background(Color.White.copy(alpha = 0.3f))
-                ); Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "MENSUALIDAD",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.8f)
-                    ); Text(
-                    "$${totalPayment.toCurrency()}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
-                )
+                    }
+                    }
                 }
-                }
+                Spacer(Modifier.height(16.dp))
             }
         }
 
@@ -3136,7 +3870,7 @@ fun RefinanceScreen(
             ) { viewModel.addDebtRow() }
         }
         item {
-            Divider(
+            HorizontalDivider(
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 thickness = 2.dp
             )
@@ -3153,7 +3887,7 @@ fun RefinanceScreen(
                     value = state.capacityCNCA,
                     onValChange = { viewModel.updateCapacityCNCA(it) },
                     type = KeyboardType.Number,
-                    leadingIcon = if (isNegative) Icons.Rounded.TrendingDown else Icons.Rounded.AddCircleOutline,
+                    leadingIcon = if (isNegative) Icons.AutoMirrored.Rounded.TrendingDown else Icons.Rounded.AddCircleOutline,
                     isCurrency = true,
                     isError = state.inputError,
                     imeAction = ImeAction.Done
@@ -3185,35 +3919,7 @@ fun RefinanceScreen(
                 }
             }
         }
-        item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable { viewModel.toggleRetention(!state.useRetention) }
-                    .padding(12.dp)
-            ) {
-                Checkbox(
-                    checked = state.useRetention,
-                    onCheckedChange = { viewModel.toggleRetention(it) },
-                    colors = CheckboxDefaults.colors(checkedColor = JuicyGreen)
-                )
-                Spacer(Modifier.width(8.dp))
-                Column {
-                    Text(
-                        "Aplicar Tasa Preferencial",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        if (state.useRetention) "Se validará monto mínimo según producto." else "Habilita para ofertar tasa baja (Solo 60m)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-            }
-        }
+
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.weight(1f)) {
@@ -3236,36 +3942,58 @@ fun RefinanceScreen(
             }
         }
 
+        // Botones de acción para resultados
+        if (state.offersCNCA.isNotEmpty() && !state.isLoading) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    JuicyButton(
+                        text = "COMPARAR OFERTAS",
+                        color = JuicyBlue,
+                        shadowColor = JuicyBlueShadow,
+                        textColor = Color.White,
+                        icon = Icons.AutoMirrored.Rounded.CompareArrows,
+                        soundManager = soundManager
+                    ) {
+                        viewModel.toggleOffersComparator(true)
+                    }
+                }
+            }
+        }
+
         if (state.isLoading) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    JuicyLottieLoader(modifier = Modifier.size(200.dp))
-                }
+                ResultCardSkeletonList(count = 3)
             }
         } else {
             itemsIndexed(state.offersCNCA) { index, offer ->
+                val haptics = LocalHapticManager.current
                 AnimatedResultItem(index = index) {
                     ResultCard(
                         offer = offer,
                         onClick = {
                             soundManager.play("pop")
+                            haptics?.medium()
                             viewModel.onSelectOffer(offer)
+                        },
+                        onShowAmortization = {
+                            soundManager.play("magic")
+                            haptics?.success()
+                            viewModel.showAmortizationFor(offer)
                         },
                         rewardsState = rewardsState // NUEVO: Aplicar estilos
                     )
                 }
             }
             if (state.offersCNCA.isEmpty()) item { 
-                EmptyState(
-                    viewModel = viewModel,
-                    soundManager = soundManager,
-                    isRefinanceTab = true
-                ) 
+                // Usar nuevo Empty State Ilustrado
+                EmptyStateIllustration(
+                    title = "Sin ofertas de refinanciamiento",
+                    message = "Ajusta tu capacidad o deudas seleccionadas con 'Detalle'",
+                    emoji = "📊"
+                )
             }
         }
         item { Spacer(Modifier.height(80.dp)) }
@@ -3372,7 +4100,7 @@ fun NewCreditScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                if (state.useRetention) "Se validará monto mínimo según producto." else "Habilita para tasa preferencial (Solo 60meses)",
+                                if (state.useRetention) "Solo se mostrarán ofertas con tasa preferencial (60 meses)" else "Habilita para filtrar solo ofertas con tasa preferencial",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -3403,16 +4131,30 @@ fun NewCreditScreen(
             }
         }
 
+        // Botones de acción para resultados
+        if (state.offersNew.isNotEmpty() && !state.isLoading) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    JuicyButton(
+                        text = "COMPARAR OFERTAS",
+                        color = JuicyBlue,
+                        shadowColor = JuicyBlueShadow,
+                        textColor = Color.White,
+                        icon = Icons.AutoMirrored.Rounded.CompareArrows,
+                        soundManager = soundManager
+                    ) {
+                        viewModel.toggleOffersComparator(true)
+                    }
+                }
+            }
+        }
+
         if (state.isLoading) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    JuicyLottieLoader(modifier = Modifier.size(200.dp))
-                }
+                ResultCardSkeletonList(count = 3)
             }
         } else {
             itemsIndexed(state.offersNew) { index, offer ->
@@ -3423,16 +4165,21 @@ fun NewCreditScreen(
                             soundManager.play("pop")
                             viewModel.onSelectOffer(offer)
                         },
-                        rewardsState = rewardsState // NUEVO: Aplicar estilos
+                        onShowAmortization = {
+                            soundManager.play("magic")
+                            viewModel.showAmortizationFor(offer)
+                        },
+                        rewardsState = rewardsState
                     )
                 }
             }
             if (state.offersNew.isEmpty()) item { 
-                EmptyState(
-                    viewModel = viewModel,
-                    soundManager = soundManager,
-                    isRefinanceTab = false
-                ) 
+                // Usar nuevo Empty State Ilustrado
+                EmptyStateIllustration(
+                    title = "Sin ofertas para ti",
+                    message = "Ajusta la capacidad de pago o plazo",
+                    emoji = "🔍"
+                )
             }
         }
         item { Spacer(Modifier.height(80.dp)) }
@@ -3561,47 +4308,36 @@ fun InsuranceScreen(
                     )
                     Spacer(Modifier.height(20.dp))
                     
-                    // Dropdown Tipo de Pensión
-                    var expandedPension by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = expandedPension,
-                        onExpandedChange = { 
-                            expandedPension = it
-                            soundManager.play(if (it) "pop" else "success") // Sonido al abrir/cerrar
-                        }
+                    // Selector Tipo de Pensión (FilterChips)
+                    Text(
+                        "TIPO DE PENSIÓN",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
-                            value = state.insPensionType,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("TIPO DE PENSIÓN") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPension) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = JuicyPurple,
-                                focusedLabelColor = JuicyPurple
-                            ),
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedPension,
-                            onDismissRequest = { 
-                                expandedPension = false
-                                soundManager.play("success")
-                            },
-                            modifier = Modifier.animateContentSize() // Animación suave
-                        ) {
-                            listOf("Invalidez", "Vejez").forEach { type ->
-                                DropdownMenuItem(
-                                    text = { Text(type) },
-                                    onClick = {
-                                        viewModel.updateInsPensionType(type)
-                                        expandedPension = false
-                                        soundManager.play("magic") // Sonido especial al seleccionar
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    },
-                                    modifier = Modifier.bouncyClick(soundManager) {} // Efecto bouncy
+                        listOf("Invalidez", "Vejez", "Otro").forEach { type ->
+                            FilterChip(
+                                selected = state.insPensionType == type,
+                                onClick = {
+                                    viewModel.updateInsPensionType(type)
+                                    soundManager.play("pop")
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                },
+                                label = { Text(type) },
+                                leadingIcon = if (state.insPensionType == type) {
+                                    { Icon(Icons.Rounded.Check, null, modifier = Modifier.size(16.dp)) }
+                                } else null,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = JuicyPurple,
+                                    selectedLabelColor = Color.White,
+                                    selectedLeadingIconColor = Color.White
                                 )
-                            }
+                            )
                         }
                     }
                     
@@ -3620,8 +4356,52 @@ fun InsuranceScreen(
                         leadingIcon = if (isAgeError) Icons.Rounded.Close else Icons.Rounded.Person,
                         isCurrency = false,
                         isError = isAgeError,
-                        imeAction = ImeAction.Done
+                        imeAction = if (!state.insIsNewClient) ImeAction.Next else ImeAction.Done
                     )
+                    
+                    Spacer(Modifier.height(16.dp))
+
+                    // Checkbox Es Cliente Nuevo
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = state.insIsNewClient,
+                                onValueChange = { 
+                                    viewModel.toggleInsNewClient(it)
+                                    soundManager.play("pop")
+                                }
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = state.insIsNewClient,
+                            onCheckedChange = null,
+                            colors = CheckboxDefaults.colors(checkedColor = JuicyPurple)
+                        )
+                        Text(
+                            "Es Cliente Nuevo",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+
+                    // Input Antigüedad (Condicional)
+                    AnimatedVisibility(visible = !state.insIsNewClient) {
+                        Column {
+                            Spacer(Modifier.height(16.dp))
+                            JuicyInput(
+                                label = "ANTIGÜEDAD (MESES)",
+                                value = state.insAntiquity,
+                                onValChange = { viewModel.updateInsAntiquity(it) },
+                                type = KeyboardType.Number,
+                                leadingIcon = Icons.Rounded.DateRange,
+                                isCurrency = false,
+                                imeAction = ImeAction.Done
+                            )
+                        }
+                    }
                     
                     // Texto de ayuda para advertencia
                     if (isAgeWarning && !isAgeError) {
@@ -3642,44 +4422,7 @@ fun InsuranceScreen(
                         }
                     }
                     
-                    Spacer(Modifier.height(20.dp))
-                    
-                    // Switch Cliente Nuevo
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .padding(16.dp)
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                "Cliente Nuevo",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                "Antigüedad < 24 meses",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                fontSize = 12.sp
-                            )
-                        }
-                        Checkbox(
-                            checked = state.insIsNewClient,
-                            onCheckedChange = { 
-                                viewModel.toggleInsNewClient(it)
-                                soundManager.play("pop")
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = JuicyPurple,
-                                uncheckedColor = MaterialTheme.colorScheme.outline
-                            )
-                        )
-                    }
+                    // (Switch "Cliente Nuevo" Eliminado - Ya existe Checkbox arriba)
                 }
             }
         }
@@ -3757,7 +4500,7 @@ fun InsuranceScreen(
                                             isRejected -> Icons.Rounded.Close
                                             isFree -> Icons.Rounded.CheckCircle
                                             hasCost -> Icons.Rounded.AttachMoney
-                                            else -> Icons.Rounded.HelpOutline
+                                            else -> Icons.AutoMirrored.Rounded.HelpOutline
                                         },
                                         contentDescription = null,
                                         tint = state.insResultColor,
@@ -3841,7 +4584,7 @@ fun InsuranceScreen(
                                                 shape = RoundedCornerShape(50)
                                             ) {
                                                 Text(
-                                                    text = "PAGO ÚNICO",
+                                                    text = "PAGO TOTAL PLAZO",
                                                     color = Color.White,
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
@@ -3852,11 +4595,33 @@ fun InsuranceScreen(
                                         } else {
                                             Spacer(Modifier.height(4.dp))
                                             Text(
-                                                text = "Primer año",
+                                                text = "Costo 1er Año",
                                                 color = Color.White.copy(alpha = 0.8f),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontSize = 12.sp
                                             )
+                                        }
+                                        
+                                        // PAGO MENSUAL ESTIMADO
+                                        if (state.insMonthlyPayment > BD_ZERO) {
+                                            Spacer(Modifier.height(16.dp))
+                                            HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                                            Spacer(Modifier.height(12.dp))
+                                            
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(
+                                                    "MENSUALIDAD APROXIMADA",
+                                                    color = Color.White.copy(alpha = 0.7f),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    "$${state.insMonthlyPayment.toCurrency()}",
+                                                    color = Color.White,
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.ExtraBold
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -3885,7 +4650,7 @@ fun InsuranceScreen(
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = Icons.Rounded.HelpOutline,
+                                            imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                             modifier = Modifier.size(20.dp)
@@ -4017,13 +4782,21 @@ fun ClientFormContent(
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(Modifier.weight(1f)) {
-                        JuicyInput(
-                            "NSS",
-                            d.nss,
-                            { if (it.length <= 11) viewModel.updateClientData(d.copy(nss = it)) },
-                            KeyboardType.Number,
-                            Icons.Rounded.Numbers
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.weight(1f)) {
+                                JuicyInput(
+                                    "NSS",
+                                    d.nss,
+                                    { if (it.length <= 11) viewModel.updateClientData(d.copy(nss = it)) },
+                                    KeyboardType.Number,
+                                    Icons.Rounded.Numbers
+                                )
+                            }
+                            if (d.nss.isNotEmpty()) {
+                                Spacer(Modifier.width(8.dp))
+                                NSSValidationIndicator(d.nss)
+                            }
+                        }
                     }
                     Box(Modifier.weight(1f)) {
                         JuicyInput(
@@ -4281,8 +5054,21 @@ fun ClientFormContent(
             color = JuicyGreen,
             shadowColor = JuicyGreenShadow,
             textColor = Color.White,
-            icon = Icons.Rounded.ReceiptLong,
+            icon = Icons.AutoMirrored.Rounded.ReceiptLong,
             onClick = { onGenerate(viewModel.generateLayout()) }
+        )
+        
+        Spacer(Modifier.height(16.dp))
+        
+        // Botón Ticket Dorado
+        JuicyButton(
+            text = "COMPARTIR TICKET DORADO",
+            color = Color(0xFFFFD700),
+            shadowColor = Color(0xFFDAA520),
+            textColor = Color.Black,
+            icon = Icons.Rounded.Share,
+            isLoading = state.isGeneratingTicket,
+            onClick = onGenerateTicket
         )
     }
 }
@@ -4341,37 +5127,84 @@ fun JuicyButton(
     color: Color,
     shadowColor: Color,
     textColor: Color,
-    height: Dp = 56.dp, // Altura estándar mejorada
+    height: Dp = 56.dp,
     icon: ImageVector? = null,
     iconColor: Color? = null,
     soundManager: SoundManager? = null,
+    isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
+    // Estado de presión para efecto 3D
+    var isPressed by remember { mutableStateOf(false) }
+    
+    // Optimización: Cachear animationSpec
+    val animSpec = remember { 
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        )
+    }
+    
+    // Animación de desplazamiento (Hundimiento)
+    val pressTranslation by animateFloatAsState(
+        targetValue = if (isPressed) 6f else 0f, // Baja 6dp al presionar
+        label = "pressTranslation",
+        animationSpec = animSpec
+    )
+    
+    val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
+    
     Box(
         modifier = Modifier
             .height(height)
             .fillMaxWidth()
-            .bouncyClick(soundManager, onClick),
+            .pointerInput(isLoading) {
+                if (!isLoading) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        isPressed = true
+                        val up = waitForUpOrCancellation()
+                        isPressed = false
+                        if (up != null) {
+                            soundManager?.play("pop")
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onClick()
+                        }
+                    }
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
-        // CAPA SOMBRA (Fondo - Desplazada hacia abajo)
+        // CAPA SOMBRA (FONDO)
         Box(
             modifier = Modifier
-                .fillMaxSize() // CRÍTICO: Debe llenar el contenedor
-                .padding(top = 6.dp) // Empuja la sombra hacia abajo
+                .fillMaxSize()
+                .padding(top = 6.dp) // Desplazada hacia abajo para simular profundidad
                 .background(shadowColor, RoundedCornerShape(16.dp))
         )
-        // CAPA PRINCIPAL (Frente - Desplazada hacia arriba)
+        
+        // CAPA PRINCIPAL (FRENTE)
         Box(
             modifier = Modifier
-                .fillMaxSize() // CRÍTICO: Debe llenar el contenedor
-                .padding(bottom = 6.dp) // Empuja el frente hacia arriba
+                .fillMaxSize()
+                .padding(bottom = 6.dp) // Deja espacio abajo para mostrar la sombra
+                .graphicsLayer {
+                    translationY = pressTranslation * density.density // Convertir dp a pixels para translationY
+                }
                 .background(color, RoundedCornerShape(16.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp)), // Brillo sutil
+                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
             contentAlignment = Alignment.Center
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (icon != null) {
+                if (isLoading) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        color = textColor,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 3.dp
+                    )
+                    Spacer(Modifier.width(12.dp))
+                } else if (icon != null) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
@@ -4381,7 +5214,7 @@ fun JuicyButton(
                     Spacer(Modifier.width(12.dp))
                 }
                 Text(
-                    text = text,
+                    text = if (isLoading) "PROCESANDO..." else text,
                     color = textColor,
                     fontWeight = FontWeight.Black,
                     style = MaterialTheme.typography.titleMedium,
@@ -4398,30 +5231,64 @@ fun JuicyIconButton(
     color: Color,
     shadowColor: Color? = null,
     iconColor: Color,
-    size: Dp = 56.dp, // Tamaño touch-friendly
+    size: Dp = 56.dp,
     soundManager: SoundManager? = null,
     onClick: () -> Unit
 ) {
     val realShadow = shadowColor ?: color.copy(alpha = 0.5f)
     
+    // Estado de presión para efecto 3D
+    var isPressed by remember { mutableStateOf(false) }
+    
+    val animSpec = remember { 
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        )
+    }
+    
+    val pressTranslation by animateFloatAsState(
+        targetValue = if (isPressed) 4f else 0f, 
+        label = "pressTranslation",
+        animationSpec = animSpec
+    )
+    
+    val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
+    
     Box(
         modifier = Modifier
             .size(size)
-            .bouncyClick(soundManager, onClick),
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    isPressed = true
+                    val up = waitForUpOrCancellation()
+                    isPressed = false
+                    if (up != null) {
+                        soundManager?.play("pop")
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onClick()
+                    }
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
-        // CAPA SOMBRA
+        // CAPA SOMBRA (FONDO)
         Box(
             modifier = Modifier
-                .fillMaxSize() // CRÍTICO
+                .fillMaxSize()
                 .padding(top = 4.dp)
                 .background(realShadow, CircleShape)
         )
-        // CAPA PRINCIPAL
+        // CAPA PRINCIPAL (FRENTE)
         Box(
             modifier = Modifier
-                .fillMaxSize() // CRÍTICO
+                .fillMaxSize()
                 .padding(bottom = 4.dp)
+                .graphicsLayer {
+                    translationY = pressTranslation * density.density
+                }
                 .background(color, CircleShape)
                 .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
             contentAlignment = Alignment.Center
@@ -4446,11 +5313,12 @@ fun JuicyInput(
     isCurrency: Boolean = false,
     isError: Boolean = false,
     imeAction: ImeAction = ImeAction.Next,
-    placeholder: String? = null // NUEVO: Placeholder opcional
+    placeholder: String? = null, // NUEVO: Placeholder opcional
+    maxLength: Int? = null // NUEVO: Límite de caracteres
 ) {
     // Generar placeholder inteligente basado en el label si no se proporciona uno
     val smartPlaceholder = placeholder ?: when {
-        isCurrency -> "$10,000.00"
+        isCurrency -> "10,000" // Sin $ porque CurrencyVisualTransformation lo agrega
         label.contains("NSS", ignoreCase = true) -> "12345678901"
         label.contains("Teléfono", ignoreCase = true) || label.contains("Celular", ignoreCase = true) -> "5512345678"
         label.contains("Nombre", ignoreCase = true) -> "Juan Pérez"
@@ -4462,81 +5330,214 @@ fun JuicyInput(
         else -> "Ingresa $label"
     }
     
+    // ========== ANIMATED FOCUS STATE ==========
+    val focusManager = LocalFocusManager.current
+    val hapticManager = LocalHapticManager.current
+    var isFocused by remember { mutableStateOf(false) }
+    
+    // Ring scale animation
+    val ringScale by animateFloatAsState(
+        targetValue = if (isFocused) 1f else 0.95f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "ringScale"
+    )
+    
+    // Ring pulse animation (infinite when focused)
+    val infiniteTransition = rememberInfiniteTransition(label = "focusPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+    
+    val borderColor = when {
+        isError -> JuicyRed
+        isFocused -> JuicyBlue
+        else -> MaterialTheme.colorScheme.outline
+    }
+    
     Column {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (isError) JuicyRed else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = { input ->
-                val isValidChar = input.all { it.isDigit() || it == '.' || it == '-' }
-                val singleDot = input.count { it == '.' } <= 1
-                val validMinus = if (input.contains('-')) input.indexOf('-') == 0 && input.count { it == '-' } == 1 else true
-
-                if (type == KeyboardType.Number || type == KeyboardType.Decimal) {
-                    if (isValidChar && singleDot && validMinus) {
-                        onValChange(input)
-                    }
-                } else {
-                    onValChange(input)
-                }
-            },
-            modifier = Modifier.fillMaxWidth().border(
-                width = if (isError) 2.dp else 0.dp, 
-                color = if (isError) JuicyRed else Color.Transparent,
-                shape = RoundedCornerShape(16.dp)
-            ),
-            textStyle = TextStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.SansSerif
-            ),
-            isError = isError,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = if (isCurrency) KeyboardType.Decimal else type,
-                imeAction = imeAction
-            ),
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            leadingIcon = { 
-                Icon(
-                    leadingIcon, 
-                    null, 
-                    tint = if (isError) JuicyRed else MaterialTheme.colorScheme.outline
-                ) 
-            },
-            placeholder = {
-                Text(
-                    smartPlaceholder,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                )
-            },
-            supportingText = if (isError && value.isEmpty()) {
-                { 
-                    Text(
-                        "Este campo es requerido",
-                        color = JuicyRed,
-                        style = MaterialTheme.typography.bodySmall
-                    ) 
-                }
-            } else null,
-            visualTransformation = if (isCurrency) CurrencyVisualTransformation() else VisualTransformation.None,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = if (isError) JuicyRed else JuicyBlue,
-                unfocusedBorderColor = if (isError) JuicyRed else MaterialTheme.colorScheme.outline,
-                errorBorderColor = JuicyRed,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                errorContainerColor = MaterialTheme.colorScheme.surface
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isError) JuicyRed else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
-        )
+            
+            // Character counter
+            if (maxLength != null && isFocused) {
+                val remaining = maxLength - value.length
+                Text(
+                    text = "$remaining",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (remaining < 5) JuicyOrange else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontWeight = if (remaining < 5) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier.padding(end = 4.dp, bottom = 4.dp)
+                )
+            }
+        }
+        
+        // Animated focus ring container (Premium Ghost Style)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = 1f // No escalar todo el input, solo el background si se desea
+                    scaleY = 1f
+                }
+        ) {
+            // Pulsing glow background (only visible when focused)
+            if (isFocused && !isError) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    JuicyBlue.copy(alpha = 0.1f),
+                                    Color.Transparent
+                                )
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                )
+            }
+            
+            // Input Surface
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        color = if (isFocused) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .border(
+                        width = if (isFocused) 1.dp else 0.dp,
+                        color = if (isError) JuicyRed else if (isFocused) JuicyBlue.copy(alpha = 0.3f) else Color.Transparent,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .clip(RoundedCornerShape(12.dp))
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused != isFocused) {
+                            isFocused = focusState.isFocused
+                            if (focusState.isFocused) {
+                                hapticManager?.light()
+                            }
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Leading Icon
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(start = 12.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Icon(
+                        leadingIcon,
+                        null,
+                        tint = if (isError) JuicyRed else if (isFocused) JuicyBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Native BasicTextField for total control
+                BasicTextField(
+                    value = value,
+                    onValueChange = { input ->
+                        // Play haptic on input
+                        if (input != value) {
+                            hapticManager?.tick()
+                        }
+                        
+                        // Enforce max length
+                        if (maxLength != null && input.length > maxLength) return@BasicTextField
+                        
+                        val isValidChar = input.all { it.isDigit() || it == '.' || it == '-' }
+                        val singleDot = input.count { it == '.' } <= 1
+                        val validMinus = if (input.contains('-')) input.indexOf('-') == 0 && input.count { it == '-' } == 1 else true
+
+                        if (type == KeyboardType.Number || type == KeyboardType.Decimal) {
+                            if (isValidChar && singleDot && validMinus) {
+                                onValChange(input)
+                            }
+                        } else {
+                            onValChange(input)
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 12.dp),
+                    textStyle = TextStyle(
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Medium, // Menos bold, más elegante
+                        fontFamily = FontFamily.SansSerif,
+                        color = MaterialTheme.colorScheme.onSurface 
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = if (isCurrency) KeyboardType.Decimal else type,
+                        imeAction = imeAction
+                    ),
+                    singleLine = true,
+                    visualTransformation = if (isCurrency) CurrencyVisualTransformation() else VisualTransformation.None,
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (value.isEmpty()) {
+                                Text(
+                                    smartPlaceholder,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                    style = TextStyle(
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Normal
+                                    )
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+                
+                // Trailing Error Icon (Optional)
+                if (isError) {
+                     Icon(
+                        Icons.Rounded.Error,
+                        null,
+                        tint = JuicyRed,
+                        modifier = Modifier.padding(horizontal = 12.dp).size(20.dp)
+                    )
+                }
+            }
+            
+            // Bottom Indicator Line (Animated)
+             Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(
+                        color = if (isError) JuicyRed else if (isFocused) JuicyBlue else Color.Transparent
+                    )
+                    .graphicsLayer {
+                         scaleX = if (isFocused || isError) 1f else 0f
+                         transformOrigin = TransformOrigin(0.5f, 1f)
+                    }
+            )
+
+        }
     }
 }
 
@@ -4968,7 +5969,7 @@ fun OfferPreviewModal(
                 
                 Spacer(Modifier.height(32.dp))
                 
-                // Hero Section - Liquidez
+                // Hero Section - Liquidez con animación de entrada
                 Text(
                     text = if(offer.amount > offer.mainValue) "REMANENTE" else "MONTO A RECIBIR",
                     style = MaterialTheme.typography.labelMedium,
@@ -4978,6 +5979,37 @@ fun OfferPreviewModal(
                 
                 Spacer(Modifier.height(8.dp))
                 
+                // ✨ HERO ANIMATION: Scale + Fade In
+                var heroScaleTarget by remember { mutableFloatStateOf(0.8f) }
+                var heroAlphaTarget by remember { mutableFloatStateOf(0f) }
+                
+                LaunchedEffect(Unit) {
+                    heroScaleTarget = 1f
+                    heroAlphaTarget = 1f
+                }
+                
+                val heroScale by animateFloatAsState(
+                    targetValue = heroScaleTarget,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    ),
+                    label = "heroScale"
+                )
+                
+                val heroAlpha by animateFloatAsState(
+                    targetValue = heroAlphaTarget,
+                    animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+                    label = "heroAlpha"
+                )
+                
+                val productColors = remember(offer.product, offer.tipoTasa) {
+                    ProductBranding.getColors(
+                        offer.product, 
+                        offer.tipoTasa == "RETENCION"
+                    )
+                }
+                
                 Text(
                     text = "$${offer.mainValue.toCurrency()}",
                     style = TextStyle(
@@ -4986,7 +6018,12 @@ fun OfferPreviewModal(
                         fontSize = 56.sp,
                         letterSpacing = (-2).sp
                     ),
-                    color = JuicyGreen
+                    color = productColors.primary, // 🎨 Usa color del producto
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = heroScale
+                        scaleY = heroScale
+                        alpha = heroAlpha
+                    }
                 )
                 
                 // Pill secundaria (Monto Bruto)
@@ -5001,7 +6038,7 @@ fun OfferPreviewModal(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Rounded.ReceiptLong,
+                                Icons.AutoMirrored.Rounded.ReceiptLong,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                                 modifier = Modifier.size(16.dp)
@@ -5052,7 +6089,7 @@ fun OfferPreviewModal(
                         
                         // CAT
                         DetailRow(
-                            icon = Icons.Rounded.TrendingDown,
+                            icon = Icons.AutoMirrored.Rounded.TrendingDown,
                             label = "CAT",
                             value = offer.cat
                         )
@@ -5126,7 +6163,7 @@ fun OfferPreviewModal(
                         border = BorderStroke(2.dp, JuicyBlue)
                     ) {
                         Icon(
-                            Icons.Rounded.ReceiptLong,
+                            Icons.AutoMirrored.Rounded.ReceiptLong,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -5215,50 +6252,84 @@ fun DetailRow(
 fun ResultCard(
     offer: LoanOffer,
     onClick: () -> Unit,
+    onShowAmortization: (() -> Unit)? = null, // NUEVO: Callback para simulador
     rewardsState: RewardsState = RewardsState() // Default para compatibilidad
 ) {
-    // ========== OBTENER ESTILO ACTIVO ==========
+    // ========== OBTENER ESTILO ACTIVO (CACHEADO) ==========
     val activeCardStyle = remember(rewardsState.active.currentCardStyle) {
         CardStyleCatalog.getCardStyleById(rewardsState.active.currentCardStyle)
             ?: CardStyleCatalog.ALL_CARD_STYLES.first()
     }
     // ===========================================
     
-    val color = if (offer.isBest) JuicyOrange else MaterialTheme.colorScheme.surface
-    val shadow = if (offer.isBest) JuicyOrangeShadow else MaterialTheme.colorScheme.outline
-    val contentColor = if (offer.isBest) Color.White else MaterialTheme.colorScheme.onSurface
-
-    // Animación de brillo (Mantener lógica existente)
-    val infiniteTransition = rememberInfiniteTransition(label = "bestOfferGlow")
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f, targetValue = 0.8f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "glowAlpha"
-    )
-    val glowOffset by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(2000, easing = LinearEasing), RepeatMode.Restart),
-        label = "glowOffset"
-    )
+    // ========== OBTENER COLORES POR PRODUCTO ==========
+    val usePremiumDesign = offer.tipoTasa == "RETENCION"
+    val productColors = remember(offer.product, usePremiumDesign) {
+        ProductBranding.getColors(offer.product, usePremiumDesign)
+    }
     
-    // ========== SHIMMER ANIMATION ==========
-    val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerOffset by shimmerTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmerOffset"
-    )
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val outlineColor = MaterialTheme.colorScheme.outline
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    
+    // Usar colores del producto para tarjetas destacadas
+    val actualColor = when {
+        usePremiumDesign -> productColors.primary
+        offer.isBest -> productColors.primary
+        else -> surfaceColor
+    }
+    val shadow = when {
+        usePremiumDesign || offer.isBest -> productColors.shadow
+        else -> outlineColor
+    }
+    val contentColor = if (usePremiumDesign || offer.isBest) Color.White else onSurfaceColor
+    // =================================================
+
+    // Optimización: Solo crear animaciones infinitas cuando son necesarias
+    val glowAlpha: Float
+    val glowOffset: Float
+    
+    if (usePremiumDesign || offer.isBest) {
+        val infiniteTransition = rememberInfiniteTransition(label = "bestOfferGlow")
+        glowAlpha = infiniteTransition.animateFloat(
+            initialValue = 0.3f, targetValue = 0.8f,
+            animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "glowAlpha"
+        ).value
+        glowOffset = infiniteTransition.animateFloat(
+            initialValue = 0f, targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(2000, easing = LinearEasing), RepeatMode.Restart),
+            label = "glowOffset"
+        ).value
+    } else {
+        glowAlpha = 0f
+        glowOffset = 0f
+    }
+    
+    // Optimización: Solo crear shimmer cuando está activo
+    val shimmerOffset: Float
+    
+    if (activeCardStyle.hasShimmer && !offer.isBest) {
+        val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
+        shimmerOffset = shimmerTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "shimmerOffset"
+        ).value
+    } else {
+        shimmerOffset = 0f
+    }
     // =======================================
 
     JuicyCard(
         color = if (activeCardStyle.hasGlassmorphism && !offer.isBest) {
-            color.copy(alpha = 0.7f)
+            actualColor.copy(alpha = 0.7f)
         } else {
-            color
+            actualColor
         },
         shadowColor = if (activeCardStyle.hasGlow) {
             MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -5267,35 +6338,38 @@ fun ResultCard(
         },
         modifier = Modifier
             .then(
-                if (offer.isBest) {
+                if (usePremiumDesign || offer.isBest) {
                     Modifier.drawWithContent {
                         drawContent()
+                        val glowColors = listOf<Color>(
+                            productColors.primary.copy(alpha = glowAlpha),
+                            productColors.accent.copy(alpha = glowAlpha * 0.8f),
+                            productColors.primary.copy(alpha = glowAlpha)
+                        )
                         val glowBrush = Brush.linearGradient(
-                            colors = listOf(
-                                JuicyOrangeGlow.copy(alpha = glowAlpha),
-                                JuicyYellow.copy(alpha = glowAlpha * 0.6f),
-                                JuicyOrangeGlow.copy(alpha = glowAlpha)
-                            ),
+                            colors = glowColors,
                             start = Offset(size.width * glowOffset, 0f),
                             end = Offset(size.width * glowOffset + size.width * 0.5f, size.height)
                         )
-                        drawRect(
+                        drawRoundRect(
                             brush = glowBrush,
-                            alpha = 0.4f,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f)
+                            alpha = 0.5f,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx()),
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6f)
                         )
                     }
                 } else Modifier
             )
             .then(
-                // ========== APLICAR SHIMMER SI ESTÁ ACTIVO ==========
+                // ========== APLICAR SHIMMER CON COLORES DEL PRODUCTO ==========
                 if (activeCardStyle.hasShimmer && !offer.isBest) {
                     Modifier.drawWithContent {
                         drawContent()
                         val shimmerBrush = Brush.linearGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.3f),
+                                productColors.shimmer, // 🎨 Usa color del producto
+                                productColors.accent.copy(alpha = 0.4f), // 🎨 Acento del producto
                                 Color.Transparent
                             ),
                             start = Offset(size.width * shimmerOffset - size.width * 0.3f, 0f),
@@ -5304,7 +6378,7 @@ fun ResultCard(
                         drawRect(brush = shimmerBrush)
                     }
                 } else Modifier
-                // ====================================================
+                // ==============================================================
             )
             .then(
                 // ========== APLICAR GLASSMORPHISM ==========
@@ -5345,11 +6419,47 @@ fun ResultCard(
                     Text(
                         text = offer.tipoTasa,
                         fontWeight = FontWeight.Bold,
-                        color = if (offer.isBest) Color.White.copy(alpha = 0.8f) else JuicyBlue,
+                        color = if (usePremiumDesign) Color.White.copy(alpha = 0.9f) 
+                               else if (offer.isBest) Color.White.copy(alpha = 0.8f) 
+                               else JuicyBlue,
                         fontSize = 10.sp
                     )
                 }
-                if (offer.isBest) {
+                if (offer.tipoTasa == "RETENCION") {
+                    // Badge premium con gradiente
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF9C27B0),
+                                        Color(0xFF7B1FA2)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Star,
+                                contentDescription = null,
+                                tint = JuicyYellow,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "TASA PREFERENCIAL",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+                } else if (offer.isBest) {
                     Surface(color = Color.White, shape = RoundedCornerShape(4.dp)) {
                         Text(
                             text = "MEJOR OPCIÓN", fontSize = 10.sp, fontWeight = FontWeight.Bold,
@@ -5357,6 +6467,27 @@ fun ResultCard(
                         )
                     }
                 }
+            }
+            
+            // --- CAT Badge ---
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                CatBadge(
+                    cat = offer.cat,
+                    isPreferencial = usePremiumDesign
+                )
+            }
+            
+            // --- Indicador de Ahorro (solo para ofertas preferenciales) ---
+            if (usePremiumDesign) {
+                Spacer(Modifier.height(12.dp))
+                SavingsIndicator(
+                    traditionalRate = 44.2f, // CAT Tradicional referencia
+                    preferentialRate = offer.cat.replace("%", "").toFloatOrNull() ?: 36f
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -5394,7 +6525,7 @@ fun ResultCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            Icons.Rounded.ReceiptLong, null, 
+                            Icons.AutoMirrored.Rounded.ReceiptLong, null, 
                             tint = contentColor.copy(alpha = 0.8f), 
                             modifier = Modifier.size(12.dp)
                         )
@@ -5432,6 +6563,38 @@ fun ResultCard(
                     Text("${offer.term} Meses", fontWeight = FontWeight.ExtraBold, color = contentColor, fontSize = 18.sp)
                 }
             }
+            
+            // Botón de Amortización (si está disponible)
+            if (onShowAmortization != null) {
+                Spacer(Modifier.height(12.dp))
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onShowAmortization() },
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (offer.isBest) Color.White.copy(alpha = 0.2f) else JuicyBlue.copy(alpha = 0.1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Rounded.TableChart,
+                            contentDescription = "Ver Amortización",
+                            tint = if (offer.isBest) Color.White else JuicyBlue,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Ver Tabla de Amortización",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (offer.isBest) Color.White else JuicyBlue
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -5454,7 +6617,7 @@ fun DebtRowItem(
                         .padding(8.dp)
                 ) {
                     Icon(
-                        Icons.Rounded.ReceiptLong,
+                        Icons.AutoMirrored.Rounded.ReceiptLong,
                         null,
                         tint = JuicyBlue,
                         modifier = Modifier.size(24.dp)
@@ -5630,7 +6793,7 @@ fun DropdownCompact(
                     }
                 } else null,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth().height(50.dp),
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true).fillMaxWidth().height(50.dp),
                 textStyle = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
@@ -5939,6 +7102,10 @@ fun JuicySliderInput(
     isError: Boolean = false
 ) {
     val floatValue = value.replace(",", "").replace("$", "").toFloatOrNull() ?: range.start
+    
+    // 🎮 NUEVO: Haptic Manager para feedback en slider
+    val hapticManager = LocalHapticManager.current
+    var lastSnappedValue by remember { mutableStateOf(floatValue) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         JuicyInput(
@@ -5957,7 +7124,13 @@ fun JuicySliderInput(
         Slider(
             value = floatValue,
             onValueChange = { newVal ->
-                onValueChange(newVal.toInt().toString())
+                val snappedValue = newVal.toInt()
+                // ✨ Haptic tick solo cuando cambia el valor snapped
+                if (snappedValue.toFloat() != lastSnappedValue) {
+                    hapticManager?.tick()
+                    lastSnappedValue = snappedValue.toFloat()
+                }
+                onValueChange(snappedValue.toString())
             },
             valueRange = range,
             steps = steps,
@@ -6477,7 +7650,7 @@ fun JuicyProviderDropdown(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
-                    .menuAnchor()
+                    .menuAnchor(MenuAnchorType.PrimaryEditable, true)
                     .fillMaxWidth()
                     .height(56.dp), // Un poco más alto para elegancia
                 textStyle = TextStyle(
@@ -6576,7 +7749,7 @@ fun JuicyTermDropdown(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
-                    .menuAnchor()
+                    .menuAnchor(MenuAnchorType.PrimaryEditable, true)
                     .fillMaxWidth()
                     .height(56.dp),
                 textStyle = TextStyle(
@@ -6624,5 +7797,322 @@ fun JuicyTermDropdown(
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun AcademyScreen(viewModel: CalculatorViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.School,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "Academia ConsuCalcu",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Módulos de capacitación próximamente.",
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+fun RewardUnlockOverlay(
+    unlockedItems: List<Any>,
+    onDismiss: () -> Unit
+) {
+    // Placeholder interaction
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        // Auto dismiss for now to unblock
+        kotlinx.coroutines.delay(100)
+        onDismiss()
+    }
+}
+
+@Composable
+fun RewardsGalleryScreen(viewModel: CalculatorViewModel, onBack: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp).background(MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Galería de Recompensas", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(16.dp))
+        JuicyButton(
+            text = "VOLVER", 
+            color = MaterialTheme.colorScheme.primary, 
+            shadowColor = MaterialTheme.colorScheme.primary, 
+            textColor = android.graphics.Color.WHITE.let { androidx.compose.ui.graphics.Color(it) }, 
+            onClick = onBack
+        )
+    }
+}
+
+@Composable
+fun ThemeSelectorScreen(viewModel: CalculatorViewModel, onBack: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
+        Text("Selector de Temas")
+        JuicyButton(text="VOLVER", color=MaterialTheme.colorScheme.primary, shadowColor=MaterialTheme.colorScheme.primary, textColor=androidx.compose.ui.graphics.Color.White, onClick=onBack)
+    }
+}
+
+@Composable
+fun ParticleSelectorScreen(viewModel: CalculatorViewModel, onBack: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
+        Text("Selector de Partículas")
+        JuicyButton(text="VOLVER", color=MaterialTheme.colorScheme.primary, shadowColor=MaterialTheme.colorScheme.primary, textColor=androidx.compose.ui.graphics.Color.White, onClick=onBack)
+    }
+}
+
+@Composable
+fun AvatarSelectorScreen(viewModel: CalculatorViewModel, onBack: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
+        Text("Selector de Avatares")
+        JuicyButton(text="VOLVER", color=MaterialTheme.colorScheme.primary, shadowColor=MaterialTheme.colorScheme.primary, textColor=androidx.compose.ui.graphics.Color.White, onClick=onBack)
+    }
+}
+
+@Composable
+fun CardStyleSelectorScreen(viewModel: CalculatorViewModel, onBack: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
+        Text("Selector de Estilos")
+        JuicyButton(text="VOLVER", color=MaterialTheme.colorScheme.primary, shadowColor=MaterialTheme.colorScheme.primary, textColor=androidx.compose.ui.graphics.Color.White, onClick=onBack)
+    }
+}
+
+// =================================================================================================
+// NEW FEATURES UI COMPONENTS
+// =================================================================================================
+
+/**
+ * Comparador Side-by-Side de Ofertas
+ * Muestra una tabla comparativa de múltiples ofertas de crédito
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OffersComparator(
+    offers: List<LoanOffer>,
+    onDismiss: () -> Unit,
+    onSelectOffer: (LoanOffer) -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .navigationBarsPadding()
+        ) {
+            Text(
+                "Comparador de Ofertas",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            // Header de la tabla
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Producto", Modifier.weight(1.2f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("Monto", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+                Text("Mensualidad", Modifier.weight(1.2f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+                Text("Plazo", Modifier.weight(0.8f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.Center)
+            }
+            
+            Spacer(Modifier.height(8.dp))
+            
+            // Filas de ofertas
+            LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                itemsIndexed(offers) { index, offer ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clickable { onSelectOffer(offer) },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (offer.isBest) JuicyGreen.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant,
+                        border = if (offer.isBest) BorderStroke(2.dp, JuicyGreen) else null
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1.2f)) {
+                                Text(offer.product, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                if (offer.isBest) {
+                                    Text("⭐ Mejor Opción", fontSize = 9.sp, color = JuicyGreen)
+                                }
+                            }
+                            Text("$${offer.amount.toCurrency()}", Modifier.weight(1f), fontSize = 13.sp, textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
+                            Text("$${offer.monthlyPayment.toCurrency()}", Modifier.weight(1.2f), fontSize = 13.sp, textAlign = TextAlign.End)
+                            Text("${offer.term}m", Modifier.weight(0.8f), fontSize = 11.sp, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        }
+                    }
+                }
+            }
+            
+            Spacer(Modifier.height(16.dp))
+            
+            JuicyButton(
+                text = "CERRAR",
+                color = MaterialTheme.colorScheme.secondary,
+                shadowColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                textColor = Color.White,
+                onClick = onDismiss
+            )
+        }
+    }
+}
+
+/**
+ * Simulador de Amortización
+ * Muestra la tabla de amortización completa con desglose mes a mes
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AmortizationSimulator(
+    offer: LoanOffer,
+    amortizationTable: List<AmortizationRow>,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .navigationBarsPadding()
+        ) {
+            // Header
+            Text(
+                "Tabla de Amortización",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "${offer.product} - ${offer.term} meses",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            // Resumen visual
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = JuicyBlue.copy(alpha = 0.1f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Monto", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text("$${offer.amount.toCurrency()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = JuicyBlue)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Mensualidad", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text("$${offer.monthlyPayment.toCurrency()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = JuicyGreen)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Total a Pagar", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        val totalPaid = amortizationTable.sumOf { it.payment }
+                        Text("$${totalPaid.toCurrency()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = JuicyOrange)
+                    }
+                }
+            }
+            
+            Spacer(Modifier.height(16.dp))
+            
+            // Tabla de amortización
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                // Header
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Mes", Modifier.weight(0.6f), fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                        Text("Interés", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
+                        Text("Capital", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
+                        Text("Saldo", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
+                    }
+                }
+                
+                // Rows
+                itemsIndexed(amortizationTable) { index, row ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(if (index % 2 == 0) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("${row.month}", Modifier.weight(0.6f), fontSize = 11.sp)
+                        Text("$${row.interest.toCurrency()}", Modifier.weight(1f), fontSize = 11.sp, textAlign = TextAlign.End, color = JuicyRed.copy(alpha = 0.7f))
+                        Text("$${row.principal.toCurrency()}", Modifier.weight(1f), fontSize = 11.sp, textAlign = TextAlign.End, color = JuicyGreen.copy(alpha = 0.7f))
+                        Text("$${row.balance.toCurrency()}", Modifier.weight(1f), fontSize = 11.sp, textAlign = TextAlign.End, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+            
+            Spacer(Modifier.height(16.dp))
+            
+            JuicyButton(
+                text = "CERRAR",
+                color = MaterialTheme.colorScheme.secondary,
+                shadowColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                textColor = Color.White,
+                onClick = onDismiss
+            )
+        }
+    }
+}
+
+/**
+ * Indicador de validación de NSS
+ * Se integra en el JuicyInput existente
+ */
+@Composable
+fun NSSValidationIndicator(nss: String) {
+    if (nss.length == 11) {
+        val isValid = nss.isValidNSS()
+        Icon(
+            imageVector = if (isValid) Icons.Rounded.CheckCircle else Icons.Rounded.Cancel,
+            contentDescription = if (isValid) "NSS Válido" else "NSS Inválido",
+            tint = if (isValid) JuicyGreen else JuicyRed,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
