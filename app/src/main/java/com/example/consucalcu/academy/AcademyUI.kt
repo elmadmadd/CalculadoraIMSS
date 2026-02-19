@@ -137,6 +137,21 @@ fun AcademyScreen(
                 }
             )
         }
+        
+        // Pantalla de Práctica (Credit Match Game)
+        if (currentBattle == null && selectedLesson != null && selectedLesson!!.type == LessonType.PRACTICE) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                CreditMatchGame(
+                    onCaseSolved = { /* Feedback visual local en el componente */ },
+                    onClose = {
+                        // Marcar como completada al terminar
+                        viewModel.completeLesson(selectedLesson!!.id, 3, 3)
+                        selectedLesson = null
+                        soundManager?.play("success")
+                    }
+                )
+            }
+        }
     }
 }
 

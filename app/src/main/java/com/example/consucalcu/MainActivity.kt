@@ -1,18 +1,20 @@
 package com.example.consucalcu
 
 import kotlinx.coroutines.Job
-import androidx.compose.material.icons.rounded.Share
+
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Canvas
+
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.media.AudioAttributes
-import android.media.SoundPool
+
 import android.os.Build
 import android.os.Bundle
+import android.graphics.Canvas
+import android.media.SoundPool
 import android.os.Environment
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -96,6 +98,7 @@ import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.rounded.AccountBalance
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddCircleOutline
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.AttachMoney
 import androidx.compose.material.icons.rounded.Badge
 import androidx.compose.material.icons.rounded.Business
@@ -181,6 +184,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
@@ -217,6 +221,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -275,10 +280,16 @@ import com.example.consucalcu.rewards.ui.*
 
 // ========== ACADEMY SYSTEM IMPORTS ==========
 import com.example.consucalcu.academy.*
+import com.example.consucalcu.academy.*
+import com.example.consucalcu.ui.*
+import com.example.consucalcu.features.*
+import androidx.compose.material.icons.rounded.History
 
 // ========== HAPTIC FEEDBACK SYSTEM ==========
 val LocalHapticManager = compositionLocalOf<HapticManager?> { null }
-
+// ========== HAPTIC FEEDBACK SYSTEM ==========
+// =================================================================================================
+// =================================================================================================
 // =================================================================================================
 // MAIN ACTIVITY
 // =================================================================================================
@@ -470,7 +481,8 @@ fun Color.blendWith(other: Color, ratio: Float = 0.5f): Color {
     )
 }
 
-val BD_ZERO = BigDecimal.ZERO; val BD_500 = BigDecimal("500"); val BD_1000 = BigDecimal("1000")
+val BD_ZERO = BigDecimal.ZERO
+val BD_500 = BigDecimal("500")
 fun String.toBD(): BigDecimal = this.replace(",", "").replace("$", "").trim().toBigDecimalOrNull() ?: BD_ZERO
 fun Double.toBD(): BigDecimal = BigDecimal.valueOf(this)
 fun BigDecimal.toCurrency(): String = DecimalFormat("#,###.00").format(this)
@@ -563,12 +575,12 @@ fun calculateAmortizationTable(
 // AZUL PREMIUM - Más profundo y profesional
 val JuicyBlue = Color(0xFF2563EB)        // Azul más sofisticado (de 0xFF0A84FF)
 val JuicyBlueShadow = Color(0xFF1D4ED8)  // Sombra más integrada
-val JuicyBlueGlow = Color(0xFF60A5FA)    // Glow más suave
+
 
 // VERDE ESMERALDA - Menos neón, más premium
 val JuicyGreen = Color(0xFF10B981)       // Verde esmeralda (de 0xFF00E676)
 val JuicyGreenShadow = Color(0xFF059669) // Sombra profunda
-val JuicyGreenGlow = Color(0xFF34D399)   // Glow refinado
+
 
 // NARANJA CÁLIDO - Más sofisticado
 val JuicyOrange = Color(0xFFF97316)      // Naranja cálido (de 0xFFFF6D00)
@@ -820,58 +832,9 @@ fun Modifier.bouncyClick(soundManager: SoundManager? = null, onClick: () -> Unit
  * En lugar de escalar, mueve el botón hacia abajo y reduce la sombra
  * Retorna el estado isPressed para que el Composable pueda ajustar la sombra
  */
-@Composable
-fun rememberPressable3DState(): Pair<Boolean, Modifier> {
-    var isPressed by remember { mutableStateOf(false) }
-    
-    val animSpec = remember { 
-        spring<Float>(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        )
-    }
-    
-    val pressDepth by animateFloatAsState(
-        targetValue = if (isPressed) 4f else 0f, // Cuánto se "hunde"
-        label = "pressDepth",
-        animationSpec = animSpec
-    )
-    
-    val modifier = Modifier
-        .graphicsLayer {
-            translationY = pressDepth // Mueve hacia abajo, no escala
-        }
-        .pointerInput(Unit) {
-            awaitEachGesture {
-                awaitFirstDown(requireUnconsumed = false)
-                isPressed = true
-                waitForUpOrCancellation()
-                isPressed = false
-            }
-        }
-    
-    return Pair(isPressed, modifier)
-}
 
-fun Modifier.shimmerEffect(): Modifier = composed {
-    var size by remember { mutableStateOf(IntSize.Zero) }
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val startOffsetX by transition.animateFloat(
-        initialValue = -2 * size.width.toFloat(), targetValue = 2 * size.width.toFloat(),
-        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Restart), label = "offset"
-    )
-    background(
-        brush = Brush.linearGradient(
-            colors = listOf(
-                Color(0xFFB8B5B5).copy(alpha = 0.2f),
-                Color(0xFF8F8B8B).copy(alpha = 0.4f),
-                Color(0xFFB8B5B5).copy(alpha = 0.2f)
-            ),
-            start = Offset(startOffsetX, 0f),
-            end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
-        )
-    ).onGloballyPositioned { size = it.size }
-}
+
+
 
 /**
  * PREMIUM HAPTIC FEEDBACK SYSTEM
@@ -1791,6 +1754,51 @@ object FinancialEngine {
         "CONSUPAGO" to BigDecimal("1.9954353")
     )
 
+    // Reglas de Validación de Plazo y Monto Mínimo (2026)
+    fun isValidTermAndAmount(product: String, term: Int, amount: BigDecimal): Boolean {
+        if (amount <= BigDecimal.ZERO) return false
+        
+        return when (product) {
+            "MASNOMINA" -> {
+                // Plazos de 24, 36, 48 y 60, monto mínimo de 8,000 pesos a cualquier plazo.
+                if (term !in listOf(24, 36, 48, 60)) return false
+                amount >= BigDecimal("8000")
+            }
+            "CONSUPAGO" -> {
+                // 12 o 24 meses -> min 35k
+                // 36 o 48 meses -> min 15k
+                // 54 o 60 -> min 10k
+                when (term) {
+                    12, 24 -> amount >= BigDecimal("35000")
+                    36, 48 -> amount >= BigDecimal("15000")
+                    54, 60 -> amount >= BigDecimal("10000")
+                    else -> false
+                }
+            }
+            "OPCIPRES" -> {
+                // 36 -> min 70k, 48 -> min 50k, 54 -> min 45k, 60 -> min 30k
+                when (term) {
+                    36 -> amount >= BigDecimal("70000")
+                    48 -> amount >= BigDecimal("50000")
+                    54 -> amount >= BigDecimal("45000")
+                    60 -> amount >= BigDecimal("30000")
+                    else -> false
+                }
+            }
+            "CONSUBANCO" -> {
+                // 36 -> min 145k, 48 -> min 100k, 54 -> min 95k, 60 -> min 40k
+                when (term) {
+                    36 -> amount >= BigDecimal("145000")
+                    48 -> amount >= BigDecimal("100000")
+                    54 -> amount >= BigDecimal("95000")
+                    60 -> amount >= BigDecimal("40000")
+                    else -> false
+                }
+            }
+            else -> true
+        }
+    }
+
     fun calculate(
         prodKey: String,
         value: BigDecimal,
@@ -1986,9 +1994,20 @@ object FinancialEngine {
 // =================================================================================================
 // 10. VIEWMODEL STATE
 // =================================================================================================
+// =================================================================================================
+data class CalculationDraft(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val timestamp: Long = System.currentTimeMillis(),
+    val debts: List<Debt>, // Snapshot
+    val capacity: String,
+    val type: String = "Refinanciamiento"
+)
+
 data class CalculatorUiState(
     val selectedTab: Int = 0,
     val debts: List<Debt> = listOf(Debt()),
+    val history: List<CalculationDraft> = emptyList(), // Historial
+    val showHistory: Boolean = false, // Modal Historial
     val capacityCNCA: String = "",
     val offersCNCA: List<LoanOffer> = emptyList(),
     val newCreditInput: String = "",
@@ -2016,6 +2035,10 @@ data class CalculatorUiState(
     
     // Ticket Generation State
     val isGeneratingTicket: Boolean = false,
+    
+    // New Feature: Shareable Ticket
+    val showTicketPreview: Boolean = false,
+    val activeTicketData: TicketData? = null,
     
     // ========== REWARDS SYSTEM STATE ==========
     val showRewardUnlockOverlay: Boolean = false,
@@ -2164,7 +2187,7 @@ class CalculatorViewModel : ViewModel() {
         saveJob?.cancel()
         saveJob = viewModelScope.launch(Dispatchers.IO) {
             delay(1000) // Debounce de 1 segundo para no saturar disco
-            val s = _uiState.value;
+            val s = _uiState.value
             val prefs = ctx.getSharedPreferences("ConsuCalcuPrefs", Context.MODE_PRIVATE)
             prefs.edit()
                 .putString("debts", gson.toJson(s.debts))
@@ -2427,6 +2450,7 @@ class CalculatorViewModel : ViewModel() {
     }
 
     fun calculateRefinance(ctx: Context, soundManager: SoundManager) {
+        saveToHistory("Refinanciamiento")
         viewModelScope.launch {
             val current = _uiState.value
             val totalDebts = current.debts.sumOf { it.balance.toBD() }
@@ -2444,8 +2468,8 @@ class CalculatorViewModel : ViewModel() {
             _uiState.update { it.copy(isLoading = true, offersCNCA = emptyList()) }
             delay(1500)
             val calculatedOffers = withContext(Dispatchers.Default) {
-                val state = _uiState.value;
-                val cap = state.capacityCNCA.toBD();
+                val state = _uiState.value
+                val cap = state.capacityCNCA.toBD()
                 
                 if (state.clientData.nss.isNotEmpty()) {
                     val nss = state.clientData.nss
@@ -2453,8 +2477,8 @@ class CalculatorViewModel : ViewModel() {
                     }
                 }
 
-                val debtBalance = state.debts.sumOf { it.balance.toBD() };
-                val debts = state.debts.filter { it.balance.toBD() > BD_ZERO };
+                val debtBalance = state.debts.sumOf { it.balance.toBD() }
+                val debts = state.debts.filter { it.balance.toBD() > BD_ZERO }
                 val results = mutableListOf<LoanOffer>()
                 
                 
@@ -2540,7 +2564,7 @@ class CalculatorViewModel : ViewModel() {
                                             offerRet,
                                             config
                                         )
-                                        if (viable && offerRet.amount >= debtBalance) {
+                                        if (viable && offerRet.amount >= debtBalance && FinancialEngine.isValidTermAndAmount(prodKey, term, offerRet.amount)) {
                                             val remnant = offerRet.amount.subtract(debtBalance)
                                             val finalReasons = reasons.toMutableList().apply {
                                                 add("Tasa Preferencial (24+ pagos)")
@@ -2586,7 +2610,7 @@ class CalculatorViewModel : ViewModel() {
                                             offer,
                                             config
                                         )
-                                        if (viable && offer.amount >= debtBalance) {
+                                        if (viable && offer.amount >= debtBalance && FinancialEngine.isValidTermAndAmount(prodKey, term, offer.amount)) {
                                             val remnant = offer.amount.subtract(debtBalance)
                                             results.add(
                                                 offer.copy(
@@ -2634,8 +2658,8 @@ class CalculatorViewModel : ViewModel() {
             _uiState.update { it.copy(isLoading = true, offersNew = emptyList()) }
             delay(1500)
             val calculatedOffers = withContext(Dispatchers.Default) {
-                val state = _uiState.value;
-                val inputVal = state.newCreditInput.toBD();
+                val state = _uiState.value
+                val inputVal = state.newCreditInput.toBD()
                 val results = mutableListOf<LoanOffer>()
                 if (inputVal > BD_ZERO) {
                     FinancialConfig.PRODUCTS.forEach { (prodKey, config) ->
@@ -2643,18 +2667,19 @@ class CalculatorViewModel : ViewModel() {
                             // MODO RETENCIÓN: Solo calcular ofertas de retención para 60 meses
                             // NO SE MUESTRAN OFERTAS TRADICIONALES cuando este modo está activo
                             val term = 60
+                            val step = if (state.isByAmount) BigDecimal("100") else BigDecimal("500")
                             val calcRet = FinancialEngine.calculate(
                                 prodKey,
                                 inputVal,
                                 term,
                                 state.isByAmount,
                                 true,
-                                BigDecimal("100")
+                                step
                             )
                             if (calcRet != null && calcRet.second == "RETENCION") {
                                 val (res, tipo) = calcRet
                                 val minRetNuevo = FinancialEngine.MIN_RET_NUEVO[prodKey] ?: BigDecimal("999999999")
-                                if (res.amount >= minRetNuevo) {
+                                if (res.amount >= minRetNuevo && FinancialEngine.isValidTermAndAmount(prodKey, term, res.amount)) {
                                     results.add(
                                         LoanOffer(
                                             prodKey,
@@ -2674,18 +2699,19 @@ class CalculatorViewModel : ViewModel() {
                         } else {
                             // MODO TRADICIONAL: Calcular todas las ofertas tradicionales
                             config.factorsTrad.keys.forEach { term ->
+                                val step = if (state.isByAmount) BigDecimal("100") else BigDecimal("500")
                                 val calcTrad = FinancialEngine.calculate(
                                     prodKey,
                                     inputVal,
                                     term,
                                     state.isByAmount,
                                     false,
-                                    BigDecimal("100")
+                                    step
                                 )
                                 if (calcTrad != null) {
                                     val (res, tipo) = calcTrad
                                     val minRequired = config.minTermMap[term] ?: config.minGlobal
-                                    if (res.amount >= minRequired && res.amount >= config.minGlobal) {
+                                    if (res.amount >= minRequired && res.amount >= config.minGlobal && FinancialEngine.isValidTermAndAmount(prodKey, term, res.amount)) {
                                         results.add(
                                             LoanOffer(
                                                 prodKey,
@@ -3023,6 +3049,94 @@ CAT: ${o.cat}
     }
     
     // =================================================================================================
+    // HISTORY LOGIC
+    // =================================================================================================
+    fun saveToHistory(type: String) {
+        val state = _uiState.value
+        // Solo guardar si hay datos relevantes
+        if (state.debts.isEmpty() && state.capacityCNCA.isBlank()) return
+        
+        val draft = CalculationDraft(
+            debts = state.debts.map { it.copy() }, // Deep copy
+            capacity = state.capacityCNCA,
+            type = type
+        )
+        // Limitar historial a 10 items
+        val newHistory = (listOf(draft) + state.history).take(10)
+        _uiState.update { it.copy(history = newHistory) }
+    }
+    
+
+
+    fun deleteDraft(draft: CalculationDraft) {
+        _uiState.update { 
+            it.copy(history = it.history - draft) 
+        }
+    }
+
+    fun clearHistory() {
+        _uiState.update { 
+            it.copy(history = emptyList()) 
+        }
+    }
+    
+    fun restoreHistory(draft: CalculationDraft) {
+        _uiState.update { 
+            it.copy(
+                debts = draft.debts,
+                capacityCNCA = draft.capacity,
+                showHistory = false,
+                offersCNCA = emptyList(),
+                selectedTab = if(draft.type == "Refinanciamiento") 0 else 1
+            )
+        }
+    }
+    
+    fun toggleHistory() {
+        _uiState.update { it.copy(showHistory = !it.showHistory) }
+    }
+
+    // =================================================================================================
+    // TICKET SHARING LOGIC
+    // =================================================================================================
+    fun prepareTicketSharing(context: Context, offer: LoanOffer) {
+        val state = _uiState.value
+        val debts = state.debts
+        val totalCurrentPayment = debts.sumOf { it.payment.toBD() }
+        
+        // Formatear datos
+        val savings = if (totalCurrentPayment > BigDecimal.ZERO && state.selectedTab == 0) {
+            val s = totalCurrentPayment.subtract(offer.monthlyPayment).max(BigDecimal.ZERO)
+            "$${s.toCurrency()}"
+        } else {
+             "N/A"
+        }
+        
+        val prevPaymentStr = if (totalCurrentPayment > BigDecimal.ZERO && state.selectedTab == 0) {
+            "${debts.size} Deudas"
+        } else {
+            "Crédito Nuevo"
+        }
+
+        val data = TicketData(
+            clientName = state.clientData.name.ifBlank { "Cliente Preferente" },
+            date = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()),
+            product = offer.product,
+            amount = "$${offer.mainValue.toCurrency()}",
+            payment = "$${offer.monthlyPayment.toCurrency()}",
+            term = offer.term,
+            previousPayment = prevPaymentStr,
+            savings = savings
+        )
+        
+        _uiState.update { it.copy(showTicketPreview = true, activeTicketData = data) }
+    }
+    
+    fun dismissTicketPreview() {
+        _uiState.update { it.copy(showTicketPreview = false, activeTicketData = null) }
+    }
+    
+    // =================================================================================================
     // NEW FEATURES FUNCTIONS
     // =================================================================================================
     
@@ -3138,6 +3252,18 @@ fun ConsuCalcuApp(
                             scrolledContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         actions = {
+                            // History Button
+                            IconButton(onClick = { 
+                                soundManager.play("pop")
+                                viewModel.toggleHistory()
+                            }) {
+                                Icon(
+                                    Icons.Rounded.History,
+                                    contentDescription = "Historial",
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+
                             // ========== AVATAR ACTIVO ==========
                             val activeAvatar = remember(rewardsState.active.currentAvatar) {
                                 AvatarCatalog.getAvatarById(rewardsState.active.currentAvatar)
@@ -3353,8 +3479,8 @@ fun ConsuCalcuApp(
                             Box(
                                     modifier = Modifier
                                     .align(Alignment.BottomStart)
-                                    .offset(x = (indicatorOffset * (LocalContext.current.resources.displayMetrics.widthPixels / 4f / LocalContext.current.resources.displayMetrics.density)).dp)
-                                    .width((LocalContext.current.resources.displayMetrics.widthPixels / 4f / LocalContext.current.resources.displayMetrics.density).dp)
+                                    .offset(x = (indicatorOffset * (LocalConfiguration.current.screenWidthDp.toFloat() / 4f)).dp)
+                                    .width((LocalConfiguration.current.screenWidthDp.toFloat() / 4f).dp)
                                     .height(3.dp)
                                     .padding(horizontal = 24.dp)
                                     .background(
@@ -3546,6 +3672,58 @@ fun ConsuCalcuApp(
                         onGenerateTicket = { viewModel.generateTicketBackground(ctx) })
                 }
             }
+            
+            // --- NUEVO: TICKET PREVIEW DIALOG ---
+            if (state.showTicketPreview && state.activeTicketData != null) {
+                Dialog(onDismissRequest = { viewModel.dismissTicketPreview() }) {
+                     Column(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                     ) {
+                         DigitalTicket(
+                             data = state.activeTicketData!!,
+                             modifier = Modifier.padding(16.dp)
+                         )
+                         
+                         Spacer(Modifier.height(16.dp))
+                         
+                         JuicyButton(
+                             text = "CERRAR",
+                             color = Color.White,
+                             shadowColor = Color.Gray,
+                             textColor = Color.Black,
+                             height = 48.dp, 
+                             soundManager = soundManager,
+                             onClick = { viewModel.dismissTicketPreview() }
+                         )
+                     }
+                }
+            }
+
+            // HISTORIAL MODAL
+            if (state.showHistory) {
+                ModalBottomSheet(
+                    onDismissRequest = { viewModel.toggleHistory() },
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    HistorySheet(
+                        history = state.history,
+                        onRestore = { draft -> 
+                             viewModel.restoreHistory(draft)
+                             soundManager.play("magic")
+                        },
+                        onClear = { 
+                            viewModel.clearHistory()
+                            soundManager.play("delete")
+                        },
+                        onDelete = { draft ->
+                            viewModel.deleteDraft(draft)
+                             soundManager.play("delete")
+                        }
+                    )
+                }
+            }
 
             if (state.mandatoryConfigNeeded) {
                 MandatoryConfigScreen(viewModel, ctx, soundManager)
@@ -3697,7 +3875,6 @@ fun ConsuCalcuApp(
                     )
                 }
                 // =========================================
-            }
 
             if (state.showSuccessAnim) SuccessOverlay { viewModel.hideSuccess() }
             if (state.showConfetti) {
@@ -3756,13 +3933,13 @@ fun ConsuCalcuApp(
             }
         }
     }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable
-
 // =================================================================================================
 // 13. SCREENS
 // =================================================================================================
+@Composable
 fun RefinanceScreen(
     viewModel: CalculatorViewModel,
     state: CalculatorUiState,
@@ -3771,7 +3948,7 @@ fun RefinanceScreen(
     rewardsState: RewardsState = RewardsState() // NUEVO: Para estilos de tarjetas
 ) {
     val haptic = LocalHapticFeedback.current
-    val totalDebt = state.debts.sumOf { it.balance.toBD() };
+    val totalDebt = state.debts.sumOf { it.balance.toBD() }
     val totalPayment = state.debts.sumOf { it.payment.toBD() }
 
     LazyColumn(
@@ -3987,13 +4164,34 @@ fun RefinanceScreen(
                     )
                 }
             }
-            if (state.offersCNCA.isEmpty()) item { 
-                // Usar nuevo Empty State Ilustrado
-                EmptyStateIllustration(
-                    title = "Sin ofertas de refinanciamiento",
-                    message = "Ajusta tu capacidad o deudas seleccionadas con 'Detalle'",
-                    emoji = "📊"
-                )
+            if (state.offersCNCA.isEmpty()) item {
+                 val hasDebts = state.debts.any { it.balance.toBD() > BigDecimal.ZERO }
+                 if (hasDebts) {
+                     EmptyStateIllustration(
+                         title = "Sin ofertas disponibles",
+                         message = "Revisa los criterios de rechazo abajo",
+                         emoji = "🚦"
+                     )
+                     Spacer(Modifier.height(16.dp))
+                     
+                     val totalPagos = state.debts.sumOf { it.payment.toBD() }
+                     val cap = totalPagos.add(state.capacityCNCA.toBD())
+                     val capOk = cap > BigDecimal.ZERO
+                     
+                     ViabilityTrafficLight(
+                         checks = listOf(
+                             "Liquidez y Capacidad" to capOk,
+                             "Validación Plazos (Extensión)" to false,
+                             "Antigüedad (16+ pagos)" to false
+                         )
+                     )
+                 } else {
+                     EmptyStateIllustration(
+                         title = "Calculadora Inteligente",
+                         message = "Agrega tus deudas para comenzar el análisis",
+                         emoji = "👋"
+                     )
+                 }
             }
         }
         item { Spacer(Modifier.height(80.dp)) }
@@ -5606,181 +5804,7 @@ fun JuicyChip(selected: Boolean, text: String, onClick: () -> Unit) {
     }
 }
 
-@Composable
-fun EmptyState(
-    viewModel: CalculatorViewModel,
-    soundManager: SoundManager,
-    isRefinanceTab: Boolean = true
-) {
-    val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
-    
-    var showLottie by remember { mutableStateOf(false) }
-    var showTexts by remember { mutableStateOf(false) }
-    var showButton by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        
-        showLottie = true
-        delay(200)
-        showTexts = true
-        delay(400)
-        showButton = true
-    }
-    
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AnimatedVisibility(
-            visible = showLottie,
-            enter = scaleIn(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            )
-        ) {
-            val composition by rememberLottieComposition(
-                LottieCompositionSpec.RawRes(R.raw.lottie_empty_search)
-            )
-            val progress by animateLottieCompositionAsState(
-                composition = composition,
-                iterations = LottieConstants.IterateForever
-            )
-            
-            LottieAnimation(
-                composition = composition,
-                progress = { progress },
-                modifier = Modifier
-                    .size(240.dp)
-                    .semantics {
-                        contentDescription = context.getString(R.string.search_empty_content_description)
-                    }
-            )
-        }
-        
-        Spacer(Modifier.height(24.dp))
-        
-        AnimatedVisibility(
-            visible = showTexts,
-            enter = fadeIn(
-                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
-            ) + slideInVertically(
-                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
-                initialOffsetY = { it / 4 }
-            )
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.search_empty_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(Modifier.height(12.dp))
-                
-                Text(
-                    text = stringResource(R.string.search_empty_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-        }
-        
-        Spacer(Modifier.height(32.dp))
-        
-        AnimatedVisibility(
-            visible = showButton,
-            enter = fadeIn(
-                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
-            )
-        ) {
-            EmptyStateActionButton(
-                viewModel = viewModel,
-                soundManager = soundManager,
-                isRefinanceTab = isRefinanceTab,
-                haptic = haptic
-            )
-        }
-    }
-}
 
-@Composable
-private fun EmptyStateActionButton(
-    viewModel: CalculatorViewModel,
-    soundManager: SoundManager,
-    isRefinanceTab: Boolean,
-    haptic: HapticFeedback
-) {
-    var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        )
-    )
-    
-    OutlinedButton(
-        onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            soundManager.play("pop")
-            
-            if (isRefinanceTab) {
-                viewModel.clearRefinanceData()
-            } else {
-                viewModel.clearNewCreditData()
-            }
-        },
-        modifier = Modifier
-            .heightIn(min = 48.dp)
-            .widthIn(min = 200.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
-                    }
-                )
-            },
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Icon(
-            Icons.Rounded.DeleteSweep,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = stringResource(R.string.search_empty_action),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
 
 @Composable
 
@@ -5911,6 +5935,7 @@ fun OfferPreviewModal(
     onDismiss: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val state by viewModel.uiState.collectAsState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -6096,6 +6121,23 @@ fun OfferPreviewModal(
                     }
                 }
                 
+                // --- 📊 NUEVO: Gráfica Antes vs Después (Solo Refinanciamiento) ---
+                val isRefinance = state.selectedTab == 0
+                if (isRefinance) {
+                    val currentPayment = remember(state.debts) { 
+                        state.debts.sumOf { it.payment.toBD() } 
+                    }
+                    
+                    if (currentPayment > BigDecimal.ZERO) {
+                        Spacer(Modifier.height(24.dp))
+                        BeforeAfterChart(
+                            currentPayment = currentPayment,
+                            newPayment = offer.monthlyPayment
+                        )
+                    }
+                }
+                // -----------------------------------------------------------------
+
                 // Razones de aprobación (si existen)
                 if (offer.reasons.isNotEmpty()) {
                     Spacer(Modifier.height(24.dp))
@@ -6146,62 +6188,34 @@ fun OfferPreviewModal(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Botón Generar JPEG
-                    OutlinedButton(
-                        onClick = {
-                            soundManager.play("magic")
-                            viewModel.generateTicketBackground(context)
-                            onDismiss()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp)
-                            .bouncyClick(soundManager) {},
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = JuicyBlue
-                        ),
-                        border = BorderStroke(2.dp, JuicyBlue)
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ReceiptLong,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "GENERAR\nJPEG",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 14.sp
-                        )
+                    // Botón Compartir Ticket
+                    Box(Modifier.weight(0.35f)) {
+                         JuicyButton(
+                            text = "",
+                            icon = Icons.Rounded.Share,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shadowColor = MaterialTheme.colorScheme.outline.copy(alpha=0.2f),
+                            textColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            height = 56.dp,
+                            soundManager = soundManager
+                         ) {
+                             // Generar y Compartir Ticket (Simulado visualmente por ahora o invocar función)
+                             // En una implementación real, esto capturaría el Bitmap del ticket.
+                             // Por ahora, mostraremos un Toast o similar, o abriremos el diálogo de ticket si estuviéramos listos.
+                             soundManager.play("pop")
+                             viewModel.prepareTicketSharing(context, offer)
+                         }
                     }
-                    
-                    // Botón Continuar
-                    Button(
-                        onClick = {
-                            soundManager.play("cash")
-                            onContinue()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp)
-                            .bouncyClick(soundManager) {},
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = JuicyGreen,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Icon(
-                            Icons.Rounded.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "CONTINUAR",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 14.sp
+
+                    Box(Modifier.weight(1f)) {
+                         JuicyButton(
+                            text = "CONTINUAR",
+                            color = JuicyGreen,
+                            shadowColor = JuicyGreenShadow,
+                            textColor = Color.White,
+                            height = 56.dp,
+                            soundManager = soundManager,
+                            onClick = onContinue
                         )
                     }
                 }
@@ -7329,15 +7343,7 @@ fun RPGDialogOverlay(
     }
 }
 
-@Composable
-fun JuicyLottieSuccess(modifier: Modifier = Modifier) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_success))
-    LottieAnimation(
-        composition = composition,
-        iterations = 1,
-        modifier = modifier
-    )
-}
+
 
 @Composable
 fun JuicyLottieLoader(modifier: Modifier = Modifier) {
@@ -7454,8 +7460,8 @@ fun StreakOverlay(streak: Int, onDismiss: () -> Unit) {
  */
 @Composable
 fun LevelUpOverlay(level: Int, reward: String?, onDismiss: () -> Unit) {
-    val GoldColor = Color(0xFFFFD700)
-    val GoldGlow = Color(0xFFFFF176)
+    val goldColor = Color(0xFFFFD700)
+    val goldGlow = Color(0xFFFFF176)
     
     Box(
         modifier = Modifier
@@ -7467,7 +7473,7 @@ fun LevelUpOverlay(level: Int, reward: String?, onDismiss: () -> Unit) {
                         Color(0xFF0A0E27).copy(alpha = 0.98f),
                         Color.Black.copy(alpha = 0.95f)
                     ),
-                    radius = 1500f
+                    radius = 1200f
                 )
             )
             .clickable(
@@ -7476,26 +7482,43 @@ fun LevelUpOverlay(level: Int, reward: String?, onDismiss: () -> Unit) {
             ) { /* Evitar clicks accidentales */ },
         contentAlignment = Alignment.Center
     ) {
+        // Confetti
+        KonfettiView(
+            modifier = Modifier.fillMaxSize(),
+            parties = listOf(
+                Party(
+                    speed = 0f,
+                    maxSpeed = 30f,
+                    damping = 0.9f,
+                    spread = 360,
+                    colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+                    emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+                    position = Position.Relative(0.5, 0.3)
+                )
+            )
+        )
+        
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(32.dp)
         ) {
+            // Animación de nivel subiendo
             val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_levelup))
             LottieAnimation(
                 composition = composition,
-                iterations = LottieConstants.IterateForever,
-                modifier = Modifier.size(240.dp)
+                iterations = 1,
+                modifier = Modifier.size(280.dp)
             )
 
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "¡NIVEL $level ALCANZADO!",
+                text = "¡NIVEL $level!",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 42.sp,
                 fontWeight = FontWeight.Black,
-                color = GoldColor,
+                color = goldColor,
                 textAlign = TextAlign.Center,
                 letterSpacing = 2.sp,
                 modifier = Modifier
@@ -7504,79 +7527,56 @@ fun LevelUpOverlay(level: Int, reward: String?, onDismiss: () -> Unit) {
                         drawRect(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    GoldGlow.copy(alpha = 0.4f),
+                                    goldGlow.copy(alpha = 0.4f),
                                     Color.Transparent
                                 )
                             ),
                             blendMode = androidx.compose.ui.graphics.BlendMode.Screen
                         )
                     }
+                    .graphicsLayer {
+                        shadowElevation = 20f
+                        spotShadowColor = goldColor
+                    }
             )
 
-            Spacer(Modifier.height(32.dp))
-
+            Spacer(Modifier.height(16.dp))
+            
             if (reward != null) {
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFF1A1F3A),
-                    border = BorderStroke(3.dp, GoldColor),
-                    shadowElevation = 16.dp,
+                Text(
+                    text = "Recompensa Desbloqueada:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(Modifier.height(8.dp))
+                
+                Text(
+                    text = reward,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .fillMaxWidth(0.88f)
                         .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFF1A1F3A),
-                                    Color(0xFF0F1426)
-                                )
-                            ),
-                            RoundedCornerShape(24.dp)
+                            color = goldColor.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(28.dp)
-                    ) {
-                        Icon(
-                            Icons.Rounded.EmojiEvents,
-                            contentDescription = null,
-                            tint = GoldColor,
-                            modifier = Modifier.size(56.dp)
+                        .border(
+                            width = 1.dp,
+                            color = goldColor.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(12.dp)
                         )
-
-                        Spacer(Modifier.height(16.dp))
-
-                        Text(
-                            text = "Nuevo Título Desbloqueado",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = GoldGlow,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(Modifier.height(12.dp))
-
-                        Text(
-                            text = reward,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Black,
-                            color = GoldColor,
-                            textAlign = TextAlign.Center,
-                            letterSpacing = 1.sp
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(36.dp))
-            } else {
-                Spacer(Modifier.height(16.dp))
+                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                )
             }
+
+            Spacer(Modifier.height(40.dp))
 
             val buttonGradient = if (reward != null) {
                 Brush.linearGradient(
-                    colors = listOf(GoldColor, Color(0xFFFFB300))
+                    colors = listOf(goldColor, Color(0xFFFFB300))
                 )
             } else {
                 GradientGreen
@@ -7587,23 +7587,33 @@ fun LevelUpOverlay(level: Int, reward: String?, onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(16.dp),
                 elevation = ButtonDefaults.buttonElevation(12.dp),
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(64.dp)
-                    .background(buttonGradient, RoundedCornerShape(18.dp))
+                    .fillMaxWidth(0.65f)
+                    .height(60.dp)
+                    .background(buttonGradient, RoundedCornerShape(16.dp))
             ) {
                 Text(
-                    text = if (reward != null) "RECLAMAR" else "¡CONTINUAR!",
+                    text = if (reward != null) "RECLAMAR" else "¡GENIAL!",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
-                    color = if (reward != null) Color(0xFF1A0F00) else Color.White,
+                    color = Color.White,
                     letterSpacing = 1.5.sp
                 )
             }
         }
     }
+}
+
+@Composable
+fun JuicyLottieSuccess(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_success))
+    LottieAnimation(
+        composition = composition,
+        iterations = 1,
+        modifier = modifier
+    )
 }
 // ==========================================
 // NUEVOS DROPDOWNS "JUICY" CON COLOR
@@ -7801,34 +7811,7 @@ fun JuicyTermDropdown(
 }
 
 
-@Composable
-fun AcademyScreen(viewModel: CalculatorViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.School,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "Academia ConsuCalcu",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Módulos de capacitación próximamente.",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-    }
-}
+
 
 @Composable
 fun RewardUnlockOverlay(
@@ -7838,7 +7821,7 @@ fun RewardUnlockOverlay(
     // Placeholder interaction
     androidx.compose.runtime.LaunchedEffect(Unit) {
         // Auto dismiss for now to unblock
-        kotlinx.coroutines.delay(100)
+        delay(100)
         onDismiss()
     }
 }
@@ -8114,5 +8097,140 @@ fun NSSValidationIndicator(nss: String) {
             tint = if (isValid) JuicyGreen else JuicyRed,
             modifier = Modifier.size(24.dp)
         )
+    }
+}
+
+// =================================================================================================
+// 15. HISTORY SHEET UI
+// =================================================================================================
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HistorySheet(
+    history: List<CalculationDraft>,
+    onRestore: (CalculationDraft) -> Unit,
+    onClear: () -> Unit,
+    onDelete: (CalculationDraft) -> Unit
+) {
+    Column(
+        Modifier
+            .padding(24.dp)
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
+    ) {
+        Row(
+           Modifier.fillMaxWidth(), 
+           horizontalArrangement = Arrangement.SpaceBetween,
+           verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Historial Reciente", 
+                style = MaterialTheme.typography.titleLarge, 
+                fontWeight = FontWeight.Black
+            )
+            if (history.isNotEmpty()) {
+                TextButton(onClick = onClear) {
+                    Text("Limpiar", color = MaterialTheme.colorScheme.error)
+                }
+            } else {
+                Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.primary)
+            }
+        }
+        
+        Spacer(Modifier.height(24.dp))
+        
+        if (history.isEmpty()) {
+            Column(
+                Modifier.fillMaxWidth(), 
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "📭", 
+                    fontSize = 48.sp
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "No hay borradores guardados",
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.5f)
+                )
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(history, key = { it.timestamp }) { draft ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = {
+                            if (it == SwipeToDismissBoxValue.EndToStart) {
+                                onDelete(draft)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    )
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromStartToEnd = false,
+                        backgroundContent = {
+                            val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) 
+                                MaterialTheme.colorScheme.errorContainer 
+                            else Color.Transparent
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                            }
+                        }
+                    ) {
+                        JuicyCard(
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f),
+                            shadowColor = MaterialTheme.colorScheme.outline.copy(alpha=0.3f),
+                            modifier = Modifier.clickable { onRestore(draft) }
+                        ) {
+                            Row(
+                                Modifier.padding(16.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        draft.type, 
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        "${draft.debts.size} deudas • Cap: $${draft.capacity}", 
+                                        style = MaterialTheme.typography.bodySmall, 
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f)
+                                    )
+                                }
+                                
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(draft.timestamp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        java.text.SimpleDateFormat("dd/MM", java.util.Locale.getDefault()).format(draft.timestamp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.4f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
