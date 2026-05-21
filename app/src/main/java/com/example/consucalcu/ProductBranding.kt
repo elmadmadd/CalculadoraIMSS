@@ -13,14 +13,14 @@ object ProductBranding {
 
     // ========== CONSUBANCO ==========
     object Consubanco {
-        val primary = Color(0xFF1565C0)      // Azul corporativo
-        val primaryDark = Color(0xFF0D47A1)
-        val accent = Color(0xFF42A5F5)
-        val shadow = Color(0xFF1565C0).copy(alpha = 0.4f)
+        val primary = Color(0xFF16A34A)      // Verde esmeralda (Green)
+        val primaryDark = Color(0xFF15803D)
+        val accent = Color(0xFF4ADE80)
+        val shadow = Color(0xFF15803D).copy(alpha = 0.4f)
         
         val gradient: Brush
             get() = Brush.horizontalGradient(
-                colors = listOf(primary, primaryDark, Color(0xFF0D47A1))
+                colors = listOf(primary, primaryDark, Color(0xFF14532D))
             )
         
         val gradientVertical: Brush
@@ -31,14 +31,14 @@ object ProductBranding {
 
     // ========== CONSUPAGO ==========
     object Consupago {
-        val primary = Color(0xFF00897B)      // Verde azulado
-        val primaryDark = Color(0xFF00695C)
-        val accent = Color(0xFF4DB6AC)
-        val shadow = Color(0xFF00897B).copy(alpha = 0.4f)
+        val primary = Color(0xFFEA580C)      // Naranja fuerte (Orange)
+        val primaryDark = Color(0xFFC2410C)
+        val accent = Color(0xFFFB923C)
+        val shadow = Color(0xFFC2410C).copy(alpha = 0.4f)
         
         val gradient: Brush
             get() = Brush.horizontalGradient(
-                colors = listOf(primary, primaryDark, Color(0xFF004D40))
+                colors = listOf(primary, primaryDark, Color(0xFF9A3412))
             )
         
         val gradientVertical: Brush
@@ -49,14 +49,14 @@ object ProductBranding {
 
     // ========== OPCIPRES ==========
     object Opcipres {
-        val primary = Color(0xFF6A1B9A)      // Morado
-        val primaryDark = Color(0xFF4A148C)
-        val accent = Color(0xFFAB47BC)
-        val shadow = Color(0xFF6A1B9A).copy(alpha = 0.4f)
+        val primary = Color(0xFFD97706)      // Amarillo / Ámbar dorado (Yellow)
+        val primaryDark = Color(0xFFB45309)
+        val accent = Color(0xFFFBBF24)
+        val shadow = Color(0xFFB45309).copy(alpha = 0.4f)
         
         val gradient: Brush
             get() = Brush.horizontalGradient(
-                colors = listOf(primary, primaryDark, Color(0xFF38006B))
+                colors = listOf(primary, primaryDark, Color(0xFF78350F))
             )
         
         val gradientVertical: Brush
@@ -67,14 +67,14 @@ object ProductBranding {
 
     // ========== MASNOMINA ==========
     object Masnomina {
-        val primary = Color(0xFFE65100)      // Naranja oscuro
-        val primaryDark = Color(0xFFBF360C)
-        val accent = Color(0xFFFF9800)
-        val shadow = Color(0xFFE65100).copy(alpha = 0.4f)
+        val primary = Color(0xFFDC2626)      // Rojo (Red)
+        val primaryDark = Color(0xFFB91C1C)
+        val accent = Color(0xFFF87171)
+        val shadow = Color(0xFFB91C1C).copy(alpha = 0.4f)
         
         val gradient: Brush
             get() = Brush.horizontalGradient(
-                colors = listOf(primary, primaryDark, Color(0xFF8B2500))
+                colors = listOf(primary, primaryDark, Color(0xFF7F1D1D))
             )
         
         val gradientVertical: Brush

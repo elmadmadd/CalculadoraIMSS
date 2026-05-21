@@ -14,7 +14,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "2.2"
+        versionName = "2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -74,5 +74,6 @@ dependencies {
     // 6. Lottie Compose for Juicy Animations
     implementation("com.airbnb.android:lottie-compose:6.3.0")
 
-
+    // 7. Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 }

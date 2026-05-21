@@ -34,9 +34,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 // Importar desde MainActivity
-import com.example.consucalcu.JuicyOrange
-import com.example.consucalcu.JuicyYellow
+import com.example.consucalcu.JuicyGradientCard
 import com.example.consucalcu.SoundManager
+import com.example.consucalcu.JuicyCard
+import com.example.consucalcu.GoldAccent
 
 import kotlinx.coroutines.delay
 
@@ -168,7 +169,6 @@ private fun AcademyMainScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .navigationBarsPadding(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -189,7 +189,7 @@ private fun AcademyMainScreen(
         
         // Spacer final
         item {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }
@@ -199,98 +199,66 @@ private fun AcademyMainScreen(
  */
 @Composable
 private fun AcademyHeader(progress: AcademyProgress) {
-    // Animación de gradiente
-    val infiniteTransition = rememberInfiniteTransition(label = "headerGradient")
-    val gradientOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "gradientOffset"
-    )
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
     
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary,
-                        MaterialTheme.colorScheme.tertiary,
-                        MaterialTheme.colorScheme.primary
-                    ),
-                    start = Offset(gradientOffset * 1000, 0f),
-                    end = Offset((gradientOffset + 1) * 1000, 1000f)
-                )
-            )
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    JuicyGradientCard(
+        brush = if (isDark) {
+            Brush.horizontalGradient(listOf(Color(0xFF1C1C1E), Color(0xFF2C2C2E)))
+        } else {
+            Brush.horizontalGradient(listOf(Color(0xFF1C1C1E), Color(0xFF3A3A3C)))
+        },
+        shadowColor = Color(0xFF0A0A0A)
     ) {
-        // Nivel y XP
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column {
-                Text(
-                    text = "Nivel ${progress.currentLevel}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "${progress.currentXP} / ${progress.xpToNextLevel} XP",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.9f)
-                )
-            }
-            
-            // Racha con animación de escala
-            val streakScale by infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 1.1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(800, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "streakScale"
-            )
-            
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.scale(streakScale)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.LocalFireDepartment,
-                    contentDescription = "Racha",
-                    tint = JuicyOrange,
-                    modifier = Modifier.size(32.dp)
-                )
-                Text(
-                    text = "${progress.streak}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.School,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "ACADEMIA",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.Black
+                        )
+                        Text(
+                            text = "Capacitación profesional",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+                
+                // Módulos completados badge
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = GoldAccent.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = "${progress.completedLessons.size} lecciones",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GoldAccent
+                    )
+                }
             }
         }
-        
-        // Barra de progreso XP con animación
-        LinearProgressIndicator(
-            progress = { progress.currentXP.toFloat() / progress.xpToNextLevel.toFloat() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(12.dp)
-                .clip(RoundedCornerShape(6.dp)),
-            color = Color.White,
-            trackColor = Color.White.copy(alpha = 0.3f)
-        )
     }
 }
 
@@ -303,60 +271,100 @@ private fun ModuleSection(
     onLessonClick: (Lesson) -> Unit,
     soundManager: SoundManager?
 ) {
+    // Progreso animado del módulo
+    val moduleProgress = if (module.totalLessons > 0) {
+        module.completedLessons.toFloat() / module.totalLessons.toFloat()
+    } else 0f
+    
+    val animatedProgress by animateFloatAsState(
+        targetValue = moduleProgress,
+        animationSpec = tween(800, easing = FastOutSlowInEasing),
+        label = "moduleProgress"
+    )
+    
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Header del módulo
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .border(
-                    width = 2.dp,
-                    color = if (module.isUnlocked) module.color else MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        JuicyCard(
+            color = MaterialTheme.colorScheme.surface,
+            shadowColor = if (module.isUnlocked) module.color.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outline
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = module.icon,
-                    fontSize = 32.sp,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(module.color.copy(alpha = 0.2f))
-                        .padding(8.dp)
-                )
+            Column(Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = module.icon,
+                            fontSize = 32.sp,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(module.color.copy(alpha = 0.2f))
+                                .padding(8.dp)
+                        )
+
+                        Column {
+                            Text(
+                                text = module.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (module.isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                            Text(
+                                text = "${module.completedLessons}/${module.totalLessons} lecciones",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    if (!module.isUnlocked) {
+                        Icon(
+                            imageVector = Icons.Rounded.Lock,
+                            contentDescription = "Bloqueado",
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                    } else if (moduleProgress >= 1f) {
+                        // Badge de completado
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(module.color),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Rounded.CheckCircle,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
                 
-                Column {
-                    Text(
-                        text = module.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (module.isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = "${module.completedLessons}/${module.totalLessons} lecciones",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                // Barra de progreso del módulo
+                if (module.isUnlocked) {
+                    Spacer(Modifier.height(12.dp))
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = module.color,
+                        trackColor = module.color.copy(alpha = 0.15f)
                     )
                 }
-            }
-            
-            if (!module.isUnlocked) {
-                Icon(
-                    imageVector = Icons.Rounded.Lock,
-                    contentDescription = "Bloqueado",
-                    tint = MaterialTheme.colorScheme.outline
-                )
             }
         }
         
@@ -461,6 +469,9 @@ private fun LessonNode(
     soundManager: SoundManager?,
     alignment: Alignment.Horizontal
 ) {
+    // Estado para tooltip de nodo bloqueado
+    var showLockedTooltip by remember { mutableStateOf(false) }
+    
     // Animación de escala
     val scale by animateFloatAsState(
         targetValue = if (lesson.isLocked) 0.9f else 1f,
@@ -468,13 +479,13 @@ private fun LessonNode(
         label = "scale"
     )
     
-    // Animación de flotación para lecciones disponibles (no bloqueadas y no completadas)
+    // Animación de flotación más sutil (4dp en vez de 8dp)
     val infiniteTransition = rememberInfiniteTransition(label = "float")
     val floatOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = if (!lesson.isLocked && !lesson.isCompleted) 8f else 0f,
+        targetValue = if (!lesson.isLocked && !lesson.isCompleted) 4f else 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
+            animation = tween(2500, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "floatOffset"
@@ -490,79 +501,154 @@ private fun LessonNode(
         ),
         label = "pulseAlpha"
     )
+
+    // Glow sutil para lecciones disponibles
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = if (!lesson.isLocked && !lesson.isCompleted) 0.4f else 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
+
+    // Auto-dismiss del tooltip
+    LaunchedEffect(showLockedTooltip) {
+        if (showLockedTooltip) {
+            delay(2000)
+            showLockedTooltip = false
+        }
+    }
     
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (alignment == Alignment.Start) Arrangement.Start else Arrangement.End
     ) {
-        Box(
-            modifier = Modifier
-                .scale(scale)
-                .offset(y = (-floatOffset).dp)
-                .size(80.dp)
-                .clip(CircleShape)
-                .then(
-                    if (lesson.isLocked) {
-                        Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                    } else if (lesson.isCompleted) {
-                        Modifier.background(
-                            Brush.linearGradient(
-                                colors = listOf(moduleColor, moduleColor.copy(alpha = 0.7f))
-                            )
-                        )
-                    } else {
-                        // Lección disponible - con efecto de pulso
-                        Modifier
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        moduleColor.copy(alpha = pulseAlpha),
-                                        moduleColor.copy(alpha = 0.2f)
-                                    )
+        // Contenedor con nodo + título
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(120.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .scale(scale)
+                    .offset(y = (-floatOffset).dp)
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .then(
+                        if (lesson.isLocked) {
+                            Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                        } else if (lesson.isCompleted) {
+                            Modifier.background(
+                                Brush.linearGradient(
+                                    colors = listOf(moduleColor, moduleColor.copy(alpha = 0.7f))
                                 )
                             )
-                    }
-                )
-                .border(
-                    width = if (!lesson.isLocked && !lesson.isCompleted) 4.dp else 3.dp,
-                    color = if (lesson.isLocked) MaterialTheme.colorScheme.outline
-                    else moduleColor,
-                    shape = CircleShape
-                )
-                .clickable(enabled = !lesson.isLocked) { onClick() }
-                .padding(12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = when (lesson.type) {
-                        LessonType.QUIZ -> Icons.Rounded.HelpOutline
-                        LessonType.BATTLE -> Icons.Rounded.EmojiEvents
-                        LessonType.RESOURCE -> Icons.Rounded.ReceiptLong
-                        LessonType.PRACTICE -> Icons.Rounded.Loop
-                    },
-                    contentDescription = lesson.type.name,
-                    tint = if (lesson.isLocked) MaterialTheme.colorScheme.onSurfaceVariant
-                    else if (lesson.isCompleted) Color.White
-                    else moduleColor,
-                    modifier = Modifier.size(28.dp)
-                )
-                
-                if (lesson.isCompleted && lesson.stars > 0) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        repeat(lesson.stars) {
-                            Icon(
-                                imageVector = Icons.Rounded.Star,
-                                contentDescription = "Estrella",
-                                tint = JuicyYellow,
-                                modifier = Modifier.size(12.dp)
-                            )
+                        } else {
+                            // Lección disponible - con efecto de pulso
+                            Modifier
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            moduleColor.copy(alpha = pulseAlpha),
+                                            moduleColor.copy(alpha = 0.2f)
+                                        )
+                                    )
+                                )
+                        }
+                    )
+                    .border(
+                        width = if (!lesson.isLocked && !lesson.isCompleted) 3.dp else 2.dp,
+                        color = if (lesson.isLocked) MaterialTheme.colorScheme.outline
+                        else moduleColor,
+                        shape = CircleShape
+                    )
+                    .clickable(enabled = true) {
+                        if (lesson.isLocked) {
+                            showLockedTooltip = true
+                            soundManager?.play("wrong")
+                        } else {
+                            onClick()
                         }
                     }
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    if (lesson.isLocked) {
+                        Icon(
+                            Icons.Rounded.Lock,
+                            contentDescription = "Bloqueado",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = when (lesson.type) {
+                                LessonType.QUIZ -> Icons.Rounded.HelpOutline
+                                LessonType.BATTLE -> Icons.Rounded.EmojiEvents
+                                LessonType.RESOURCE -> Icons.Rounded.ReceiptLong
+                                LessonType.PRACTICE -> Icons.Rounded.Loop
+                            },
+                            contentDescription = lesson.type.name,
+                            tint = if (lesson.isCompleted) Color.White else moduleColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    
+                    if (lesson.isCompleted && lesson.stars > 0) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                            repeat(lesson.stars) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Star,
+                                    contentDescription = "Estrella",
+                                    tint = GoldAccent,
+                                    modifier = Modifier.size(10.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Título de la lección (NUEVO)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = lesson.title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (lesson.isCompleted) FontWeight.Bold else FontWeight.Medium,
+                color = if (lesson.isLocked) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                       else if (lesson.isCompleted) moduleColor
+                       else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 14.sp
+            )
+            
+            // Tooltip de bloqueo (NUEVO)
+            AnimatedVisibility(
+                visible = showLockedTooltip,
+                enter = fadeIn(tween(200)) + expandVertically(tween(200)),
+                exit = fadeOut(tween(300)) + shrinkVertically(tween(300))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.inverseSurface)
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "🔒 Nivel ${lesson.requiredLevel} requerido",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }

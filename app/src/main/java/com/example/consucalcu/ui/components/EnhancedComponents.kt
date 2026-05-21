@@ -9,6 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -504,48 +510,67 @@ fun EmptyStateIllustration(
     emoji: String = "🔍",
     modifier: Modifier = Modifier
 ) {
+    // Map emoji hint to Material icon
+    val icon = when {
+        emoji.contains("🔍") || emoji.contains("search", true) -> Icons.Default.Search
+        emoji.contains("👋") || emoji.contains("wave", true) -> Icons.Default.Person
+        emoji.contains("🚦") || emoji.contains("light", true) -> Icons.Default.Warning
+        else -> Icons.Default.Info
+    }
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Emoji grande animado
-        val infiniteTransition = rememberInfiniteTransition(label = "emptyBounce")
-        val bounce = infiniteTransition.animateFloat(
+        // Subtle float animation
+        val infiniteTransition = rememberInfiniteTransition(label = "emptyFloat")
+        val floatY = infiniteTransition.animateFloat(
             initialValue = 0f,
-            targetValue = -10f,
+            targetValue = -6f,
             animationSpec = infiniteRepeatable(
-                animation = tween(600, easing = FastOutSlowInEasing),
+                animation = tween(2000, easing = FastOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse
             ),
-            label = "bounceAnim"
+            label = "floatAnim"
         )
         
-        Text(
-            text = emoji,
-            fontSize = 64.sp,
-            modifier = Modifier.graphicsLayer {
-                translationY = bounce.value
-            }
-        )
+        // Icon in a circle
+        Box(
+            modifier = Modifier
+                .graphicsLayer { translationY = floatY.value }
+                .size(80.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.material3.Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(36.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        }
         
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
         
         Text(
             text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            letterSpacing = 0.2.sp
         )
         
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         
         Text(
             text = message,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            lineHeight = 18.sp
         )
     }
 }

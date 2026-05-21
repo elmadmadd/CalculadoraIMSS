@@ -35,6 +35,11 @@ import com.example.consucalcu.JuicyBlue
 import com.example.consucalcu.JuicyOrange
 
 import kotlinx.coroutines.delay
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.draw.drawWithContent
 
 /**
  * BATTLE SCREEN - Pantalla de batalla RPG
@@ -55,23 +60,41 @@ fun BattleScreen(
         lesson.questions[battleState.currentQuestionIndex]
     } else null
     
-    // Animación de shake cuando recibe daño
-    val shakeOffset by remember { mutableStateOf(Animatable(0f)) }
+    // Haptics
+    val haptic = LocalHapticFeedback.current
     
+    // Animaciones de inmersión para daño
+    val shakeOffset = remember { Animatable(0f) }
+    var showDamageFlash by remember { mutableStateOf(false) }
+    
+    // Nombres dinámicos de enemigos para mayor inmersión
+    val enemyName = remember(lesson.id) {
+        val names = listOf("Cliente Indeciso", "Evaluador IMSS", "Sistema Lento", "Gestor de Competencia")
+        names[lesson.id.length % names.size]
+    }
+    
+    // Shake violento y flash rojo cuando el jugador pierde HP
     LaunchedEffect(battleState.playerHP) {
-        if (battleState.playerHP < 100) {
-            shakeOffset.animateTo(
-                targetValue = 10f,
-                animationSpec = tween(50)
-            )
-            shakeOffset.animateTo(
-                targetValue = -10f,
-                animationSpec = tween(50)
-            )
-            shakeOffset.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(50)
-            )
+        if (battleState.playerHP < 100 && battleState.playerHP != 0) { // No vibrar al inicio ni si está muerto y ya vibró antes (opcional, pero simplificamos)
+            showDamageFlash = true
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress) // Vibración fuerte
+            
+            // Shake más agresivo (30dp en vez de 10dp) con más rebotes
+            shakeOffset.animateTo(35f, tween(40))
+            shakeOffset.animateTo(-35f, tween(50))
+            shakeOffset.animateTo(25f, tween(40))
+            shakeOffset.animateTo(-25f, tween(50))
+            shakeOffset.animateTo(10f, tween(40))
+            shakeOffset.animateTo(0f, tween(50))
+            
+            showDamageFlash = false
+        }
+    }
+    
+    // Haptic sutil al atacar (cuando el enemigo pierde HP)
+    LaunchedEffect(battleState.enemyHP) {
+        if (battleState.enemyHP < 100) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) // Vibración suave
         }
     }
     
@@ -87,16 +110,22 @@ fun BattleScreen(
                 )
             )
     ) {
+        // --- EFECTO DE CÁMARA (SHAKE) Y FLASH DE DAÑO A TODA LA PANTALLA ---
         val scrollState = rememberScrollState()
         
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .offset(x = shakeOffset.value.dp) // Toda la pantalla tiembla
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding()
+                    .verticalScroll(scrollState)
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 140.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
             // Top bar con botón salir
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -123,13 +152,13 @@ fun BattleScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Enemigo
+                // Enemigo Inmersivo
                 BattleEntity(
-                    name = "Jefe ${lesson.title}",
+                    name = enemyName,
                     hp = battleState.enemyHP,
                     maxHP = 100,
                     isEnemy = true,
-                    emoji = "👹"
+                    emoji = if (enemyName.contains("Cliente")) "🙍‍♂️" else "👹"
                 )
                 
                 // VS
@@ -146,8 +175,7 @@ fun BattleScreen(
                     hp = battleState.playerHP,
                     maxHP = 100,
                     isEnemy = false,
-                    emoji = "🛡️",
-                    shakeOffset = shakeOffset.value
+                    emoji = "🛡️"
                 )
             }
             
@@ -182,6 +210,20 @@ fun BattleScreen(
                     onContinue = onExit
                 )
             }
+        } // cierra el Column superior
+        } // cierra el Box del shakeOffset
+        
+        // RED FLASH OVERLAY (Daño Crítico)
+        AnimatedVisibility(
+            visible = showDamageFlash,
+            enter = fadeIn(tween(50)),
+            exit = fadeOut(tween(400))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(JuicyRed.copy(alpha = 0.35f))
+            )
         }
     }
 }
@@ -417,12 +459,35 @@ private fun BattleResult(
 ) {
     var showConfetti by remember { mutableStateOf(false) }
     
+    // Transición infinita para el efecto holográfico (Foil)
+    val infiniteTransition = rememberInfiniteTransition(label = "foil")
+    val foilOffset by infiniteTransition.animateFloat(
+        initialValue = -1000f,
+        targetValue = 2000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "foilOffset"
+    )
+    
+    // Haptic al ganar
+    val haptic = LocalHapticFeedback.current
+    
     LaunchedEffect(Unit) {
         if (isVictory) {
             delay(300)
             showConfetti = true
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            delay(200)
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        } else {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
+    
+    // Si tienes 3 estrellas, es una carta premium
+    val isPremiumFoil = isVictory && stars == 3
     
     Column(
         modifier = Modifier
@@ -432,8 +497,28 @@ private fun BattleResult(
                 if (isVictory) Brush.linearGradient(
                     colors = listOf(JuicyGreen, JuicyBlue)
                 ) else Brush.linearGradient(
-                    colors = listOf(JuicyRed, JuicyOrange)
+                    colors = listOf(Color(0xFF8B0000), JuicyRed) // Rojo más oscuro
                 )
+            )
+            .then(
+                // EFECTO HOLOGRÁFICO FOIL
+                if (isPremiumFoil) {
+                    Modifier.drawWithContent {
+                        drawContent()
+                        val brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.1f),
+                                Color(0xFFFFFFEE).copy(alpha = 0.5f), // Brillo holográfico amarillo/blanco
+                                Color.White.copy(alpha = 0.1f),
+                                Color.Transparent
+                            ),
+                            start = Offset(foilOffset, 0f),
+                            end = Offset(foilOffset + 400f, size.height)
+                        )
+                        drawRect(brush = brush)
+                    }
+                } else Modifier
             )
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

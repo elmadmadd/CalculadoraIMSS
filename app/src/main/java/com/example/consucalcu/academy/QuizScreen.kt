@@ -32,6 +32,11 @@ import com.example.consucalcu.JuicyYellow
 import com.example.consucalcu.JuicyOrange
 
 import kotlinx.coroutines.delay
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.draw.drawWithContent
 
 /**
  * QUIZ SCREEN - Pantalla de cuestionario normal
@@ -65,7 +70,7 @@ fun QuizScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .navigationBarsPadding()
-                .padding(16.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 140.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Top bar
@@ -101,6 +106,9 @@ fun QuizScreen(
                 )
             }
             
+            // Haptic
+            val haptic = LocalHapticFeedback.current
+            
             // Contenido
             if (!quizCompleted && currentQuestion != null) {
                 val scrollState = rememberScrollState()
@@ -126,6 +134,8 @@ fun QuizScreen(
                         isCorrect = isCorrect,
                         onAnswerSelected = { answer ->
                             if (!showFeedback) {
+                                // Haptic al seleccionar
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedAnswer = answer
                                 isCorrect = answer == currentQuestion.correctAnswer
                                 showFeedback = true
@@ -147,14 +157,28 @@ fun QuizScreen(
             
             // Resultado final
             if (quizCompleted) {
+                val stars = StarRating.calculateStars(correctAnswers, lesson.questions.size)
+                val passed = stars > 0
+                
                 QuizResult(
                     correctAnswers = correctAnswers,
                     totalQuestions = lesson.questions.size,
                     xpEarned = lesson.xpReward,
-                    stars = StarRating.calculateStars(correctAnswers, lesson.questions.size),
+                    stars = stars,
                     onContinue = {
                         onComplete(correctAnswers, lesson.questions.size)
-                    }
+                    },
+                    onRetry = if (!passed) {
+                        {
+                            // Reiniciar el quiz completamente
+                            currentQuestionIndex = 0
+                            correctAnswers = 0
+                            selectedAnswer = null
+                            showFeedback = false
+                            isCorrect = false
+                            quizCompleted = false
+                        }
+                    } else null
                 )
             }
         }
@@ -429,17 +453,43 @@ private fun QuizResult(
     totalQuestions: Int,
     xpEarned: Int,
     stars: Int,
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    onRetry: (() -> Unit)? = null
 ) {
     val percentage = (correctAnswers.toFloat() / totalQuestions.toFloat() * 100).toInt()
     val passed = stars > 0
     
     var showAnimation by remember { mutableStateOf(false) }
     
+    // Transición infinita para el efecto holográfico (Foil)
+    val infiniteTransition = rememberInfiniteTransition(label = "foil")
+    val foilOffset by infiniteTransition.animateFloat(
+        initialValue = -1000f,
+        targetValue = 2000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "foilOffset"
+    )
+    
+    // Haptic al terminar
+    val haptic = LocalHapticFeedback.current
+    
     LaunchedEffect(Unit) {
         delay(300)
         showAnimation = true
+        if (passed) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            delay(200)
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        } else {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
     }
+    
+    // Si tienes 3 estrellas, es una carta premium
+    val isPremiumFoil = passed && stars == 3
     
     Column(
         modifier = Modifier
@@ -452,8 +502,28 @@ private fun QuizResult(
                         MaterialTheme.colorScheme.secondary
                     )
                 ) else Brush.linearGradient(
-                    colors = listOf(JuicyOrange, JuicyRed)
+                    colors = listOf(Color(0xFF8B0000), JuicyRed) // Rojo más oscuro
                 )
+            )
+            .then(
+                // EFECTO HOLOGRÁFICO FOIL
+                if (isPremiumFoil) {
+                    Modifier.drawWithContent {
+                        drawContent()
+                        val brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.1f),
+                                Color(0xFFFFFFEE).copy(alpha = 0.5f), // Brillo holográfico
+                                Color.White.copy(alpha = 0.1f),
+                                Color.Transparent
+                            ),
+                            start = Offset(foilOffset, 0f),
+                            end = Offset(foilOffset + 400f, size.height)
+                        )
+                        drawRect(brush = brush)
+                    }
+                } else Modifier
             )
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -542,22 +612,64 @@ private fun QuizResult(
             }
         }
         
-        // Botón continuar
-        Button(
-            onClick = onContinue,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = if (passed) MaterialTheme.colorScheme.primary else JuicyRed
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = if (passed) "Continuar" else "Volver a intentar",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
+        // Botones de acción
+        if (passed) {
+            // Botón continuar (aprobado)
+            Button(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Continuar",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+        } else {
+            // Botón reintentar (reprobado)
+            if (onRetry != null) {
+                Button(
+                    onClick = onRetry,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = JuicyOrange
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.Loop,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Volver a intentar",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            }
+            
+            // Botón salir (siempre visible al reprobar)
+            TextButton(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Salir",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }

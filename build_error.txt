@@ -1,0 +1,329 @@
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:298:45 Unresolved reference 'HapticManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:298:61 Argument type mismatch: actual type is 'Function0<Nothing?>', but 'Function0<uninferred T (of fun <T> compositionLocalOf)>' was expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:314:33 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:314:44 Unresolved reference 'HapticManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:335:28 Unresolved reference 'CalculatorViewModel'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:335:50 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:338:30 Property delegate must have a 'getValue(Nothing?, KProperty0<ERROR CLASS: Cannot infer argument for type parameter T>)' method. None of the following functions is applicable:
+fun <T> State<T>.getValue(thisObj: Any?, property: KProperty<*>): T
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:338:33 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:338:43 Unresolved reference 'rewardsState'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:338:56 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:341:53 Unresolved reference 'active'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:342:56 Unresolved reference 'active'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:464:17 Unresolved reference 'ConsuCalcuApp'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:799:40 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:831:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:942:5 Syntax error: Expecting an element.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:943:9 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:945:2 Syntax error: Expecting ','.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:951:5 Anonymous functions with names are prohibited.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:967:2 Syntax error: Expecting ','.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:974:5 Anonymous functions with names are prohibited.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1007:2 Syntax error: Expecting ','.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1013:5 Anonymous functions with names are prohibited.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1060:40 Unresolved reference 'light'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1062:40 Unresolved reference 'medium'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1110:1 Syntax error: Expecting ')'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1110:7 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1110:20 Function invocation 'context(...)' expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1110:27 Syntax error: Expecting ')'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1110:27 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1111:5 Modifier 'private' is not applicable to 'local variable'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1112:5 Modifier 'private' is not applicable to 'local variable'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1114:5 Unresolved reference 'init'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1119:9 Captured values cannot be initialized because of possible reassignments.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1124:46 Function invocation 'context(...)' expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1125:47 Function invocation 'context(...)' expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1126:48 Function invocation 'context(...)' expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1127:48 Function invocation 'context(...)' expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1129:51 Function invocation 'context(...)' expected.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1139:31 Variable 'soundPool' must be initialized.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1143:9 Variable 'soundPool' must be initialized.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1218:1 Named object 'TicketGenerator' cannot be local. Try to use an anonymous object instead.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1221:16 Unresolved reference 'LoanOffer'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1222:17 Unresolved reference 'ClientData'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1355:35 Unresolved reference 'amount'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1376:41 Unresolved reference 'name'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1376:67 Unresolved reference 'name'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1377:41 Unresolved reference 'product'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1378:41 Unresolved reference 'term'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1396:35 Unresolved reference 'monthlyPayment'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1400:45 Unresolved reference 'cat'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1401:48 Unresolved reference 'tipoTasa'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1491:6 Class 'LoanOffer' is not abstract and does not implement abstract members:
+fun describeContents(): Int
+fun writeToParcel(p0: Parcel, p1: Int): Unit
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1491:12 'Parcelable' cannot be a local class.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1506:6 Class 'ClientData' is not abstract and does not implement abstract members:
+fun describeContents(): Int
+fun writeToParcel(p0: Parcel, p1: Int): Unit
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1506:12 'Parcelable' cannot be a local class.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1552:1 Modifier 'enum' is not applicable to 'local class'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1553:1 Modifier 'enum' is not applicable to 'local class'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1555:1 Named object 'NormativaIMSS' cannot be local. Try to use an anonymous object instead.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1613:1 Named object 'FinancialConfig' cannot be local. Try to use an anonymous object instead.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1614:10 'Class' is prohibited here.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1615:10 'Class' is prohibited here.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1616:10 'Class' is prohibited here.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1749:1 Named object 'FinancialEngine' cannot be local. Try to use an anonymous object instead.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:1750:10 'Class' is prohibited here.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2481:56 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2490:31 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2665:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2669:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2676:56 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2681:31 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2770:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2774:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2887:56 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2902:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:2926:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3062:26 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3235:24 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3235:35 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3262:55 Unresolved reference 'release'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3267:9 Unresolved reference 'JuicyOnboarding'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3267:40 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3380:58 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3525:50 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3650:33 Unresolved reference 'RefinanceScreen'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3655:33 Unresolved reference 'NewCreditScreen'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3660:33 Unresolved reference 'InsuranceScreen'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3677:21 Unresolved reference 'OfferPreviewModal'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3694:21 Unresolved reference 'ClientFormContent'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3696:40 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3697:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3720:26 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3739:21 Unresolved reference 'HistorySheet'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3741:39 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3743:43 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3747:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3749:38 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3751:43 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3758:17 Unresolved reference 'MandatoryConfigScreen'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3761:21 Unresolved reference 'ConfigDialog'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3765:21 Unresolved reference 'JuicyOnboarding'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3769:21 Unresolved reference 'RPGDialogOverlay'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3772:49 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3778:21 Unresolved reference 'StreakOverlay'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3779:38 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3785:21 Unresolved reference 'LevelUpOverlay'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3786:38 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3796:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3821:54 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3832:54 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3843:54 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3854:54 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3880:25 Unresolved reference 'OffersComparator'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3883:46 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3886:47 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3887:46 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3897:21 Unresolved reference 'AmortizationSimulator'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3901:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3908:40 Unresolved reference 'SuccessOverlay'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3951:17 Unresolved reference 'StreakOverlay'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3952:34 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3958:17 Unresolved reference 'LevelUpOverlay'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3959:34 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:3975:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4018:13 Unresolved reference 'JuicyGradientCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4024:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4098:13 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4102:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4113:46 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4175:70 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4190:41 Unresolved reference 'DropdownCompact'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4196:95 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4202:45 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4208:99 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4209:45 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4215:99 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4222:45 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4227:96 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4228:45 Unresolved reference 'DropdownCompact'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4234:104 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4235:45 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4240:104 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4266:46 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4296:13 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4300:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4313:21 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4316:70 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4394:21 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4403:20 Unresolved reference 'JuicyIconButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4421:17 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4443:21 Unresolved reference 'ResultCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4446:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4447:38 Unresolved reference 'medium'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4451:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4452:38 Unresolved reference 'success'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4499:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4509:13 Unresolved reference 'JuicyGradientCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4515:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4545:13 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4549:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4563:29 Unresolved reference 'JuicyChip'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4567:50 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4571:29 Unresolved reference 'JuicyChip'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4575:50 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4583:25 Unresolved reference 'JuicySliderInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4588:78 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4592:25 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4595:76 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4650:21 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4660:17 Unresolved reference 'JuicyIconButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4678:17 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4699:21 Unresolved reference 'ResultCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4702:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4706:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4731:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4751:13 Unresolved reference 'JuicyGradientCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4757:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4786:13 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4790:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4800:21 Unresolved reference 'JuicyProviderDropdown'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4803:57 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4804:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4811:21 Unresolved reference 'JuicyTermDropdown'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4814:53 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4815:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4821:21 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4824:67 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4836:13 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4840:17 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4865:50 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4888:21 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4891:64 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4909:50 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4931:29 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4934:78 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4970:21 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4979:42 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4985:17 Unresolved reference 'JuicyIconButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:4993:34 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5007:21 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5011:25 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5172:54 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5302:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5305:64 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5316:33 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5319:43 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5319:100 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5326:33 Unresolved reference 'NSSValidationIndicator'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5331:25 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5334:35 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5334:93 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5345:25 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5348:35 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5348:92 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5354:25 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5357:35 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5357:91 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5366:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5369:65 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5378:25 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5381:35 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5381:94 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5387:25 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5390:79 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5399:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5402:27 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5402:86 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5409:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5412:64 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5430:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5433:67 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5440:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5443:71 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5461:17 Unresolved reference 'TransactionTypeSelector'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5463:86 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5470:21 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5473:72 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5482:29 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5485:86 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5491:29 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5494:84 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5503:21 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5506:80 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5531:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5534:68 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5541:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5544:27 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5544:90 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5557:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5560:68 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5567:17 Unresolved reference 'JuicyInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5570:27 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5570:90 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5581:9 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5593:9 Unresolved reference 'JuicyButton'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5662:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5699:43 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5764:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5798:39 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5966:48 Unresolved reference 'light'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:5993:44 Unresolved reference 'tick'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6264:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6422:25 Unresolved reference 'DetailRow'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6435:25 Unresolved reference 'DetailRow'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6447:25 Unresolved reference 'DetailRow'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6536:43 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6952:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6972:17 Unresolved reference 'DropdownCompact'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6978:50 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6991:17 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6997:50 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:6998:17 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7004:50 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7008:17 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7013:47 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7014:17 Unresolved reference 'DropdownCompact'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7020:55 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7021:17 Unresolved reference 'CompactInput'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7026:55 Unresolved reference 'it'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7092:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7123:31 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7159:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7190:43 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7213:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7354:78 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7366:87 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7475:36 Unresolved reference 'tick'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7496:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:7556:30 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/MainActivity.kt:8567:2 Syntax error: Expecting '}'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:40:31 Unresolved reference 'JuicyGradientCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:41:31 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:42:31 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:53:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:86:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:99:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:104:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:116:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:120:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:139:35 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:153:39 Unresolved reference 'play'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:169:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:216:5 Unresolved reference 'JuicyGradientCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:222:9 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:293:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:300:9 Unresolved reference 'JuicyCard'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:304:13 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:368:19 Unresolved reference 'SoundManager'.
+e: file:///Users/madd/AndroidStudioProjects/consucalcu/app/src/main/java/com/example/consucalcu/academy/AcademyUI.kt:446:19 Unresolved reference 'SoundManager'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 10s
