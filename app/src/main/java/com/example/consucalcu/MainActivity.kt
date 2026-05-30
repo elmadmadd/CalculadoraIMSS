@@ -266,6 +266,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -546,77 +547,77 @@ fun calculateAmortizationTable(
 // 2. DESIGN SYSTEM & THEME - PALETA PREMIUM REFINADA
 // =================================================================================================
 
-// AZUL PREMIUM - Más profundo y profesional
-val JuicyBlue = Color(0xFF2563EB)        // Azul más sofisticado (de 0xFF0A84FF)
-val JuicyBlueShadow = Color(0xFF1D4ED8)  // Sombra más integrada
+// AZUL PREMIUM - Más profundo y profesional (reemplazado por Zinc 900 / Slate 800)
+val JuicyBlue = Color(0xFF18181B)
+val JuicyBlueShadow = Color(0xFF27272A)
 
 
-// VERDE ESMERALDA - Menos neón, más premium
-val JuicyGreen = Color(0xFF10B981)       // Verde esmeralda (de 0xFF00E676)
-val JuicyGreenShadow = Color(0xFF059669) // Sombra profunda
+// VERDE ESMERALDA - Menos neón, más premium (reemplazado por Slate 600)
+val JuicyGreen = Color(0xFF475569)
+val JuicyGreenShadow = Color(0xFF334155)
 
 
-// NARANJA CÁLIDO - Más sofisticado
-val JuicyOrange = Color(0xFFF97316)      // Naranja cálido (de 0xFFFF6D00)
-val JuicyOrangeShadow = Color(0xFFEA580C) // Sombra más rica
-val JuicyOrangeGlow = Color(0xFFFB923C)  // Glow suave
+// NARANJA CÁLIDO - Más sofisticado (reemplazado por Slate 500)
+val JuicyOrange = Color(0xFF64748B)
+val JuicyOrangeShadow = Color(0xFF475569)
+val JuicyOrangeGlow = Color(0xFF94A3B8)
 
-// ROJO CORAL - Más elegante
-val JuicyRed = Color(0xFFEF4444)         // Rojo coral (de 0xFFFF1744)
-val JuicyRedShadow = Color(0xFFDC2626)   // Sombra integrada
-val JuicyRedGlow = Color(0xFFF87171)     // Glow suave
+// ROJO CORAL - Más elegante (reemplazado por Rose/Red elegante plano)
+val JuicyRed = Color(0xFFBE123C)
+val JuicyRedShadow = Color(0xFF9F1239)
+val JuicyRedGlow = Color(0xFFFDA4AF)
 
-// PÚRPURA REFINADO - Más profundo
-val JuicyPurple = Color(0xFF8B5CF6)      // Púrpura refinado (de 0xFF7C4DFF)
-val JuicyPurpleShadow = Color(0xFF7C3AED) // Sombra rica
-val JuicyPurpleGlow = Color(0xFFA78BFA)  // Glow elegante
+// PÚRPURA REFINADO - Más profundo (reemplazado por Slate)
+val JuicyPurple = Color(0xFF334155)
+val JuicyPurpleShadow = Color(0xFF1E293B)
+val JuicyPurpleGlow = Color(0xFF64748B)
 
 // COLORES SECUNDARIOS - También refinados
-val JuicyCyan = Color(0xFF06B6D4)        // Cyan más premium (de 0xFF00E5FF)
-val JuicyPink = Color(0xFFEC4899)        // Rosa más elegante (de 0xFFFF4081)
-val JuicyYellow = Color(0xFFFACC15)      // Amarillo dorado (de 0xFFFFEA00)
-val JuicyLime = Color(0xFF84CC16)        // Lima más natural (de 0xFFC6FF00)
+val JuicyCyan = Color(0xFF475569)
+val JuicyPink = Color(0xFF334155)
+val JuicyYellow = Color(0xFF64748B)
+val JuicyLime = Color(0xFF475569)
 
 // GRADIENTES REFINADOS
 val GradientBlue = Brush.linearGradient(
-    colors = listOf(Color(0xFF2563EB), Color(0xFF06B6D4))
+    colors = listOf(Color(0xFF09090B), Color(0xFF27272A))
 )
 val GradientGreen = Brush.linearGradient(
-    colors = listOf(Color(0xFF10B981), Color(0xFF14B8A6))
+    colors = listOf(Color(0xFF27272A), Color(0xFF18181B))
 )
 val GradientOrange = Brush.linearGradient(
-    colors = listOf(Color(0xFFF97316), Color(0xFFFB923C))
+    colors = listOf(Color(0xFF18181B), Color(0xFF09090B))
 )
 val GradientPurple = Brush.linearGradient(
-    colors = listOf(Color(0xFF8B5CF6), Color(0xFFD946EF))
+    colors = listOf(Color(0xFF09090B), Color(0xFF18181B))
 )
 val GradientSunset = Brush.linearGradient(
-    colors = listOf(Color(0xFFF97316), Color(0xFFEF4444), Color(0xFFD946EF))
+    colors = listOf(Color(0xFF09090B), Color(0xFF27272A), Color(0xFF18181B))
 )
 
 // ===== PALETA MONOCROMÁTICA PREMIUM =====
-val BgLight = Color(0xFFF2F2F7)       // Gris claro iOS-style
-val BgDark = Color(0xFF000000)        // Negro puro - ultra premium
+val BgLight = Color(0xFFFAFAFA)       // Gris muy claro Zinc-50
+val BgDark = Color(0xFF09090B)        // Negro Zinc-950
 
 val SurfaceLight = Color(0xFFFFFFFF)  // Blanco puro
-val SurfaceDark = Color(0xFF1C1C1E)   // Gris oscuro neutro (iOS dark)
+val SurfaceDark = Color(0xFF18181B)   // Gris Zinc-900
 
-val TextDark = Color(0xFF1C1C1E)      // Negro neutro para textos
-val TextLight = Color(0xFFF5F5F5)     // Blanco suave para textos
+val TextDark = Color(0xFF09090B)      // Negro Zinc-950
+val TextLight = Color(0xFFF4F4F5)     // Blanco suave Zinc-100
 
-val BorderLight = Color(0xFFE5E5EA)   // Borde gris claro neutro
-val BorderDark = Color(0xFF3A3A3C)    // Borde gris oscuro neutro
+val BorderLight = Color(0xFFE4E4E7)   // Gris claro Zinc-200
+val BorderDark = Color(0xFF27272A)    // Gris oscuro Zinc-800
 
-// DORADO PREMIUM (acento principal de la app)
-val GoldAccent = Color(0xFFD4A855)        // Dorado principal
-val GoldAccentLight = Color(0xFFE8C96E)   // Dorado claro
-val GoldAccentDark = Color(0xFFB8860B)    // Dorado profundo
+// DORADO PREMIUM (acento principal de la app) -> Reemplazado por Champagne/Arena sutil
+val GoldAccent = Color(0xFF8E8A7F)        // Champagne sutil
+val GoldAccentLight = Color(0xFFB5A99B)   // Arena claro
+val GoldAccentDark = Color(0xFF5F5B54)    // Champagne profundo
 
 // COLORES DE ESTADO (funcionales, no identidad visual)
-val SuccessGreen = Color(0xFF34C759)  // Verde iOS
-val WarningOrange = Color(0xFFFF9F0A) // Naranja iOS
-val ErrorRed = Color(0xFFFF3B30)      // Rojo iOS
-val InfoBlue = Color(0xFF007AFF)      // Azul iOS
+val SuccessGreen = Color(0xFF10B981)  // Esmeralda limpio
+val WarningOrange = Color(0xFFF59E0B) // Ámbar limpio
+val ErrorRed = Color(0xFFEF4444)      // Rojo limpio
+val InfoBlue = Color(0xFF3B82F6)      // Azul limpio
 
 private val LightColorScheme = lightColorScheme(
     primary = JuicyBlue,
@@ -1566,10 +1567,10 @@ object FinancialConfig {
     val PRODUCTS = mapOf(
         "CONSUBANCO TRADICIONAL" to ProductData(
             mapOf(
-                60 to BigDecimal("34.47760"),
-                54 to BigDecimal("36.01540"),
-                48 to BigDecimal("38.34810"),
-                36 to BigDecimal("45.12300")
+                60 to BigDecimal("34.47786"),
+                54 to BigDecimal("36.01578"),
+                48 to BigDecimal("38.34620"),
+                36 to BigDecimal("45.12133")
             ),
             RetentionRule(
                 mapOf(60 to BigDecimal("30.95418")),
@@ -1586,15 +1587,15 @@ object FinancialConfig {
             )
         ),
         "CONSUBANCO ESPECIAL" to ProductData(
-            mapOf(60 to BigDecimal("31.62900")),
+            mapOf(60 to BigDecimal("31.62827")),
             RetentionRule(emptyMap(), BigDecimal("9999999")),
-            ProductMeta(2.50, "39.03%", "31.50%"),
+            ProductMeta(2.50, "32.94%", "31.50%"),
             BigDecimal("100000"),
             BigDecimal("1000"),
             mapOf(60 to BigDecimal("100000"))
         ),
         "CONSUBANCO VIP" to ProductData(
-            mapOf(60 to BigDecimal("30.95560")),
+            mapOf(60 to BigDecimal("30.95419")),
             RetentionRule(emptyMap(), BigDecimal("9999999")),
             ProductMeta(2.50, "39.03%", "31.50%"),
             BigDecimal("150000"),
@@ -1603,40 +1604,40 @@ object FinancialConfig {
         ),
         "CONSUPAGO TRADICIONAL" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("36.80720"),
-                54 to BigDecimal("38.28120"),
-                48 to BigDecimal("40.26500"),
-                36 to BigDecimal("46.44700"),
-                24 to BigDecimal("59.66730"),
-                12 to BigDecimal("101.04600")
+                60 to BigDecimal("36.61922"),
+                54 to BigDecimal("38.09840"),
+                48 to BigDecimal("40.07602"),
+                36 to BigDecimal("46.26983"),
+                24 to BigDecimal("59.51904"),
+                12 to BigDecimal("100.90633")
             ),
             retention = RetentionRule(
                  mapOf(60 to BigDecimal("33.25726")),
                  BigDecimal("50000.0")
             ),
-            meta = ProductMeta(2.73, "44.20%", "36.42%"),
-            minGlobal = BigDecimal("10000"),
+            meta = ProductMeta(2.73, "43.62%", "36.42%"),
+            minGlobal = BigDecimal("5000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(
-                60 to BigDecimal("10000"), 54 to BigDecimal("10000"),
-                48 to BigDecimal("15000"), 36 to BigDecimal("15000"),
+                60 to BigDecimal("5000"), 54 to BigDecimal("5000"),
+                48 to BigDecimal("10000"), 36 to BigDecimal("10000"),
                 24 to BigDecimal("25000"), 12 to BigDecimal("25000")
             )
         ),
         "CONSUPAGO ESPECIAL" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("33.25540")),
+            factorsTrad = mapOf(60 to BigDecimal("33.25726")),
             retention = RetentionRule(emptyMap(), BigDecimal("9999999")),
-            meta = ProductMeta(2.73, "44.20%", "36.42%"),
+            meta = ProductMeta(2.73, "43.62%", "36.42%"),
             minGlobal = BigDecimal("50000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(60 to BigDecimal("50000"))
         ),
         "OPCIPRES TRADICIONAL" to ProductData(
             mapOf(
-                60 to BigDecimal("35.98760"),
-                54 to BigDecimal("37.65870"),
-                48 to BigDecimal("39.86460"),
-                36 to BigDecimal("46.31100")
+                60 to BigDecimal("35.98563"),
+                54 to BigDecimal("37.65908"),
+                48 to BigDecimal("39.86519"),
+                36 to BigDecimal("46.31088")
             ),
             RetentionRule(
                 mapOf(60 to BigDecimal("32.22283")),
@@ -1653,7 +1654,7 @@ object FinancialConfig {
             )
         ),
         "OPCIPRES ESPECIAL" to ProductData(
-            mapOf(60 to BigDecimal("32.22380")),
+            mapOf(60 to BigDecimal("32.22283")),
             RetentionRule(emptyMap(), BigDecimal("9999999")),
             ProductMeta(2.67, "42.26%", "34.21%"),
             BigDecimal("75000"),
@@ -1662,16 +1663,23 @@ object FinancialConfig {
         ),
         "MASNOMINA" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("36.91860"),
-                48 to BigDecimal("40.31880"),
-                36 to BigDecimal("46.49680"),
-                24 to BigDecimal("59.69180")
+                60 to BigDecimal("36.77748"),
+                54 to BigDecimal("36.01578"),
+                48 to BigDecimal("40.18578"),
+                36 to BigDecimal("46.37244"),
+                24 to BigDecimal("59.57626")
             ),
             retention = RetentionRule(emptyMap(), BigDecimal("999999999.0")),
-            meta = ProductMeta(2.73, "44.57%", "46.50%"),
-            minGlobal = BigDecimal("8000"),
+            meta = ProductMeta(2.73, "43.96%", "46.50%"),
+            minGlobal = BigDecimal("10000"),
             minInc = BigDecimal("0"),
-            minTermMap = emptyMap()
+            minTermMap = mapOf(
+                60 to BigDecimal("10000"),
+                54 to BigDecimal("75000"),
+                48 to BigDecimal("15000"),
+                36 to BigDecimal("15000"),
+                24 to BigDecimal("20000")
+            )
         )
     )
     val STANDARD_TERMS = listOf("12", "18", "24", "36", "48", "54", "60")
@@ -3269,12 +3277,12 @@ fun ConsuCalcuApp(
                         Surface(
                             // En modo claro usamos un gris claro (background del segmented bar), en oscuro casi negro
                             color = if (isDarkTheme) Color(0xFF151515) else Color(0xFFF2F2F7),
-                            shadowElevation = if (isDarkTheme) 16.dp else 8.dp,
+                            shadowElevation = 0.dp,
                             shape = RoundedCornerShape(32.dp),
                             modifier = Modifier
                                 .border(
                                     width = 1.dp,
-                                    color = if (isDarkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                                    color = if (isDarkTheme) Color(0xFF27272A) else Color(0xFFE4E4E7),
                                     shape = RoundedCornerShape(32.dp)
                                 )
                         ) {
@@ -3295,18 +3303,6 @@ fun ConsuCalcuApp(
 
                                 val tabWidth = islandWidth / 4
 
-                                // Animación continua para el borde brillante giratorio
-                                val infiniteTransition = rememberInfiniteTransition(label = "glowRotate")
-                                val rotation by infiniteTransition.animateFloat(
-                                    initialValue = 0f,
-                                    targetValue = 360f,
-                                    animationSpec = infiniteRepeatable(
-                                        animation = tween(4000, easing = LinearEasing),
-                                        repeatMode = RepeatMode.Restart
-                                    ),
-                                    label = "rotation"
-                                )
-
                                 // === Pastilla (Pill) indicadora detrás de los íconos ===
                                 Box(
                                     modifier = Modifier
@@ -3316,52 +3312,15 @@ fun ConsuCalcuApp(
                                         .height(64.dp)
                                         .padding(6.dp)
                                 ) {
-                                    // Efecto Borde Dorado Animado (ambos temas)
-                                    val innerFill = if (isDarkTheme) Color(0xFF2C2C2E) else Color.White
-                                    val goldColors = if (isDarkTheme) {
-                                        listOf(
-                                            Color(0xFFB8860B), // Dark Goldenrod
-                                            Color(0xFFFFDF00), // Gold
-                                            Color(0xFFFFF8DC), // Brillo puntual claro
-                                            Color(0xFFFFDF00),
-                                            Color(0xFFB8860B)
-                                        )
-                                    } else {
-                                        listOf(
-                                            Color(0xFFD4A855), // Champagne suave
-                                            Color(0xFFE8C96E), // Gold claro
-                                            Color(0xFFFFF5D4), // Brillo puntual
-                                            Color(0xFFE8C96E),
-                                            Color(0xFFD4A855)
-                                        )
-                                    }
-                                    
+                                    val indicatorColor = if (isDarkTheme) Color(0xFF27272A) else Color(0xFFFFFFFF)
+                                    val indicatorBorder = if (isDarkTheme) Color(0xFF3F3F46) else Color(0xFFE4E4E7)
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .clip(RoundedCornerShape(30.dp))
-                                            .drawWithContent {
-                                                rotate(rotation) {
-                                                    drawRect(
-                                                        brush = Brush.sweepGradient(
-                                                            colors = goldColors,
-                                                            center = Offset(size.width / 2, size.height / 2)
-                                                        ),
-                                                        size = Size(size.width * 2f, size.height * 2f),
-                                                        topLeft = Offset(-size.width * 0.5f, -size.height * 0.5f)
-                                                    )
-                                                }
-                                                drawContent()
-                                            }
-                                    ) {
-                                        // Centro de la pastilla que tapa el gradiente, dejando solo el borde dorado
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(2.dp)
-                                                .background(innerFill, RoundedCornerShape(28.dp))
-                                        )
-                                    }
+                                            .background(indicatorColor)
+                                            .border(1.dp, indicatorBorder, RoundedCornerShape(30.dp))
+                                    )
                                 }
 
                                 val onTabClick: (String) -> Unit = { route ->
@@ -5369,93 +5328,50 @@ fun JuicyButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    // Estado de presión para efecto 3D
-    var isPressed by remember { mutableStateOf(false) }
-    
-    // Optimización: Cachear animationSpec
-    val animSpec = remember { 
-        spring<Float>(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        )
-    }
-    
-    // Animación de desplazamiento (Hundimiento sutil)
-    val pressTranslation by animateFloatAsState(
-        targetValue = if (isPressed) 2f else 0f, // Baja solo 2dp
-        label = "pressTranslation",
-        animationSpec = animSpec
-    )
-    
-    val density = LocalDensity.current
-    val haptic = LocalHapticFeedback.current
-    
     Box(
         modifier = modifier
             .height(height)
             .fillMaxWidth()
-            .pointerInput(isLoading) {
+            .bouncyClick(soundManager = soundManager) {
                 if (!isLoading) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
-                        isPressed = true
-                        val up = waitForUpOrCancellation()
-                        isPressed = false
-                        if (up != null) {
-                            soundManager?.play("pop")
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onClick()
-                        }
-                    }
+                    onClick()
                 }
-            },
+            }
+            .background(color, RoundedCornerShape(10.dp))
+            .border(
+                width = 1.dp,
+                color = if (color == Color.Transparent) shadowColor else Color.White.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(10.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
-        // CAPA SOMBRA (FONDO)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 2.dp) // Sombra muy sutil
-                .background(shadowColor, RoundedCornerShape(12.dp))
-        )
-        
-        // CAPA PRINCIPAL (FRENTE)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 2.dp) // Deja espacio abajo proporcional a la sombra
-                .graphicsLayer {
-                    translationY = pressTranslation * density.density
-                }
-                .background(color, RoundedCornerShape(12.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isLoading) {
-                    androidx.compose.material3.CircularProgressIndicator(
-                        color = textColor,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 3.dp
-                    )
-                    Spacer(Modifier.width(12.dp))
-                } else if (icon != null) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconColor ?: textColor,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                }
-                Text(
-                    text = if (isLoading) "PROCESANDO..." else text,
+            if (isLoading) {
+                androidx.compose.material3.CircularProgressIndicator(
                     color = textColor,
-                    fontWeight = FontWeight.Black,
-                    style = MaterialTheme.typography.titleMedium,
-                    letterSpacing = 1.sp
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
                 )
+                Spacer(Modifier.width(8.dp))
+            } else if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor ?: textColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
             }
+            Text(
+                text = if (isLoading) "PROCESANDO..." else text,
+                color = textColor,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+                letterSpacing = 0.5.sp
+            )
         }
     }
 }
@@ -5470,71 +5386,20 @@ fun JuicyIconButton(
     soundManager: SoundManager? = null,
     onClick: () -> Unit
 ) {
-    val realShadow = shadowColor ?: color.copy(alpha = 0.5f)
-    
-    // Estado de presión para efecto 3D
-    var isPressed by remember { mutableStateOf(false) }
-    
-    val animSpec = remember { 
-        spring<Float>(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        )
-    }
-    
-    val pressTranslation by animateFloatAsState(
-        targetValue = if (isPressed) 2f else 0f, 
-        label = "pressTranslation",
-        animationSpec = animSpec
-    )
-    
-    val density = LocalDensity.current
-    val haptic = LocalHapticFeedback.current
-    
     Box(
         modifier = Modifier
             .size(size)
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
-                    isPressed = true
-                    val up = waitForUpOrCancellation()
-                    isPressed = false
-                    if (up != null) {
-                        soundManager?.play("pop")
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onClick()
-                    }
-                }
-            },
+            .bouncyClick(soundManager = soundManager, onClick = onClick)
+            .background(color, RoundedCornerShape(10.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
         contentAlignment = Alignment.Center
     ) {
-        // CAPA SOMBRA (FONDO)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 2.dp)
-                .background(realShadow, RoundedCornerShape(12.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(size * 0.5f)
         )
-        // CAPA PRINCIPAL (FRENTE)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 2.dp)
-                .graphicsLayer {
-                    translationY = pressTranslation * density.density
-                }
-                .background(color, RoundedCornerShape(12.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(size * 0.5f)
-            )
-        }
     }
 }
 
@@ -5570,32 +5435,10 @@ fun JuicyInput(
     val hapticManager = LocalHapticManager.current
     var isFocused by remember { mutableStateOf(false) }
     
-    // Ring scale animation
-    val ringScale by animateFloatAsState(
-        targetValue = if (isFocused) 1f else 0.95f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "ringScale"
-    )
-    
-    // Ring pulse animation (infinite when focused)
-    val infiniteTransition = rememberInfiniteTransition(label = "focusPulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-    
     val borderColor = when {
-        isError -> JuicyRed
-        isFocused -> JuicyBlue
-        else -> MaterialTheme.colorScheme.outline
+        isError -> ErrorRed
+        isFocused -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
     }
     
     Column {
@@ -5607,7 +5450,7 @@ fun JuicyInput(
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isError) JuicyRed else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                color = if (isError) ErrorRed else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
             
@@ -5617,51 +5460,28 @@ fun JuicyInput(
                 Text(
                     text = "$remaining",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (remaining < 5) JuicyOrange else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    color = if (remaining < 5) WarningOrange else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     fontWeight = if (remaining < 5) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier.padding(end = 4.dp, bottom = 4.dp)
                 )
             }
         }
         
-        // Animated focus ring container (Premium Ghost Style)
+        // Clean Minimalist container
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer {
-                    scaleX = 1f // No escalar todo el input, solo el background si se desea
-                    scaleY = 1f
-                }
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // Pulsing glow background (only visible when focused)
-            if (isFocused && !isError) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    JuicyBlue.copy(alpha = 0.1f),
-                                    Color.Transparent
-                                )
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                )
-            }
-            
-            // Input Surface
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .background(
-                        color = if (isFocused) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        color = if (isFocused) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(12.dp)
                     )
                     .border(
-                        width = if (isFocused) 1.dp else 0.dp,
-                        color = if (isError) JuicyRed else if (isFocused) JuicyBlue.copy(alpha = 0.3f) else Color.Transparent,
+                        width = 1.dp,
+                        color = borderColor,
                         shape = RoundedCornerShape(12.dp)
                     )
                     .clip(RoundedCornerShape(12.dp))
@@ -5685,7 +5505,7 @@ fun JuicyInput(
                     Icon(
                         leadingIcon,
                         null,
-                        tint = if (isError) JuicyRed else if (isFocused) JuicyBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        tint = if (isError) ErrorRed else if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -5719,7 +5539,7 @@ fun JuicyInput(
                         .padding(vertical = 12.dp),
                     textStyle = TextStyle(
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.Medium, // Menos bold, más elegante
+                        fontWeight = FontWeight.Medium,
                         fontFamily = FontFamily.SansSerif,
                         color = MaterialTheme.colorScheme.onSurface 
                     ),
@@ -5751,28 +5571,11 @@ fun JuicyInput(
                      Icon(
                         Icons.Rounded.Error,
                         null,
-                        tint = JuicyRed,
+                        tint = ErrorRed,
                         modifier = Modifier.padding(horizontal = 12.dp).size(20.dp)
-                    )
+                     )
                 }
             }
-            
-            // Bottom Indicator Line (Animated)
-             Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(
-                        color = if (isError) JuicyRed else if (isFocused) JuicyBlue else Color.Transparent
-                    )
-                    .graphicsLayer {
-                         scaleX = if (isFocused || isError) 1f else 0f
-                         transformOrigin = TransformOrigin(0.5f, 1f)
-                         alpha = if (isFocused || isError) 1f else 0f
-                    }
-            )
-
         }
     }
 }
@@ -5989,18 +5792,13 @@ fun JuicyCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    Box(modifier = modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier.matchParentSize().padding(top = 2.dp)
-                .background(shadowColor, RoundedCornerShape(12.dp))
-        )
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp)
-                .background(color, RoundedCornerShape(12.dp))
-                .border(1.dp, shadowColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-        ) {
-            content()
-        }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(color, RoundedCornerShape(12.dp))
+            .border(1.dp, shadowColor.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+    ) {
+        content()
     }
 }
 
@@ -6011,18 +5809,13 @@ fun JuicyGradientCard(
     shadowColor: Color,
     content: @Composable () -> Unit
 ) {
-    Box(modifier = modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier.matchParentSize().padding(top = 2.dp)
-                .background(shadowColor, RoundedCornerShape(16.dp))
-        )
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp)
-                .background(brush, RoundedCornerShape(16.dp))
-                .border(1.dp, shadowColor.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-        ) {
-            content()
-        }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(brush, RoundedCornerShape(16.dp))
+            .border(1.dp, shadowColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+    ) {
+        content()
     }
 }
 
@@ -7325,9 +7118,9 @@ fun ConfigFormContent(
     var tempUser by remember { mutableStateOf(state.userProfile.username) }
     var tempPwd by remember { mutableStateOf(state.userProfile.password) }
     var tempSup by remember { mutableStateOf(state.userProfile.supervisor) }
-    
+
     // Validación para botón habilitado
-    val isValid = tempName.isNotBlank() && tempUser.isNotBlank() && 
+    val isValid = tempName.isNotBlank() && tempUser.isNotBlank() &&
                  tempPwd.isNotBlank() && tempSup.isNotBlank()
 
     Column(
@@ -7468,21 +7261,509 @@ fun ConfigDialog(viewModel: CalculatorViewModel, ctx: Context, soundManager: Sou
     }
 }
 
+// =================================================================================================
+// PREMIUM ONBOARDING SCREEN — Primer Ingreso
+// =================================================================================================
+
+/** Datos del asesor recopilados en el onboarding */
+private data class OnboardingData(
+    val name: String = "",
+    val username: String = "",
+    val password: String = "",
+    val supervisor: String = ""
+)
+
 @Composable
 fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundManager: SoundManager) {
+    val isDark = isSystemInDarkTheme()
+    val hapticManager = LocalHapticManager.current
+
+    // ── Estado de pasos (0, 1, 2) ──────────────────────────────────────────────
+    var step by remember { mutableIntStateOf(0) }
+    var data by remember { mutableStateOf(OnboardingData()) }
+
+    // Validaciones por paso
+    val step0Valid = data.name.isNotBlank()
+    val step1Valid = data.username.isNotBlank() && data.password.isNotBlank()
+    val step2Valid = data.supervisor.isNotBlank()
+    val currentStepValid = when (step) {
+        0 -> step0Valid
+        1 -> step1Valid
+        2 -> step2Valid
+        else -> false
+    }
+
+    // ── Mascot escala según el paso ────────────────────────────────────────────
+    val mascotScale by animateFloatAsState(
+        targetValue = if (step == 0) 1f else 0.72f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "mascotScale"
+    )
+
+    val bgBase = if (isDark) BgDark else BgLight
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .background(bgBase)
     ) {
-        JuicyCard(
-            color = MaterialTheme.colorScheme.surface,
-            shadowColor = MaterialTheme.colorScheme.outline
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ConfigFormContent(viewModel, ctx, soundManager, isMandatory = true)
+            // Contenedor deslizable para la parte superior (evita problemas de tamaño al abrir el teclado)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(56.dp))
+
+                // ── Dots de progreso ───────────────────────────────────────────
+                OnboardingStepDots(currentStep = step, totalSteps = 3)
+
+                Spacer(Modifier.height(32.dp))
+
+                // ── Mascot / Hero ──────────────────────────────────────────────
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer { scaleX = mascotScale; scaleY = mascotScale }
+                        .size(110.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.avatar_mascot),
+                        contentDescription = "Buddy",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+
+                Spacer(Modifier.height(28.dp))
+
+                // ── Contenido por paso con Crossfade (más robusto y evita bugs de medición de tamaño) ──
+                androidx.compose.animation.Crossfade(
+                    targetState = step,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    animationSpec = tween(300),
+                    label = "stepContent"
+                ) { targetStep ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        when (targetStep) {
+                            // ── PASO 1: Bienvenida + Nombre ───────────────────
+                            0 -> {
+                                OnboardingStepHeader(
+                                    title = "¡Bienvenido, Asesor!",
+                                    subtitle = "Empecemos conociéndonos.\n¿Cuál es tu nombre completo?",
+                                    isDark = isDark
+                                )
+                                Spacer(Modifier.height(28.dp))
+                                OnboardingInputField(
+                                    label = "NOMBRE COMPLETO",
+                                    value = data.name,
+                                    onValueChange = { data = data.copy(name = it) },
+                                    icon = Icons.Rounded.Person,
+                                    placeholder = "Ej. María García López",
+                                    isDark = isDark,
+                                    imeAction = ImeAction.Done
+                                )
+                            }
+                            // ── PASO 2: Credenciales ──────────────────────────
+                            1 -> {
+                                OnboardingStepHeader(
+                                    title = "Tus Credenciales",
+                                    subtitle = "Se usan para generar el\nlayout de captura automático.",
+                                    isDark = isDark
+                                )
+                                Spacer(Modifier.height(28.dp))
+                                OnboardingInputField(
+                                    label = "USUARIO (BP)",
+                                    value = data.username,
+                                    onValueChange = { data = data.copy(username = it) },
+                                    icon = Icons.Rounded.Badge,
+                                    placeholder = "Ej. MGARCIA01",
+                                    isDark = isDark
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                OnboardingInputField(
+                                    label = "CONTRASEÑA DEL SISTEMA",
+                                    value = data.password,
+                                    onValueChange = { data = data.copy(password = it) },
+                                    icon = Icons.Rounded.Lock,
+                                    placeholder = "Tu contraseña de acceso",
+                                    isDark = isDark,
+                                    imeAction = ImeAction.Done
+                                )
+                            }
+                            // ── PASO 3: Supervisor + Confirmar ────────────────
+                            2 -> {
+                                OnboardingStepHeader(
+                                    title = "Último Detalle",
+                                    subtitle = "¿Quién es tu supervisor?\nAparecerá en tus reportes.",
+                                    isDark = isDark
+                                )
+                                Spacer(Modifier.height(28.dp))
+                                OnboardingInputField(
+                                    label = "NOMBRE DEL SUPERVISOR",
+                                    value = data.supervisor,
+                                    onValueChange = { data = data.copy(supervisor = it) },
+                                    icon = Icons.Rounded.Person,
+                                    placeholder = "Ej. Carlos Ramírez",
+                                    isDark = isDark,
+                                    imeAction = ImeAction.Done
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                OnboardingProfileSummary(data = data, isDark = isDark)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Botones de navegación ──────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Botón ATRÁS
+                if (step > 0) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isDark) Color.White.copy(alpha = 0.08f)
+                                else Color.Black.copy(alpha = 0.06f)
+                            )
+                            .bouncyClick {
+                                hapticManager?.light()
+                                soundManager.play("pop")
+                                if (step > 0) {
+                                    step--
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.KeyboardArrowRight,
+                            contentDescription = "Atrás",
+                            tint = if (isDark) Color.White.copy(0.7f) else Color.Black.copy(0.6f),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .graphicsLayer { scaleX = -1f }
+                        )
+                    }
+                }
+
+                // Botón SIGUIENTE / COMENZAR
+                val isLastStep = step == 2
+                val btnColor = if (currentStepValid) {
+                    if (isLastStep) GoldAccent else JuicyBlue
+                } else {
+                    if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+                }
+                val btnShadow = if (currentStepValid) {
+                    if (isLastStep) GoldAccentDark else JuicyBlueShadow
+                } else {
+                    if (isDark) Color(0xFF1C1C1E) else Color(0xFFD1D1D6)
+                }
+                val btnTextColor = if (currentStepValid) Color.White
+                else if (isDark) Color.White.copy(0.25f) else Color.Black.copy(0.25f)
+
+                JuicyButton(
+                    text = when {
+                        !currentStepValid -> if (isLastStep) "COMPLETA EL CAMPO" else "INGRESA TU DATO"
+                        isLastStep -> "\uD83C\uDF1F  ¡COMENZAR AHORA!"
+                        else -> "SIGUIENTE  →"
+                    },
+                    color = btnColor,
+                    shadowColor = btnShadow,
+                    textColor = btnTextColor,
+                    soundManager = soundManager,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Clic lambda: usar valores dinámicos para evitar condiciones de carrera por clicks rápidos (ej. double-tap)
+                    val isValidDynamic = when (step) {
+                        0 -> data.name.isNotBlank()
+                        1 -> data.username.isNotBlank() && data.password.isNotBlank()
+                        2 -> data.supervisor.isNotBlank()
+                        else -> false
+                    }
+                    if (isValidDynamic) {
+                        if (step == 2) {
+                            soundManager.play("magic")
+                            hapticManager?.success()
+                            viewModel.saveProfile(
+                                ctx,
+                                UserProfile(data.name, data.username, data.password, data.supervisor)
+                            )
+                        } else if (step < 2) {
+                            hapticManager?.medium()
+                            soundManager.play("pop")
+                            step++
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(32.dp))
         }
+    }
+}
+
+// ── Dots de progreso ─────────────────────────────────────────────────────────
+@Composable
+private fun OnboardingStepDots(currentStep: Int, totalSteps: Int) {
+    val isDark = isSystemInDarkTheme()
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        repeat(totalSteps) { i ->
+            val isActive = i == currentStep
+            val isPast = i < currentStep
+            val dotWidth by animateFloatAsState(
+                targetValue = if (isActive) 28f else 8f,
+                animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium),
+                label = "dotWidth$i"
+            )
+            val dotAlpha by animateFloatAsState(
+                targetValue = if (isActive || isPast) 1f else 0.3f,
+                label = "dotAlpha$i"
+            )
+            Box(
+                modifier = Modifier
+                    .height(8.dp)
+                    .width(dotWidth.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when {
+                            isActive -> GoldAccent.copy(alpha = dotAlpha)
+                            isPast -> GoldAccent.copy(alpha = 0.6f)
+                            else -> if (isDark) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
+                        }
+                    )
+            )
+        }
+    }
+}
+
+// ── Header de paso ────────────────────────────────────────────────────────────
+@Composable
+private fun OnboardingStepHeader(title: String, subtitle: String, isDark: Boolean) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Black,
+            color = if (isDark) Color.White else Color(0xFF1C1C1E),
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isDark) Color.White.copy(alpha = 0.55f) else Color(0xFF1C1C1E).copy(alpha = 0.55f),
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
+        )
+    }
+}
+
+// ── Campo de entrada premium para onboarding ──────────────────────────────────
+@Composable
+private fun OnboardingInputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    icon: ImageVector,
+    placeholder: String,
+    isDark: Boolean,
+    imeAction: ImeAction = ImeAction.Next
+) {
+    val hapticManager = LocalHapticManager.current
+    var isFocused by remember { mutableStateOf(false) }
+    val isValid = value.isNotBlank()
+
+    val borderColor by animateColorAsState(
+        targetValue = when {
+            isValid -> SuccessGreen
+            isFocused -> GoldAccent
+            else -> if (isDark) Color.White.copy(0.12f) else Color.Black.copy(0.10f)
+        },
+        animationSpec = tween(250),
+        label = "borderColor"
+    )
+    val bgColor = if (isDark) Color(0xFF18181B) else Color.White
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Label con checkmark
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isDark) Color.White.copy(0.5f) else Color.Black.copy(0.4f),
+                letterSpacing = 1.2.sp
+            )
+            if (isValid) {
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    tint = SuccessGreen,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+        // Superficie del input
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(bgColor)
+                .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                .onFocusChanged {
+                    if (it.isFocused != isFocused) {
+                        isFocused = it.isFocused
+                        if (it.isFocused) hapticManager?.light()
+                    }
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(Modifier.width(16.dp))
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = if (isValid) SuccessGreen
+                       else if (isFocused) GoldAccent
+                       else if (isDark) Color.White.copy(0.35f) else Color.Black.copy(0.3f),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            BasicTextField(
+                value = value,
+                onValueChange = {
+                    if (it != value) hapticManager?.tick()
+                    onValueChange(it)
+                },
+                modifier = Modifier.weight(1f),
+                textStyle = TextStyle(
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily.SansSerif,
+                    color = if (isDark) Color.White else Color(0xFF1C1C1E)
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = imeAction
+                ),
+                singleLine = true,
+                decorationBox = { inner ->
+                    Box(contentAlignment = Alignment.CenterStart) {
+                        if (value.isEmpty()) {
+                            Text(
+                                placeholder,
+                                color = if (isDark) Color.White.copy(0.22f) else Color.Black.copy(0.22f),
+                                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal)
+                            )
+                        }
+                        inner()
+                    }
+                }
+            )
+            // Trailing check animado
+            AnimatedVisibility(visible = isValid) {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 14.dp)
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(SuccessGreen.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = SuccessGreen,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
+            if (!isValid) Spacer(Modifier.width(14.dp))
+        }
+    }
+}
+
+// ── Resumen del perfil (Paso 3) ───────────────────────────────────────────────
+@Composable
+private fun OnboardingProfileSummary(data: OnboardingData, isDark: Boolean) {
+    val cardBg = if (isDark) Color(0xFF18181B) else Color.White
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(cardBg)
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                "RESUMEN DE TU PERFIL",
+                style = MaterialTheme.typography.labelMedium,
+                color = GoldAccent,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            ProfileSummaryRow(Icons.Rounded.Person, "Nombre", data.name, isDark)
+            ProfileSummaryRow(Icons.Rounded.Badge, "Usuario", data.username, isDark)
+            ProfileSummaryRow(Icons.Rounded.Lock, "Contraseña", "••••••", isDark)
+            ProfileSummaryRow(Icons.Rounded.Person, "Supervisor", data.supervisor.ifBlank { "—" }, isDark)
+        }
+    }
+}
+
+@Composable
+private fun ProfileSummaryRow(icon: ImageVector, label: String, value: String, isDark: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon, contentDescription = null,
+            tint = GoldAccent.copy(alpha = 0.7f),
+            modifier = Modifier.size(15.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            "$label:",
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isDark) Color.White.copy(0.45f) else Color.Black.copy(0.45f),
+            modifier = Modifier.width(80.dp)
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isDark) Color.White.copy(0.85f) else Color(0xFF1C1C1E),
+            maxLines = 1
+        )
     }
 }
 
