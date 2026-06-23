@@ -107,6 +107,8 @@ data class JuicyColorScheme(
 // -----------------------------------------------------------------------------
 
 class JuicyHaptics(context: Context) {
+    var isHapticEnabled: Boolean = true
+
     @Suppress("DEPRECATION") // Necesario para compatibilidad con Android < 12
     private val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -116,6 +118,7 @@ class JuicyHaptics(context: Context) {
     }
 
     fun play(style: HapticStyle) {
+        if (!isHapticEnabled) return
         if (!vibrator.hasVibrator()) return
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

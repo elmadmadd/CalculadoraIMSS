@@ -176,6 +176,9 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.VolumeOff
+import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -302,6 +305,17 @@ val LocalHapticManager = compositionLocalOf<HapticManager?> { null }
 // =================================================================================================
 // MAIN ACTIVITY
 // =================================================================================================
+class SettingsAwareHapticFeedback(
+    private val delegate: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    private val isHapticEnabled: () -> Boolean
+) : androidx.compose.ui.hapticfeedback.HapticFeedback {
+    override fun performHapticFeedback(hapticFeedbackType: androidx.compose.ui.hapticfeedback.HapticFeedbackType) {
+        if (isHapticEnabled()) {
+            delegate.performHapticFeedback(hapticFeedbackType)
+        }
+    }
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -312,6 +326,21 @@ class MainActivity : ComponentActivity() {
             // Inicializar Sistemas Premium
             val context = LocalContext.current
             val hapticManager = remember { HapticManager(context) }
+            
+            // Create ViewModel instance
+            val viewModel: CalculatorViewModel = viewModel()
+            val state by viewModel.uiState.collectAsState()
+
+            // Sincronizar estado de vibración con HapticManager
+            LaunchedEffect(state.isHapticEnabled) {
+                hapticManager.isHapticEnabled = state.isHapticEnabled
+            }
+
+            // Envolver HapticFeedback nativo de Compose
+            val standardHaptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+            val customHapticFeedback = remember(standardHaptic, state.isHapticEnabled) {
+                SettingsAwareHapticFeedback(standardHaptic) { state.isHapticEnabled }
+            }
             
             // Pre-load Lottie
             LaunchedEffect(Unit) {
@@ -325,11 +354,9 @@ class MainActivity : ComponentActivity() {
             var isDarkTheme by remember { mutableStateOf(systemDark) }
 
             androidx.compose.runtime.CompositionLocalProvider(
-                LocalHapticManager provides hapticManager
+                LocalHapticManager provides hapticManager,
+                androidx.compose.ui.platform.LocalHapticFeedback provides customHapticFeedback
             ) {
-
-            // Create ViewModel instance
-            val viewModel: CalculatorViewModel = viewModel()
             
 
             
@@ -1054,6 +1081,7 @@ fun NavBarItem(
 class SoundManager(context: Context) {
     private val soundPool: SoundPool
     private val soundMap = mutableMapOf<String, Int>()
+    var isSoundEnabled: Boolean = true
 
     init {
         val attr = AudioAttributes.Builder()
@@ -1078,6 +1106,7 @@ class SoundManager(context: Context) {
     }
 
     fun play(name: String) {
+        if (!isSoundEnabled) return
         val volume = if (name == "villager") 0.6f else 1f
         val rate = if (name == "villager") (0.9f + Math.random().toFloat() * 0.2f) else 1f
         soundMap[name]?.let { soundPool.play(it, volume, volume, 1, 0, rate) }
@@ -1092,6 +1121,8 @@ class SoundManager(context: Context) {
 // HAPTIC FEEDBACK MANAGER - Premium Tactile Experience
 // =================================================================================================
 class HapticManager(context: Context) {
+    var isHapticEnabled: Boolean = true
+
     private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
         vibratorManager?.defaultVibrator
@@ -1104,6 +1135,7 @@ class HapticManager(context: Context) {
      * Light haptic - Para hover, focus, interacciones sutiles
      */
     fun light() {
+        if (!isHapticEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(VibrationEffect.createOneShot(10, 50))
         }
@@ -1113,6 +1145,7 @@ class HapticManager(context: Context) {
      * Medium haptic - Para clicks, toggles, acciones estándar
      */
     fun medium() {
+        if (!isHapticEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(VibrationEffect.createOneShot(20, 100))
         }
@@ -1122,6 +1155,7 @@ class HapticManager(context: Context) {
      * Heavy haptic - Para confirmaciones importantes, errores
      */
     fun heavy() {
+        if (!isHapticEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(VibrationEffect.createOneShot(40, 200))
         }
@@ -1131,6 +1165,7 @@ class HapticManager(context: Context) {
      * Success haptic - Patrón de doble pulse para acciones exitosas
      */
     fun success() {
+        if (!isHapticEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val pattern = longArrayOf(0, 20, 50, 20)
             val amplitudes = intArrayOf(0, 100, 0, 150)
@@ -1142,6 +1177,7 @@ class HapticManager(context: Context) {
      * Error haptic - Patrón de triple pulse para errores
      */
     fun error() {
+        if (!isHapticEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val pattern = longArrayOf(0, 15, 30, 15, 30, 20)
             val amplitudes = intArrayOf(0, 80, 0, 80, 0, 120)
@@ -1153,6 +1189,7 @@ class HapticManager(context: Context) {
      * Tick haptic - Para sliders, incrementos numéricos
      */
     fun tick() {
+        if (!isHapticEnabled) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(VibrationEffect.createOneShot(5, 40))
         }
@@ -2029,8 +2066,11 @@ data class CalculatorUiState(
     val amortizationTable: List<AmortizationRow> = emptyList(),
 
     // Filtro de resultados premium
-    val showPremiumOffers: Boolean = true
+    val showPremiumOffers: Boolean = true,
 
+    // Ajustes globales de sonido y vibración
+    val isSoundEnabled: Boolean = true,
+    val isHapticEnabled: Boolean = true
 )
 
 
@@ -2066,6 +2106,9 @@ class CalculatorViewModel : ViewModel() {
             ClientData::class.java
         ) else ClientData()
 
+        val isSound = prefs.getBoolean("isSoundEnabled", true)
+        val isHaptic = prefs.getBoolean("isHapticEnabled", true)
+
         _uiState.update {
             it.copy(
                 userProfile = p,
@@ -2082,8 +2125,8 @@ class CalculatorViewModel : ViewModel() {
                 insIsNewClient = prefs.getBoolean("insIsNew", false),
                 insAntiquity = prefs.getString("insAntiquity", "") ?: "",
                 
-
-
+                isSoundEnabled = isSound,
+                isHapticEnabled = isHaptic,
 
                 
                 // Verificar si falta configuración obligatoria
@@ -2110,6 +2153,9 @@ class CalculatorViewModel : ViewModel() {
                 .putString("insPensionType", s.insPensionType)
                 .putBoolean("insIsNew", s.insIsNewClient)
                 .putString("insAntiquity", s.insAntiquity)
+                
+                .putBoolean("isSoundEnabled", s.isSoundEnabled)
+                .putBoolean("isHapticEnabled", s.isHapticEnabled)
 
                 .apply()
         }
@@ -2126,6 +2172,14 @@ class CalculatorViewModel : ViewModel() {
                 mandatoryConfigNeeded = false
             )
         }
+    }
+
+    fun toggleSound(enabled: Boolean) {
+        _uiState.update { it.copy(isSoundEnabled = enabled) }
+    }
+
+    fun toggleHaptic(enabled: Boolean) {
+        _uiState.update { it.copy(isHapticEnabled = enabled) }
     }
 
 
@@ -2917,6 +2971,9 @@ fun ConsuCalcuApp(
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
     val soundManager = remember { SoundManager(ctx) }
+    LaunchedEffect(state.isSoundEnabled) {
+        soundManager.isSoundEnabled = state.isSoundEnabled
+    }
 
     var showMenu by remember { mutableStateOf(false) }
 
@@ -3248,6 +3305,122 @@ fun ConsuCalcuApp(
                                         Switch(
                                             checked = isDark,
                                             onCheckedChange = { onToggleTheme() },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = GoldAccent,
+                                                checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
+                                                uncheckedThumbColor = Color(0xFF8E8E93),
+                                                uncheckedTrackColor = Color(0xFF8E8E93).copy(alpha = 0.2f),
+                                                uncheckedBorderColor = Color.Transparent,
+                                                checkedBorderColor = Color.Transparent
+                                            )
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(8.dp))
+                                
+                                // ===== SONIDOS TOGGLE =====
+                                Surface(
+                                    onClick = {
+                                        viewModel.toggleSound(!state.isSoundEnabled)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(
+                                                    if (isDark) Color(0xFF2C2C2E)
+                                                    else Color(0xFFE5E5EA)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                if (state.isSoundEnabled) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp),
+                                                tint = if (state.isSoundEnabled) (if (isDark) GoldAccent else Color(0xFF34C759)) else Color(0xFF8E8E93)
+                                            )
+                                        }
+                                        Spacer(Modifier.width(14.dp))
+                                        Text(
+                                            "Efectos de Sonido",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        
+                                        Switch(
+                                            checked = state.isSoundEnabled,
+                                            onCheckedChange = { viewModel.toggleSound(it) },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = GoldAccent,
+                                                checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
+                                                uncheckedThumbColor = Color(0xFF8E8E93),
+                                                uncheckedTrackColor = Color(0xFF8E8E93).copy(alpha = 0.2f),
+                                                uncheckedBorderColor = Color.Transparent,
+                                                checkedBorderColor = Color.Transparent
+                                            )
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(8.dp))
+                                
+                                // ===== VIBRACION TOGGLE =====
+                                Surface(
+                                    onClick = {
+                                        viewModel.toggleHaptic(!state.isHapticEnabled)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(
+                                                    if (isDark) Color(0xFF2C2C2E)
+                                                    else Color(0xFFE5E5EA)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                Icons.Rounded.Vibration,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp),
+                                                tint = if (state.isHapticEnabled) (if (isDark) GoldAccent else Color(0xFF5856D6)) else Color(0xFF8E8E93)
+                                            )
+                                        }
+                                        Spacer(Modifier.width(14.dp))
+                                        Text(
+                                            "Vibración Háptica",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        
+                                        Switch(
+                                            checked = state.isHapticEnabled,
+                                            onCheckedChange = { viewModel.toggleHaptic(it) },
                                             colors = SwitchDefaults.colors(
                                                 checkedThumbColor = GoldAccent,
                                                 checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
