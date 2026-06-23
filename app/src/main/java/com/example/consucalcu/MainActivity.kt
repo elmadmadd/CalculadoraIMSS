@@ -28,6 +28,7 @@ import androidx.activity.enableEdgeToEdge
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -83,6 +84,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -913,6 +915,7 @@ object HapticPatterns {
 // 5. ANIMATION UTILS
 // =================================================================================================
 fun AnimatedResultItem(
+    key: Any?,
     index: Int,
     content: @Composable () -> Unit
 ) {
@@ -928,7 +931,8 @@ fun AnimatedResultItem(
         )
     }
     
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key) {
+        animProgress.snapTo(0f)
         animProgress.animateTo(1f, animSpec)
     }
     
@@ -3445,7 +3449,8 @@ fun ConsuCalcuApp(
                         modifier = Modifier
                             .fillMaxWidth()
                             .navigationBarsPadding()
-                            .padding(horizontal = 32.dp, vertical = 20.dp)
+                            .padding(horizontal = 32.dp, vertical = 20.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Surface(
                             // En modo claro usamos un gris claro (background del segmented bar), en oscuro casi negro
@@ -3453,6 +3458,8 @@ fun ConsuCalcuApp(
                             shadowElevation = 0.dp,
                             shape = RoundedCornerShape(32.dp),
                             modifier = Modifier
+                                .widthIn(max = 560.dp)
+                                .fillMaxWidth()
                                 .border(
                                     width = 1.dp,
                                     color = if (isDarkTheme) Color(0xFF27272A) else Color(0xFFE4E4E7),
@@ -3564,84 +3571,91 @@ fun ConsuCalcuApp(
                             top = padding.calculateTopPadding(),
                             bottom = 0.dp // El contenido se extiende hasta abajo; la isla flota encima
                         )
-                        .fillMaxSize()
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter
                 ) {
-                    // Helper para saber el índice de una ruta
-                    fun routeToIndex(route: String?) = when (route) {
-                        "refinance"  -> 0
-                        "new_credit" -> 1
-                        "insurance"  -> 2
-                        "academy"    -> 3
-                        else         -> 0
-                    }
-
-                    NavHost(
-                        navController = navController,
-                        startDestination = "refinance",
-                        enterTransition = {
-                            val from  = routeToIndex(initialState.destination.route)
-                            val to    = routeToIndex(targetState.destination.route)
-                            val dir   = if (to >= from)
-                                AnimatedContentTransitionScope.SlideDirection.Left
-                            else
-                                AnimatedContentTransitionScope.SlideDirection.Right
-                            slideIntoContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
-                                fadeIn(tween(300))
-                        },
-                        exitTransition = {
-                            val from  = routeToIndex(initialState.destination.route)
-                            val to    = routeToIndex(targetState.destination.route)
-                            val dir   = if (to >= from)
-                                AnimatedContentTransitionScope.SlideDirection.Left
-                            else
-                                AnimatedContentTransitionScope.SlideDirection.Right
-                            slideOutOfContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
-                                fadeOut(tween(300))
-                        },
-                        // Pop usa la misma lógica (al presionar atrás también compara índices)
-                        popEnterTransition = {
-                            val from  = routeToIndex(initialState.destination.route)
-                            val to    = routeToIndex(targetState.destination.route)
-                            val dir   = if (to >= from)
-                                AnimatedContentTransitionScope.SlideDirection.Left
-                            else
-                                AnimatedContentTransitionScope.SlideDirection.Right
-                            slideIntoContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
-                                fadeIn(tween(300))
-                        },
-                        popExitTransition = {
-                            val from  = routeToIndex(initialState.destination.route)
-                            val to    = routeToIndex(targetState.destination.route)
-                            val dir   = if (to >= from)
-                                AnimatedContentTransitionScope.SlideDirection.Left
-                            else
-                                AnimatedContentTransitionScope.SlideDirection.Right
-                            slideOutOfContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
-                                fadeOut(tween(300))
-                        }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .widthIn(max = 640.dp)
+                            .fillMaxWidth()
                     ) {
-                        composable("refinance") {
-                            AnimatedTabContent(tabKey = 0) {
-                                RefinanceScreen(viewModel, state, soundManager, ctx)
-                            }
+                        // Helper para saber el índice de una ruta
+                        fun routeToIndex(route: String?) = when (route) {
+                            "refinance"  -> 0
+                            "new_credit" -> 1
+                            "insurance"  -> 2
+                            "academy"    -> 3
+                            else         -> 0
                         }
-                        composable("new_credit") {
-                            AnimatedTabContent(tabKey = 1) {
-                                NewCreditScreen(viewModel, state, soundManager, ctx)
+
+                        NavHost(
+                            navController = navController,
+                            startDestination = "refinance",
+                            enterTransition = {
+                                val from  = routeToIndex(initialState.destination.route)
+                                val to    = routeToIndex(targetState.destination.route)
+                                val dir   = if (to >= from)
+                                    AnimatedContentTransitionScope.SlideDirection.Left
+                                else
+                                    AnimatedContentTransitionScope.SlideDirection.Right
+                                slideIntoContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
+                                    fadeIn(tween(300))
+                            },
+                            exitTransition = {
+                                val from  = routeToIndex(initialState.destination.route)
+                                val to    = routeToIndex(targetState.destination.route)
+                                val dir   = if (to >= from)
+                                    AnimatedContentTransitionScope.SlideDirection.Left
+                                else
+                                    AnimatedContentTransitionScope.SlideDirection.Right
+                                slideOutOfContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
+                                    fadeOut(tween(300))
+                            },
+                            // Pop usa la misma lógica (al presionar atrás también compara índices)
+                            popEnterTransition = {
+                                val from  = routeToIndex(initialState.destination.route)
+                                val to    = routeToIndex(targetState.destination.route)
+                                val dir   = if (to >= from)
+                                    AnimatedContentTransitionScope.SlideDirection.Left
+                                else
+                                    AnimatedContentTransitionScope.SlideDirection.Right
+                                slideIntoContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
+                                    fadeIn(tween(300))
+                            },
+                            popExitTransition = {
+                                val from  = routeToIndex(initialState.destination.route)
+                                val to    = routeToIndex(targetState.destination.route)
+                                val dir   = if (to >= from)
+                                    AnimatedContentTransitionScope.SlideDirection.Left
+                                else
+                                    AnimatedContentTransitionScope.SlideDirection.Right
+                                slideOutOfContainer(towards = dir, animationSpec = tween(380, easing = FastOutSlowInEasing)) +
+                                    fadeOut(tween(300))
                             }
-                        }
-                        composable("insurance") {
-                            AnimatedTabContent(tabKey = 2) {
-                                InsuranceScreen(viewModel, state, soundManager, ctx)
+                        ) {
+                            composable("refinance") {
+                                AnimatedTabContent(tabKey = 0) {
+                                    RefinanceScreen(viewModel, state, soundManager, ctx)
+                                }
                             }
-                        }
-                        composable("academy") {
-                            AnimatedTabContent(tabKey = 3) {
-                                AcademyScreen(soundManager = soundManager)
+                            composable("new_credit") {
+                                AnimatedTabContent(tabKey = 1) {
+                                    NewCreditScreen(viewModel, state, soundManager, ctx)
+                                }
+                            }
+                            composable("insurance") {
+                                AnimatedTabContent(tabKey = 2) {
+                                    InsuranceScreen(viewModel, state, soundManager, ctx)
+                                }
+                            }
+                            composable("academy") {
+                                AnimatedTabContent(tabKey = 3) {
+                                    AcademyScreen(soundManager = soundManager)
+                                }
                             }
                         }
                     }
-
                 }
                 }
                 // ================================================================
@@ -4002,7 +4016,7 @@ fun RefinanceScreen(
                 color = MaterialTheme.colorScheme.surface,
                 shadowColor = MaterialTheme.colorScheme.outline
             ) {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(20.dp).animateContentSize()) {
                     Text(
                         "DEUDAS A LIQUIDAR",
                         style = MaterialTheme.typography.titleMedium,
@@ -4369,48 +4383,56 @@ fun RefinanceScreen(
         }
 
         // ========== RESULTADOS AGRUPADOS ==========
-        if (state.isLoading) {
-            item { ResultCardSkeletonList(count = 3) }
-        } else {
-            item {
-                GroupedResultsSection(
-                    offers = state.offersCNCA,
-                    showPremium = state.showPremiumOffers,
-                    onTogglePremium = { viewModel.togglePremiumOffers() },
-                    onSelectOffer = { offer ->
-                        soundManager.play("pop")
-                        viewModel.onSelectOffer(offer)
-                    },
-                    onShowAmortization = { offer ->
-                        soundManager.play("magic")
-                        viewModel.showAmortizationFor(offer)
-                    },
-                    emptyContent = {
-                        val hasDebts = state.debts.any { it.balance.toBD() > BigDecimal.ZERO }
-                        if (hasDebts) {
-                            EmptyStateIllustration(
-                                title = "Sin ofertas disponibles",
-                                message = "Revisa los criterios de rechazo abajo",
-                                emoji = "🚦"
-                            )
-                            Spacer(Modifier.height(16.dp))
-                            val cap = state.debts.sumOf { it.payment.toBD() }.add(state.capacityCNCA.toBD())
-                            ViabilityTrafficLight(
-                                checks = listOf(
-                                    "Liquidez y Capacidad" to (cap > BigDecimal.ZERO),
-                                    "Validación Plazos (Extensión)" to false,
-                                    "Antigüedad (16+ pagos)" to false
+        item {
+            AnimatedContent(
+                targetState = state.isLoading,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                },
+                label = "resultsTransition"
+            ) { loading ->
+                if (loading) {
+                    ResultCardSkeletonList(count = 3)
+                } else {
+                    GroupedResultsSection(
+                        offers = state.offersCNCA,
+                        showPremium = state.showPremiumOffers,
+                        onTogglePremium = { viewModel.togglePremiumOffers() },
+                        onSelectOffer = { offer ->
+                            soundManager.play("pop")
+                            viewModel.onSelectOffer(offer)
+                        },
+                        onShowAmortization = { offer ->
+                            soundManager.play("magic")
+                            viewModel.showAmortizationFor(offer)
+                        },
+                        emptyContent = {
+                            val hasDebts = state.debts.any { it.balance.toBD() > BigDecimal.ZERO }
+                            if (hasDebts) {
+                                EmptyStateIllustration(
+                                    title = "Sin ofertas disponibles",
+                                    message = "Revisa los criterios de rechazo abajo",
+                                    emoji = "🚦"
                                 )
-                            )
-                        } else {
-                            EmptyStateIllustration(
-                                title = "Calculadora Inteligente",
-                                message = "Agrega tus deudas para comenzar el análisis",
-                                emoji = "👋"
-                            )
+                                Spacer(Modifier.height(16.dp))
+                                val cap = state.debts.sumOf { it.payment.toBD() }.add(state.capacityCNCA.toBD())
+                                ViabilityTrafficLight(
+                                    checks = listOf(
+                                        "Liquidez y Capacidad" to (cap > BigDecimal.ZERO),
+                                        "Validación Plazos (Extensión)" to false,
+                                        "Antigüedad (16+ pagos)" to false
+                                    )
+                                )
+                            } else {
+                                EmptyStateIllustration(
+                                    title = "Calculadora Inteligente",
+                                    message = "Agrega tus deudas para comenzar el análisis",
+                                    emoji = "👋"
+                                )
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
         // Spacer para isla flotante
@@ -4482,7 +4504,7 @@ fun NewCreditScreen(
                 color = MaterialTheme.colorScheme.surface,
                 shadowColor = MaterialTheme.colorScheme.outline
             ) {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(20.dp).animateContentSize()) {
                     Text(
                         "DATOS DE COTIZACIÓN",
                         style = MaterialTheme.typography.titleMedium,
@@ -4588,30 +4610,38 @@ fun NewCreditScreen(
         }
 
         // ========== RESULTADOS AGRUPADOS ==========
-        if (state.isLoading) {
-            item { ResultCardSkeletonList(count = 3) }
-        } else {
-            item {
-                GroupedResultsSection(
-                    offers = state.offersNew,
-                    showPremium = state.showPremiumOffers,
-                    onTogglePremium = { viewModel.togglePremiumOffers() },
-                    onSelectOffer = { offer ->
-                        soundManager.play("pop")
-                        viewModel.onSelectOffer(offer)
-                    },
-                    onShowAmortization = { offer ->
-                        soundManager.play("magic")
-                        viewModel.showAmortizationFor(offer)
-                    },
-                    emptyContent = {
-                        EmptyStateIllustration(
-                            title = "Sin ofertas para ti",
-                            message = "Ajusta la capacidad de pago o plazo",
-                            emoji = "🔍"
-                        )
-                    }
-                )
+        item {
+            AnimatedContent(
+                targetState = state.isLoading,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                },
+                label = "resultsTransition"
+            ) { loading ->
+                if (loading) {
+                    ResultCardSkeletonList(count = 3)
+                } else {
+                    GroupedResultsSection(
+                        offers = state.offersNew,
+                        showPremium = state.showPremiumOffers,
+                        onTogglePremium = { viewModel.togglePremiumOffers() },
+                        onSelectOffer = { offer ->
+                            soundManager.play("pop")
+                            viewModel.onSelectOffer(offer)
+                        },
+                        onShowAmortization = { offer ->
+                            soundManager.play("magic")
+                            viewModel.showAmortizationFor(offer)
+                        },
+                        emptyContent = {
+                            EmptyStateIllustration(
+                                title = "Sin ofertas para ti",
+                                message = "Ajusta la capacidad de pago o plazo",
+                                emoji = "🔍"
+                            )
+                        }
+                    )
+                }
             }
         }
         // Spacer para isla flotante
@@ -4736,7 +4766,7 @@ fun InsuranceScreen(
                 color = MaterialTheme.colorScheme.surface,
                 shadowColor = MaterialTheme.colorScheme.outline
             ) {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(20.dp).animateContentSize()) {
                     Text(
                         "DATOS DEL CLIENTE",
                         style = MaterialTheme.typography.titleMedium,
@@ -4899,7 +4929,7 @@ fun InsuranceScreen(
         // Result Card - Diseño Simplificado y Claro
         if (state.insResultStatus.isNotEmpty()) {
             item {
-                AnimatedResultItem(index = 0) {
+                AnimatedResultItem(key = state.insResultStatus, index = 0) {
                     val isRejected = state.insResultStatus.contains("RECHAZADO")
                     val isFree = state.insResultStatus.contains("NO APLICA")
                     val hasCost = state.insCost1Year > BD_ZERO || state.insCostTotal > BD_ZERO
@@ -6706,7 +6736,7 @@ fun GroupedResultsSection(
                         val isPremiumElement = isVariantPremium(offer.product)
                         val isGlobalBest = i == 0 && brandIdx == 0
                         
-                        AnimatedResultItem(index = i) {
+                        AnimatedResultItem(key = offer, index = i) {
                             ResultCard(
                                 offer              = offer.copy(isBest = isGlobalBest),
                                 onClick            = { onSelectOffer(offer) },
@@ -7478,11 +7508,14 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgBase)
+            .background(bgBase),
+        contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .widthIn(max = 500.dp)
+                .fillMaxWidth()
+                .fillMaxHeight()
                 .navigationBarsPadding()
                 .imePadding()
                 .padding(horizontal = 24.dp),
@@ -8553,6 +8586,7 @@ fun HistorySheet(
                     )
 
                     SwipeToDismissBox(
+                        modifier = Modifier.animateItem(),
                         state = dismissState,
                         enableDismissFromStartToEnd = false,
                         backgroundContent = {
