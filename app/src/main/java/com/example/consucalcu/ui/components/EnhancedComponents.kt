@@ -3,6 +3,7 @@ package com.example.consucalcu
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -540,16 +541,56 @@ fun EmptyStateIllustration(
         Box(
             modifier = Modifier
                 .graphicsLayer { translationY = floatY.value }
-                .size(80.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                .size(96.dp),
             contentAlignment = Alignment.Center
         ) {
-            androidx.compose.material3.Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            // Circle Background with Search Icon
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(if (isSystemInDarkTheme()) Color(0xFF1E293B) else Color(0xFFF0F3F8)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp),
+                    tint = if (isSystemInDarkTheme()) Color.White else Color(0xFF0B1F44)
+                )
+            }
+            
+            // Orange rays/sparks on the top right
+            // Spark 1
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = (-8).dp, y = 8.dp)
+                    .width(4.dp)
+                    .height(10.dp)
+                    .graphicsLayer { rotationZ = 45f }
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFF95B00))
+            )
+            // Spark 2
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 2.dp, y = 20.dp)
+                    .width(10.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFF95B00))
+            )
+            // Spark 3
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = (-2).dp, y = (-2).dp)
+                    .width(4.dp)
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFF95B00))
             )
         }
         

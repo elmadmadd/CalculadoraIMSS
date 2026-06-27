@@ -3,6 +3,8 @@ package com.example.consucalcu
 import org.junit.Test
 import org.junit.Assert.*
 import java.math.BigDecimal
+import com.example.consucalcu.data.FinancialConfig
+import com.example.consucalcu.features.FinancialEngine
 
 class ExampleUnitTest {
     

@@ -2,22 +2,29 @@ package com.example.consucalcu.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.consucalcu.ConsuOrange
-import kotlin.math.PI
-import kotlin.math.sin
+import androidx.compose.ui.text.font.FontWeight
 
 // =================================================================================================
 // 1. DATA MODELS & SHAPE
@@ -28,7 +35,6 @@ data class IndentShapeData(
     val yIndent: Float = 0f,
     val width: Float = 0f,
     val height: Float = 0f,
-    val ballOffset: Float = 0f,
     val cornerRadius: Float = 0f
 )
 
@@ -85,9 +91,7 @@ fun Path.addRoundRectWithIndent(
             )
         }
 
-        val start = translate(x = 0f, y = 0f)
         val middle = translate(x = 55f, y = 34f)
-        val end = translate(x = 110f, y = 0f)
 
         val control1 = translate(x = 23f, y = 0f)
         val control2 = translate(x = 39f, y = 34f)
@@ -95,7 +99,7 @@ fun Path.addRoundRectWithIndent(
         val control4 = translate(x = 87f, y = 0f)
 
         cubicTo(control1.x, control1.y, control2.x, control2.y, middle.x, middle.y)
-        cubicTo(control3.x, control3.y, control4.x, control4.y, end.x, end.y)
+        cubicTo(control3.x, control3.y, control4.x, control4.y, (xOffset + indentWidth), 0f)
 
         lineTo(width - cornerRadius, 0f)
         
@@ -143,10 +147,10 @@ fun AnimatedNavigationBar(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     ballColor: Color = ConsuOrange,
-    cornerRadius: Dp = 24.dp,
-    ballSize: Dp = 48.dp,
-    indentWidth: Dp = 80.dp,
-    indentHeight: Dp = 28.dp,
+    cornerRadius: Dp = 28.dp,
+    ballSize: Dp = 44.dp,
+    indentWidth: Dp = 86.dp,
+    indentHeight: Dp = 24.dp,
     content: @Composable () -> Unit
 ) {
     val density = androidx.compose.ui.platform.LocalDensity.current
@@ -165,7 +169,10 @@ fun AnimatedNavigationBar(
     // Animation for indent movement
     val animatedX by animateFloatAsState(
         targetValue = selectedItemOffset.x,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(
+            dampingRatio = 0.8f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "indentX"
     )
 
@@ -178,13 +185,17 @@ fun AnimatedNavigationBar(
         )
     )
 
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier
+            .height(80.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
         // Main Bar Surface with animated Indent
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    shadowElevation = 10f
                     shape = indentShape
                     clip = true
                 }
@@ -197,23 +208,19 @@ fun AnimatedNavigationBar(
                 .offset {
                     androidx.compose.ui.unit.IntOffset(
                         x = (animatedX - with(density) { ballSize.toPx() / 2 }).toInt(),
-                        y = with(density) { - (ballSize.toPx() / 3) }.toInt() // Lifted half way
+                        y = with(density) { -(ballSize.toPx() / 2f) }.toInt()
                     )
                 }
                 .size(ballSize)
+                .shadow(elevation = 8.dp, shape = CircleShape, spotColor = ballColor)
                 .clip(CircleShape)
-                .background(ballColor)
-                .graphicsLayer {
-                    // Small pop animation on index change
-                    val scale = 1f // Could add more complex logic here
-                },
+                .background(ballColor),
             contentAlignment = Alignment.Center
-        ) {
-            // Optional: current icon could be mirrored here inside the ball
-        }
+        ) { }
 
         // Layout for Items
         Layout(
+            modifier = Modifier.fillMaxSize(),
             content = content,
             measurePolicy = MeasurePolicy { measurables, constraints ->
                 val itemWidth = constraints.maxWidth / measurables.size
@@ -233,3 +240,72 @@ fun AnimatedNavigationBar(
         )
     }
 }
+
+@Composable
+fun AnimatedNavBarItem(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selectedColor: Color = Color.White,
+    unselectedColor: Color = Color.Gray
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
+    // Ball center is at ~32dp from top of 72dp bar. Icon center starts at 36dp.
+    // Offset = -(36 - 32) = -4dp to align icon with the floating ball center.
+    val animatedYOffset by animateDpAsState(
+        targetValue = if (selected) (-4).dp else 0.dp,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
+        label = "iconRise"
+    )
+
+    val animatedScale by animateFloatAsState(
+        targetValue = if (selected) 1.1f else 1f,
+        label = "iconScale"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable(
+                onClick = {
+                    if (!selected) {
+                        haptic.performHapticFeedback(
+                            androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove
+                        )
+                        onClick()
+                    }
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        // Icon: centered, animates upward when selected
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier
+                .offset(y = animatedYOffset)
+                .scale(animatedScale)
+                .size(24.dp),
+            tint = if (selected) selectedColor else unselectedColor
+        )
+
+        // Label: only when NOT selected, anchored to the bottom of the tap area
+        if (!selected) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                color = unselectedColor,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 8.dp)
+            )
+        }
+    }
+}
+

@@ -33,11 +33,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-// Importar desde MainActivity
-import com.example.consucalcu.JuicyGradientCard
-import com.example.consucalcu.SoundManager
-import com.example.consucalcu.JuicyCard
+import com.example.consucalcu.ui.components.JuicyGradientCard
+import com.example.consucalcu.ui.components.JuicyCard
 import com.example.consucalcu.GoldAccent
+import com.example.consucalcu.manager.SoundManager
 
 import kotlinx.coroutines.delay
 
@@ -170,7 +169,7 @@ private fun AcademyMainScreen(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Header con stats del usuario
