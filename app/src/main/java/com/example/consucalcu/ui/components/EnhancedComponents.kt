@@ -36,10 +36,10 @@ import androidx.compose.ui.graphics.graphicsLayer
  */
 
 // ========== COLORES GLOBALES ==========
-val SkeletonBaseLight = Color(0xFFE0E0E0)
-val SkeletonHighlightLight = Color(0xFFF5F5F5)
-val SkeletonBaseDark = Color(0xFF424242)
-val SkeletonHighlightDark = Color(0xFF616161)
+val SkeletonBaseLight = ConsuSkeletonLight
+val SkeletonHighlightLight = ConsuSkeletonHighlight
+val SkeletonBaseDark = ConsuSkeletonDark
+val SkeletonHighlightDark = ConsuSkeletonDarkHi
 
 // ========== SKELETON LOADING ==========
 
@@ -48,9 +48,9 @@ val SkeletonHighlightDark = Color(0xFF616161)
  */
 @Composable
 fun shimmerBrush(
-    targetColor: Color = Color(0xFFE2E8F0), // Slate-200
-    highlightColor: Color = Color(0xFFF1F5F9), // Slate-100
-    accentColor: Color = Color(0xFF93C5FD).copy(alpha = 0.3f), // Blue-300 con alpha
+    targetColor: Color = ConsuDividerLight, // Slate-200
+    highlightColor: Color = ConsuSurfaceVarLight, // Slate-100
+    accentColor: Color = ConsuOrangeLight.copy(alpha = 0.3f), // Blue-300 con alpha
     showShimmer: Boolean = true
 ): Brush {
     return if (showShimmer) {
@@ -297,13 +297,13 @@ fun CatBadge(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = if (isPreferencial) {
-        Color(0xFF4CAF50).copy(alpha = 0.15f)
+        ConsuSuccess.copy(alpha = 0.15f)
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
     
     val textColor = if (isPreferencial) {
-        Color(0xFF2E7D32)
+        ConsuSuccess
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -386,7 +386,7 @@ fun SavingsIndicator(
                 text = "-$savingsPercent%",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFF69F0AE) // Verde éxito
+                color = ConsuSuccess // Verde éxito
             )
         }
         
@@ -408,8 +408,8 @@ fun SavingsIndicator(
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF69F0AE),
-                                Color(0xFF00E676)
+                                ConsuSuccess,
+                                ConsuSuccess
                             )
                         )
                     )
@@ -462,7 +462,7 @@ fun AnimatedCurrency(
  */
 @Composable
 fun PulsatingDot(
-    color: Color = Color(0xFF4CAF50),
+    color: Color = ConsuSuccess,
     size: Dp = 8.dp,
     modifier: Modifier = Modifier
 ) {
@@ -549,14 +549,14 @@ fun EmptyStateIllustration(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(if (isSystemInDarkTheme()) Color(0xFF1E293B) else Color(0xFFF0F3F8)),
+                    .background(if (isSystemInDarkTheme()) ConsuDividerDark else ConsuChipBg),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(36.dp),
-                    tint = if (isSystemInDarkTheme()) Color.White else Color(0xFF0B1F44)
+                    tint = if (isSystemInDarkTheme()) Color.White else ConsuNavy
                 )
             }
             
@@ -570,7 +570,7 @@ fun EmptyStateIllustration(
                     .height(10.dp)
                     .graphicsLayer { rotationZ = 45f }
                     .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFFF95B00))
+                    .background(ConsuOrange)
             )
             // Spark 2
             Box(
@@ -580,7 +580,7 @@ fun EmptyStateIllustration(
                     .width(10.dp)
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFFF95B00))
+                    .background(ConsuOrange)
             )
             // Spark 3
             Box(
@@ -590,7 +590,7 @@ fun EmptyStateIllustration(
                     .width(4.dp)
                     .height(10.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFFF95B00))
+                    .background(ConsuOrange)
             )
         }
         

@@ -35,7 +35,7 @@ import androidx.compose.ui.window.DialogProperties
 
 import com.example.consucalcu.ui.components.JuicyGradientCard
 import com.example.consucalcu.ui.components.JuicyCard
-import com.example.consucalcu.GoldAccent
+import com.example.consucalcu.*
 import com.example.consucalcu.manager.SoundManager
 
 import kotlinx.coroutines.delay
@@ -202,11 +202,11 @@ private fun AcademyHeader(progress: AcademyProgress) {
     
     JuicyGradientCard(
         brush = if (isDark) {
-            Brush.horizontalGradient(listOf(Color(0xFF1C1C1E), Color(0xFF2C2C2E)))
+            Brush.horizontalGradient(listOf(ConsuNavy, ConsuSurfaceDark))
         } else {
-            Brush.horizontalGradient(listOf(Color(0xFF1C1C1E), Color(0xFF3A3A3C)))
+            Brush.horizontalGradient(listOf(ConsuNavy, ConsuNavyLight))
         },
-        shadowColor = Color(0xFF0A0A0A)
+        shadowColor = ConsuNavyDark
     ) {
         Column(
             modifier = Modifier.padding(20.dp),

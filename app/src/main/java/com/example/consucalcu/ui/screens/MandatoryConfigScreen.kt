@@ -252,12 +252,12 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                 val btnColor = if (currentStepValid) {
                     if (isLastStep) GoldAccent else JuicyBlue
                 } else {
-                    if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+                    if (isDark) ConsuSurfaceDark else ConsuChipBg
                 }
                 val btnShadow = if (currentStepValid) {
                     if (isLastStep) GoldAccentDark else JuicyBlueShadow
                 } else {
-                    if (isDark) Color(0xFF1C1C1E) else Color(0xFFD1D1D6)
+                    if (isDark) ConsuNavy else ConsuDividerLight
                 }
                 val btnTextColor = if (currentStepValid) Color.White
                 else if (isDark) Color.White.copy(0.25f) else Color.Black.copy(0.25f)
@@ -340,14 +340,14 @@ private fun OnboardingStepHeader(title: String, subtitle: String, isDark: Boolea
             text = title,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Black,
-            color = if (isDark) Color.White else Color(0xFF1C1C1E),
+            color = if (isDark) Color.White else ConsuNavy,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (isDark) Color.White.copy(alpha = 0.55f) else Color(0xFF1C1C1E).copy(alpha = 0.55f),
+            color = if (isDark) Color.White.copy(alpha = 0.55f) else ConsuNavy.copy(alpha = 0.55f),
             textAlign = TextAlign.Center,
             lineHeight = 22.sp
         )
@@ -377,7 +377,7 @@ private fun OnboardingInputField(
         animationSpec = tween(250),
         label = "borderColor"
     )
-    val bgColor = if (isDark) Color(0xFF18181B) else Color.White
+    val bgColor = if (isDark) ConsuNavyDark else Color.White
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -437,7 +437,7 @@ private fun OnboardingInputField(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = FontFamily.SansSerif,
-                    color = if (isDark) Color.White else Color(0xFF1C1C1E)
+                    color = if (isDark) Color.White else ConsuNavy
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
@@ -481,7 +481,7 @@ private fun OnboardingInputField(
 
 @Composable
 private fun OnboardingProfileSummary(data: OnboardingData, isDark: Boolean) {
-    val cardBg = if (isDark) Color(0xFF18181B) else Color.White
+    val cardBg = if (isDark) ConsuNavyDark else Color.White
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -526,7 +526,7 @@ private fun ProfileSummaryRow(icon: ImageVector, label: String, value: String, i
             value,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
-            color = if (isDark) Color.White.copy(0.85f) else Color(0xFF1C1C1E),
+            color = if (isDark) Color.White.copy(0.85f) else ConsuNavy,
             maxLines = 1
         )
     }

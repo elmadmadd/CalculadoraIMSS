@@ -29,9 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import com.example.consucalcu.JuicyBlue
-import com.example.consucalcu.JuicyGreen
-import com.example.consucalcu.R
+import com.example.consucalcu.*
 import java.io.File
 import java.io.FileOutputStream
 
@@ -57,14 +55,14 @@ fun DigitalTicket(
                 .fillMaxWidth()
                 .clip(TicketShape(20.dp.value)) // Forma personalizada con zig-zag abajo (simulado visualmente o simple rounded)
                 .background(Color.White)
-                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(16.dp))
+                .border(1.dp, ConsuDividerLight, RoundedCornerShape(16.dp))
         ) {
             // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
-                    .background(JuicyBlue)
+                    .background(ConsuNavy)
             )
             
             Column(
@@ -126,15 +124,15 @@ fun DigitalTicket(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF5F7FA), RoundedCornerShape(8.dp))
+                        .background(ConsuBgLight, RoundedCornerShape(8.dp))
                         .padding(16.dp)
                 ) {
-                    Text("MONTO A RECIBIR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Text("MONTO A RECIBIR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ConsuTextSecondary)
                     Text(
                         data.amount,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Black,
-                        color = JuicyBlue
+                        color = ConsuNavy
                     )
                 }
                 

@@ -66,11 +66,11 @@ fun InsuranceScreen(
             AnimatedResultItem(index = 0) {
                 JuicyGradientCard(
                     brush = if (isDark) {
-                        Brush.horizontalGradient(listOf(Color(0xFF1C1C1E), Color(0xFF2C2C2E)))
+                        Brush.horizontalGradient(listOf(ConsuNavy, ConsuSurfaceDark))
                     } else {
-                        Brush.horizontalGradient(listOf(Color(0xFF1C1C1E), Color(0xFF3A3A3C)))
+                        Brush.horizontalGradient(listOf(ConsuNavy, ConsuNavyLight))
                     },
-                    shadowColor = Color(0xFF0A0A0A)
+                    shadowColor = ConsuNavyDark
                 ) {
                     Column(Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -292,8 +292,8 @@ fun InsuranceScreen(
                         JuicyButton(
                             text = "CALCULAR",
                             icon = Icons.Outlined.Savings,
-                            color = if (isDark) Color.White else Color(0xFF1C1C1E),
-                            shadowColor = if (isDark) Color(0xFF3A3A3C) else Color(0xFFC7C7CC),
+                            color = if (isDark) Color.White else ConsuNavy,
+                            shadowColor = if (isDark) ConsuNavyLight else ConsuDividerLight,
                             textColor = if (isDark) Color.Black else Color.White,
                             height = 56.dp,
                             isLoading = state.isLoading,

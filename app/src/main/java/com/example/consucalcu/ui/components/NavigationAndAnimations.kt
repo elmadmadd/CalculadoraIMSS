@@ -16,9 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.example.consucalcu.LocalHapticManager
-import com.example.consucalcu.ConsuNavy
-import com.example.consucalcu.ConsuOrange
+import com.example.consucalcu.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
@@ -120,7 +118,7 @@ fun NavBarItem(
     val selectedIconBg = if (isSystemInDarkTheme()) Color.White else ConsuNavy
     val selectedIconTint = if (isSystemInDarkTheme()) ConsuNavy else Color.White
     val selectedTextColor = ConsuOrange
-    val unselectedColor = Color(0xFF94A3B8)
+    val unselectedColor = ConsuTextMuted
     
     val animatedScale by animateFloatAsState(
         targetValue = when {

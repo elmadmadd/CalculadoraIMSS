@@ -92,7 +92,7 @@ fun RefinanceScreen(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isDark) BgDark else Color(0xFFF8F9FA))
+            .background(if (isDark) BgDark else ConsuBgLight)
             .imePadding(),
         contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -115,7 +115,7 @@ fun RefinanceScreen(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFF1B3564))
+                                    .background(if (isDark) ConsuSurfaceDark else ConsuNavyLight)
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Loop,
@@ -160,7 +160,7 @@ fun RefinanceScreen(
                         Surface(
                             modifier = Modifier.size(36.dp),
                             shape = CircleShape,
-                            color = if (isDark) Color(0xFF334155) else Color(0xFF1A237E)
+                            color = if (isDark) ConsuTextSecondary else ConsuNavy
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(Icons.Rounded.AccountBalanceWallet, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -171,7 +171,7 @@ fun RefinanceScreen(
                             "DEUDAS A LIQUIDAR",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
-                            color = if (isDark) Color.White else Color(0xFF1A237E),
+                            color = if (isDark) Color.White else ConsuNavy,
                             letterSpacing = 0.5.sp
                         )
                     }
@@ -195,7 +195,7 @@ fun RefinanceScreen(
                                             viewModel.addDebtRow() 
                                         },
                                     shape = RoundedCornerShape(16.dp),
-                                    color = if (isDark) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                                    color = if (isDark) ConsuDividerDark else ConsuSurfaceVarLight,
                                 ) {
                                     Box {
                                         Icon(
@@ -207,7 +207,7 @@ fun RefinanceScreen(
                                             Surface(
                                                 modifier = Modifier.size(36.dp),
                                                 shape = CircleShape,
-                                                color = if (isDark) Color(0xFF334155) else Color(0xFF1A237E)
+                                                color = if (isDark) ConsuTextSecondary else ConsuNavy
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(Icons.Rounded.Add, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -228,7 +228,7 @@ fun RefinanceScreen(
                                             showLiquidationModal = true 
                                         },
                                     shape = RoundedCornerShape(16.dp),
-                                    color = if (isDark) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                                    color = if (isDark) ConsuDividerDark else ConsuSurfaceVarLight,
                                 ) {
                                     Box {
                                         Icon(
@@ -240,7 +240,7 @@ fun RefinanceScreen(
                                             Surface(
                                                 modifier = Modifier.size(36.dp),
                                                 shape = CircleShape,
-                                                color = if (isDark) Color(0xFF334155) else Color(0xFF1A237E)
+                                                color = if (isDark) ConsuTextSecondary else ConsuNavy
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(Icons.Rounded.Calculate, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -276,7 +276,7 @@ fun RefinanceScreen(
                         Surface(
                             modifier = Modifier.size(36.dp),
                             shape = CircleShape,
-                            color = if (isDark) Color(0xFF334155) else Color(0xFF1A237E)
+                            color = if (isDark) ConsuTextSecondary else ConsuNavy
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(Icons.Rounded.Assessment, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -288,7 +288,7 @@ fun RefinanceScreen(
                                 "CAPACIDAD DE PAGO",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Black,
-                                color = if (isDark) Color.White else Color(0xFF1A237E),
+                                color = if (isDark) Color.White else ConsuNavy,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
@@ -322,13 +322,13 @@ fun RefinanceScreen(
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = RoundedCornerShape(16.dp),
                                 color = Color.Transparent,
-                                border = BorderStroke(1.dp, if (isDark) Color.White.copy(alpha = 0.2f) else Color(0xFF1A237E))
+                                border = BorderStroke(1.dp, if (isDark) Color.White.copy(alpha = 0.2f) else ConsuNavy)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Rounded.AddCircle, null, tint = if (isDark) Color.White else Color(0xFF1A237E))
+                                    Icon(Icons.Rounded.AddCircle, null, tint = if (isDark) Color.White else ConsuNavy)
                                     
                                     BasicTextField(
                                         value = state.capacityCNCA,
@@ -338,13 +338,13 @@ fun RefinanceScreen(
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
                                             textAlign = TextAlign.Center,
-                                            color = if (isDark) Color.White else Color(0xFF1A237E)
+                                            color = if (isDark) Color.White else ConsuNavy
                                         ),
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                                         singleLine = true
                                     )
                                     
-                                    Text("MXN", fontWeight = FontWeight.Bold, color = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF1A237E).copy(alpha = 0.5f))
+                                    Text("MXN", fontWeight = FontWeight.Bold, color = if (isDark) Color.White.copy(alpha = 0.5f) else ConsuNavy.copy(alpha = 0.5f))
                                 }
                             }
                             
@@ -375,7 +375,7 @@ fun RefinanceScreen(
                         modifier = Modifier.weight(1f).fillMaxHeight()
                             .bouncyClick(soundManager) { viewModel.calculateRefinance() },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isDark) Color(0xFF334155) else Color(0xFF1A237E)
+                        color = if (isDark) ConsuTextSecondary else ConsuNavy
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 20.dp),
@@ -395,14 +395,14 @@ fun RefinanceScreen(
                         modifier = Modifier.width(80.dp).fillMaxHeight()
                             .bouncyClick(soundManager) { viewModel.clearRefinanceData() },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isDark) Color.White.copy(alpha = 0.1f) else Color(0xFFF1F5F9)
+                        color = if (isDark) Color.White.copy(alpha = 0.1f) else ConsuSurfaceVarLight
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Icon(Icons.Rounded.DeleteOutline, null, tint = JuicyOrange)
-                            Text("LIMPIAR", fontWeight = FontWeight.Bold, fontSize = 10.sp, color = if (isDark) Color.White else Color(0xFF1A237E))
+                            Text("LIMPIAR", fontWeight = FontWeight.Bold, fontSize = 10.sp, color = if (isDark) Color.White else ConsuNavy)
                         }
                     }
                 }

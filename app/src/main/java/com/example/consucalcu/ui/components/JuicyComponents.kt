@@ -405,7 +405,7 @@ fun JuicyInput(
                         .padding(start = 10.dp, end = 8.dp)
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(if (isSystemInDarkTheme()) Color(0xFF1E293B) else ConsuChipBg),
+                        .background(if (isSystemInDarkTheme()) ConsuDividerDark else ConsuChipBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -500,7 +500,13 @@ fun JuicySliderInput(
 ) {
     val floatValue = value.replace(",", "").replace("$", "").toFloatOrNull() ?: range.start
     val hapticManager = LocalHapticManager.current
-    var lastSnappedValue by remember { mutableStateOf(floatValue) }
+    
+    // Total steps for discrete haptic feedback
+    val totalSteps = if (steps > 0) steps + 1 else 20
+    val initialFraction = ((floatValue - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
+    val initialStepIndex = (initialFraction * totalSteps).toInt()
+    
+    var lastStepIndex by remember { mutableStateOf(initialStepIndex) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         JuicyInput(
@@ -520,18 +526,21 @@ fun JuicySliderInput(
             value = floatValue,
             onValueChange = { newVal ->
                 val snappedValue = newVal.toInt()
-                if (snappedValue.toFloat() != lastSnappedValue) {
+                val progressFraction = ((newVal - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
+                val currentStepIndex = (progressFraction * totalSteps).toInt()
+                
+                if (currentStepIndex != lastStepIndex) {
                     hapticManager?.tick()
-                    lastSnappedValue = snappedValue.toFloat()
+                    lastStepIndex = currentStepIndex
                 }
                 onValueChange(snappedValue.toString())
             },
             valueRange = range,
             steps = steps,
             colors = SliderDefaults.colors(
-                thumbColor = Color(0xFF1C1C1E),
-                activeTrackColor = Color(0xFF1C1C1E),
-                inactiveTrackColor = Color(0xFF1C1C1E).copy(alpha = 0.2f)
+                thumbColor = ConsuNavy,
+                activeTrackColor = ConsuNavy,
+                inactiveTrackColor = ConsuNavy.copy(alpha = 0.2f)
             )
         )
     }
@@ -704,7 +713,7 @@ fun JuicyGradientCard(
 fun JuicyChip(selected: Boolean, text: String, onClick: () -> Unit) {
     val isDark = isSystemInDarkTheme()
     val bgColor = if (selected) {
-        if (isDark) Color.White else Color(0xFF1C1C1E)
+        if (isDark) Color.White else ConsuNavy
     } else {
         MaterialTheme.colorScheme.surface
     }

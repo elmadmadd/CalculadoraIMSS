@@ -111,44 +111,44 @@ class MainActivity : ComponentActivity() {
                     darkColorScheme(
                         primary = Color.White,
                         onPrimary = Color.Black,
-                        primaryContainer = Color(0xFF2C2C2E),
+                        primaryContainer = ConsuSurfaceDark,
                         onPrimaryContainer = Color.White,
-                        secondary = GoldAccent,
+                        secondary = ConsuOrange,
                         onSecondary = Color.Black,
-                        secondaryContainer = Color(0xFF3A3A3C),
+                        secondaryContainer = ConsuNavyLight,
                         onSecondaryContainer = Color.White,
-                        tertiary = GoldAccentLight,
+                        tertiary = ConsuOrangeLight,
                         onTertiary = Color.Black,
-                        background = BgDark,
-                        onBackground = TextLight,
-                        surface = SurfaceDark,
-                        onSurface = TextLight,
-                        surfaceVariant = Color(0xFF2C2C2E),
-                        onSurfaceVariant = TextLight.copy(alpha = 0.7f),
-                        outline = BorderDark,
-                        error = ErrorRed,
+                        background = ConsuBgDark,
+                        onBackground = ConsuTextLight,
+                        surface = ConsuSurfaceDark,
+                        onSurface = ConsuTextLight,
+                        surfaceVariant = ConsuSurfaceVarDark,
+                        onSurfaceVariant = ConsuTextLight.copy(alpha = 0.7f),
+                        outline = ConsuDividerDark,
+                        error = ConsuError,
                         onError = Color.White
                     )
                 } else {
                     lightColorScheme(
-                        primary = Color(0xFF1C1C1E),
+                        primary = ConsuNavy,
                         onPrimary = Color.White,
-                        primaryContainer = Color(0xFFE5E5EA),
-                        onPrimaryContainer = TextDark,
-                        secondary = GoldAccentDark,
+                        primaryContainer = ConsuChipBg,
+                        onPrimaryContainer = ConsuTextPrimary,
+                        secondary = ConsuOrangeDark,
                         onSecondary = Color.White,
-                        secondaryContainer = Color(0xFFF2F2F7),
-                        onSecondaryContainer = TextDark,
-                        tertiary = GoldAccent,
+                        secondaryContainer = ConsuSurfaceVarLight,
+                        onSecondaryContainer = ConsuTextPrimary,
+                        tertiary = ConsuOrange,
                         onTertiary = Color.White,
-                        background = BgLight,
-                        onBackground = TextDark,
-                        surface = SurfaceLight,
-                        onSurface = TextDark,
-                        surfaceVariant = Color(0xFFF2F2F7),
-                        onSurfaceVariant = TextDark.copy(alpha = 0.7f),
-                        outline = BorderLight,
-                        error = ErrorRed,
+                        background = ConsuBgLight,
+                        onBackground = ConsuTextPrimary,
+                        surface = ConsuSurfaceLight,
+                        onSurface = ConsuTextPrimary,
+                        surfaceVariant = ConsuSurfaceVarLight,
+                        onSurfaceVariant = ConsuTextPrimary.copy(alpha = 0.7f),
+                        outline = ConsuDividerLight,
+                        error = ConsuError,
                         onError = Color.White
                     )
                 }
@@ -344,12 +344,12 @@ fun ConsuCalcuApp(
                                     .clip(CircleShape)
                                     .background(
                                         if (isDark) GoldAccent.copy(alpha = 0.15f)
-                                        else Color(0xFF1C1C1E).copy(alpha = 0.08f)
+                                        else ConsuNavy.copy(alpha = 0.08f)
                                     )
                                     .border(
                                         1.5.dp,
                                         if (isDark) GoldAccent.copy(alpha = 0.4f)
-                                        else Color(0xFF1C1C1E).copy(alpha = 0.15f),
+                                        else ConsuNavy.copy(alpha = 0.15f),
                                         CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
@@ -358,7 +358,7 @@ fun ConsuCalcuApp(
                                     initial,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isDark) GoldAccent else Color(0xFF1C1C1E)
+                                    color = if (isDark) GoldAccent else ConsuNavy
                                 )
                             }
                         }
@@ -404,12 +404,12 @@ fun ConsuCalcuApp(
                                         .clip(CircleShape)
                                         .background(
                                             if (isDark) GoldAccent.copy(alpha = 0.12f)
-                                            else Color(0xFF1C1C1E).copy(alpha = 0.06f)
+                                            else ConsuNavy.copy(alpha = 0.06f)
                                         )
                                         .border(
                                             2.dp,
                                             if (isDark) GoldAccent.copy(alpha = 0.3f)
-                                            else Color(0xFF1C1C1E).copy(alpha = 0.1f),
+                                            else ConsuNavy.copy(alpha = 0.1f),
                                             CircleShape
                                         ),
                                     contentAlignment = Alignment.Center
@@ -418,7 +418,7 @@ fun ConsuCalcuApp(
                                         userInitial,
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isDark) GoldAccent else Color(0xFF1C1C1E)
+                                        color = if (isDark) GoldAccent else ConsuNavy
                                     )
                                 }
                                 
@@ -573,8 +573,8 @@ fun ConsuCalcuApp(
                                             .size(36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(
-                                                if (isDark) Color(0xFF2C2C2E)
-                                                else Color(0xFFE5E5EA)
+                                                if (isDark) ConsuSurfaceDark
+                                                else ConsuChipBg
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -582,7 +582,7 @@ fun ConsuCalcuApp(
                                             if (isDark) Icons.Rounded.DarkMode else Icons.Rounded.LightMode,
                                             contentDescription = null,
                                             modifier = Modifier.size(20.dp),
-                                            tint = if (isDark) GoldAccent else Color(0xFFFF9500)
+                                            tint = if (isDark) GoldAccent else ConsuOrange
                                         )
                                     }
                                     Spacer(Modifier.width(14.dp))
@@ -600,8 +600,8 @@ fun ConsuCalcuApp(
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = GoldAccent,
                                             checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
-                                            uncheckedThumbColor = Color(0xFF8E8E93),
-                                            uncheckedTrackColor = Color(0xFF8E8E93).copy(alpha = 0.2f),
+                                            uncheckedThumbColor = ConsuTextSecondary,
+                                            uncheckedTrackColor = ConsuTextSecondary.copy(alpha = 0.2f),
                                             uncheckedBorderColor = Color.Transparent,
                                             checkedBorderColor = Color.Transparent
                                         )
@@ -628,8 +628,8 @@ fun ConsuCalcuApp(
                                             .size(36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(
-                                                if (isDark) Color(0xFF2C2C2E)
-                                                else Color(0xFFE5E5EA)
+                                                if (isDark) ConsuSurfaceDark
+                                                else ConsuChipBg
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -637,7 +637,7 @@ fun ConsuCalcuApp(
                                             if (state.isSoundEnabled) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
                                             contentDescription = null,
                                             modifier = Modifier.size(20.dp),
-                                            tint = if (state.isSoundEnabled) (if (isDark) GoldAccent else Color(0xFF34C759)) else Color(0xFF8E8E93)
+                                            tint = if (state.isSoundEnabled) (if (isDark) GoldAccent else ConsuSuccess) else ConsuTextSecondary
                                         )
                                     }
                                     Spacer(Modifier.width(14.dp))
@@ -655,8 +655,8 @@ fun ConsuCalcuApp(
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = GoldAccent,
                                             checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
-                                            uncheckedThumbColor = Color(0xFF8E8E93),
-                                            uncheckedTrackColor = Color(0xFF8E8E93).copy(alpha = 0.2f),
+                                            uncheckedThumbColor = ConsuTextSecondary,
+                                            uncheckedTrackColor = ConsuTextSecondary.copy(alpha = 0.2f),
                                             uncheckedBorderColor = Color.Transparent,
                                             checkedBorderColor = Color.Transparent
                                         )
@@ -683,8 +683,8 @@ fun ConsuCalcuApp(
                                             .size(36.dp)
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(
-                                                if (isDark) Color(0xFF2C2C2E)
-                                                else Color(0xFFE5E5EA)
+                                                if (isDark) ConsuSurfaceDark
+                                                else ConsuChipBg
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -692,7 +692,7 @@ fun ConsuCalcuApp(
                                             Icons.Rounded.Vibration,
                                             contentDescription = null,
                                             modifier = Modifier.size(20.dp),
-                                            tint = if (state.isHapticEnabled) (if (isDark) GoldAccent else Color(0xFF5856D6)) else Color(0xFF8E8E93)
+                                            tint = if (state.isHapticEnabled) (if (isDark) GoldAccent else ConsuNavyLight) else ConsuTextSecondary
                                         )
                                     }
                                     Spacer(Modifier.width(14.dp))
@@ -710,8 +710,8 @@ fun ConsuCalcuApp(
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = GoldAccent,
                                             checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
-                                            uncheckedThumbColor = Color(0xFF8E8E93),
-                                            uncheckedTrackColor = Color(0xFF8E8E93).copy(alpha = 0.2f),
+                                            uncheckedThumbColor = ConsuTextSecondary,
+                                            uncheckedTrackColor = ConsuTextSecondary.copy(alpha = 0.2f),
                                             uncheckedBorderColor = Color.Transparent,
                                             checkedBorderColor = Color.Transparent
                                         )
@@ -746,6 +746,7 @@ fun ConsuCalcuApp(
 
                     AnimatedNavigationBar(
                         selectedIndex = currentTabIndex,
+                        selectedIcon = NavigationTab.entries[currentTabIndex].icon,
                         modifier = Modifier
                             .widthIn(max = 560.dp)
                             .fillMaxWidth(),

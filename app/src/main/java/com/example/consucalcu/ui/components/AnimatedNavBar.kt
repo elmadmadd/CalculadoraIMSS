@@ -1,5 +1,6 @@
 package com.example.consucalcu.ui.components
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -144,36 +145,65 @@ fun Path.addRoundRectWithIndent(
 @Composable
 fun AnimatedNavigationBar(
     selectedIndex: Int,
+    selectedIcon: ImageVector,
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     ballColor: Color = ConsuOrange,
+    iconInBallColor: Color = Color.White,
     cornerRadius: Dp = 28.dp,
-    ballSize: Dp = 44.dp,
+    ballSize: Dp = 56.dp,
     indentWidth: Dp = 86.dp,
     indentHeight: Dp = 24.dp,
     content: @Composable () -> Unit
 ) {
     val density = androidx.compose.ui.platform.LocalDensity.current
-    var itemPositions by remember { mutableStateOf(listOf<Offset>()) }
-    
-    val selectedItemOffset by remember(selectedIndex, itemPositions) {
+    var itemCentersXPx by remember { mutableStateOf(listOf<Float>()) }
+
+    val targetXPx by remember(selectedIndex, itemCentersXPx) {
         derivedStateOf {
-            if (itemPositions.isNotEmpty() && selectedIndex < itemPositions.size) {
-                itemPositions[selectedIndex]
+            if (itemCentersXPx.isNotEmpty() && selectedIndex < itemCentersXPx.size) {
+                itemCentersXPx[selectedIndex]
             } else {
-                Offset.Zero
+                0f
             }
         }
     }
 
-    // Animation for indent movement
+    // Buttery smooth spring — low stiffness for slow glide, high damping to avoid bounce
     val animatedX by animateFloatAsState(
-        targetValue = selectedItemOffset.x,
+        targetValue = targetXPx,
         animationSpec = spring(
-            dampingRatio = 0.8f,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = 0.85f,
+            stiffness = Spring.StiffnessLow
         ),
-        label = "indentX"
+        label = "navX"
+    )
+
+    // Subtle scale "pop" when the ball arrives at a new tab
+    val ballScale by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = spring(
+            dampingRatio = 0.5f,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "ballPop"
+    )
+    // Trigger the pop by keying on selectedIndex
+    var ballPopTrigger by remember { mutableFloatStateOf(1f) }
+    LaunchedEffect(selectedIndex) {
+        ballPopTrigger = 0.92f  // shrink slightly
+        kotlinx.coroutines.delay(50)
+        ballPopTrigger = 1.05f  // overshoot
+        kotlinx.coroutines.delay(120)
+        ballPopTrigger = 1f     // settle
+    }
+    val animatedBallScale by animateFloatAsState(
+        targetValue = ballPopTrigger,
+        animationSpec = spring(
+            dampingRatio = 0.55f,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "ballPopScale"
     )
 
     val indentShape = IndentRectShape(
@@ -185,61 +215,92 @@ fun AnimatedNavigationBar(
         )
     )
 
+    val barHeightDp = 72.dp
+    val ballSizePx = with(density) { ballSize.toPx() }
+
     Box(
         modifier = modifier
-            .height(80.dp)
-            .fillMaxWidth(),
-        contentAlignment = Alignment.BottomCenter
+            .height(barHeightDp)
+            .fillMaxWidth()
     ) {
-        // Main Bar Surface with animated Indent
+        // 1. Bar background with shadow and indent shape clip
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    shape = indentShape
-                    clip = true
-                }
-                .background(containerColor)
+                .shadow(
+                    elevation = 12.dp,
+                    shape = indentShape,
+                    clip = false
+                )
+                .background(containerColor, shape = indentShape)
         )
 
-        // The Floating Ball
+        // 2. Floating ball with the SELECTED ICON inside it
         Box(
             modifier = Modifier
                 .offset {
                     androidx.compose.ui.unit.IntOffset(
-                        x = (animatedX - with(density) { ballSize.toPx() / 2 }).toInt(),
-                        y = with(density) { -(ballSize.toPx() / 2f) }.toInt()
+                        x = (animatedX - ballSizePx / 2f).toInt(),
+                        y = (-ballSizePx / 2.2f).toInt()
                     )
                 }
+                .scale(animatedBallScale)
                 .size(ballSize)
-                .shadow(elevation = 8.dp, shape = CircleShape, spotColor = ballColor)
+                .shadow(
+                    elevation = 10.dp,
+                    shape = CircleShape,
+                    spotColor = ballColor.copy(alpha = 0.4f)
+                )
                 .clip(CircleShape)
                 .background(ballColor),
             contentAlignment = Alignment.Center
-        ) { }
+        ) {
+            // Quick crossfade for the icon swap
+            Crossfade(
+                targetState = selectedIcon,
+                animationSpec = tween(
+                    durationMillis = 200,
+                    easing = FastOutSlowInEasing
+                ),
+                label = "ballIconCrossfade"
+            ) { icon ->
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = iconInBallColor
+                )
+            }
+        }
 
-        // Layout for Items
+        // 3. Custom Layout that measures items and reports their center-X
         Layout(
             modifier = Modifier.fillMaxSize(),
             content = content,
             measurePolicy = MeasurePolicy { measurables, constraints ->
                 val itemWidth = constraints.maxWidth / measurables.size
-                val placeables = measurables.map { it.measure(constraints.copy(minWidth = itemWidth, maxWidth = itemWidth)) }
-                
+                val placeables = measurables.map {
+                    it.measure(constraints.copy(minWidth = itemWidth, maxWidth = itemWidth))
+                }
+
                 layout(constraints.maxWidth, constraints.maxHeight) {
-                    val positions = mutableListOf<Offset>()
-                    var xPosition = 0
+                    val centers = mutableListOf<Float>()
+                    var x = 0
                     placeables.forEach { placeable ->
-                        placeable.placeRelative(xPosition, 0)
-                        positions.add(Offset(xPosition + placeable.width / 2f, 0f))
-                        xPosition += placeable.width
+                        placeable.placeRelative(x, 0)
+                        centers.add(x + placeable.width / 2f)
+                        x += placeable.width
                     }
-                    itemPositions = positions
+                    itemCentersXPx = centers
                 }
             }
         )
     }
 }
+
+// =================================================================================================
+// 3. INDIVIDUAL NAV BAR ITEM
+// =================================================================================================
 
 @Composable
 fun AnimatedNavBarItem(
@@ -248,64 +309,90 @@ fun AnimatedNavBarItem(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    selectedColor: Color = Color.White,
     unselectedColor: Color = Color.Gray
 ) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-
-    // Ball center is at ~32dp from top of 72dp bar. Icon center starts at 36dp.
-    // Offset = -(36 - 32) = -4dp to align icon with the floating ball center.
-    val animatedYOffset by animateDpAsState(
-        targetValue = if (selected) (-4).dp else 0.dp,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
-        label = "iconRise"
-    )
-
-    val animatedScale by animateFloatAsState(
-        targetValue = if (selected) 1.1f else 1f,
-        label = "iconScale"
-    )
 
     Box(
         modifier = modifier
             .fillMaxHeight()
             .clickable(
-                onClick = {
-                    if (!selected) {
-                        haptic.performHapticFeedback(
-                            androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove
-                        )
-                        onClick()
-                    }
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null
+            ) {
+                if (!selected) {
+                    haptic.performHapticFeedback(
+                        androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove
+                    )
+                    onClick()
                 }
-            ),
+            },
         contentAlignment = Alignment.Center
     ) {
-        // Icon: centered, animates upward when selected
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier
-                .offset(y = animatedYOffset)
-                .scale(animatedScale)
-                .size(24.dp),
-            tint = if (selected) selectedColor else unselectedColor
-        )
-
-        // Label: only when NOT selected, anchored to the bottom of the tap area
-        if (!selected) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
-                color = unselectedColor,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp)
+        // AnimatedVisibility: slides down + fades in when deselected,
+        // slides up + fades out when selected (absorbed into the ball)
+        AnimatedVisibility(
+            visible = !selected,
+            enter = slideInVertically(
+                initialOffsetY = { -it / 2 },  // subtle slide from above
+                animationSpec = tween(
+                    durationMillis = 400,
+                    delayMillis = 150,  // wait for ball to start moving
+                    easing = FastOutSlowInEasing
+                )
+            ) + fadeIn(
+                animationSpec = tween(
+                    durationMillis = 350,
+                    delayMillis = 200,
+                    easing = LinearOutSlowInEasing
+                )
+            ) + scaleIn(
+                initialScale = 0.8f,
+                animationSpec = tween(
+                    durationMillis = 350,
+                    delayMillis = 150,
+                    easing = FastOutSlowInEasing
+                )
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { -it / 2 },  // subtle slide upward
+                animationSpec = tween(
+                    durationMillis = 250,
+                    easing = FastOutLinearInEasing
+                )
+            ) + fadeOut(
+                animationSpec = tween(
+                    durationMillis = 200,
+                    easing = FastOutLinearInEasing
+                )
+            ) + scaleOut(
+                targetScale = 0.8f,
+                animationSpec = tween(
+                    durationMillis = 250,
+                    easing = FastOutLinearInEasing
+                )
             )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(24.dp),
+                    tint = unselectedColor
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    fontWeight = FontWeight.Medium,
+                    color = unselectedColor,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
-

@@ -344,12 +344,12 @@ fun ClientFormContent(
         
         JuicyButton(
             text = "COMPARTIR TICKET DORADO",
-            color = Color(0xFF1F2937),
-            shadowColor = Color(0xFF111827),
-            textColor = Color(0xFFFFD700),
+            color = ConsuNavy,
+            shadowColor = ConsuNavyDark,
+            textColor = ConsuOrange,
             height = 60.dp,
             icon = Icons.Rounded.Star,
-            iconColor = Color(0xFFFFD700),
+            iconColor = ConsuOrange,
             isLoading = state.isGeneratingTicket,
             onClick = onGenerateTicket
         )
@@ -1271,8 +1271,8 @@ fun LiquidationCalculatorModal(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 JuicyGradientCard(
-                    brush = Brush.linearGradient(listOf(Color(0xFF141E30), Color(0xFF243B55))),
-                    shadowColor = Color(0xFF141E30).copy(alpha=0.3f),
+                    brush = Brush.linearGradient(listOf(ConsuNavyDark, ConsuNavyLight)),
+                    shadowColor = ConsuNavyDark.copy(alpha=0.3f),
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                 ) {
                     Column(

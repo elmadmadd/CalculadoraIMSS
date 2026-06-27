@@ -62,7 +62,7 @@ fun NewCreditScreen(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isDark) Color(0xFF2C2C2E) else Color(0xFF1B3564))
+                                    .background(if (isDark) ConsuSurfaceDark else ConsuNavyLight)
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Description,
@@ -134,7 +134,7 @@ fun NewCreditScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(if (isDark) Color(0xFF1E293B) else ConsuChipBg)
+                                .background(if (isDark) ConsuDividerDark else ConsuChipBg)
                                 .padding(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
@@ -273,7 +273,7 @@ fun NewCreditScreen(
                             .width(80.dp)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isDark) Color(0xFF1E293B) else ConsuChipBg)
+                            .background(if (isDark) ConsuDividerDark else ConsuChipBg)
                             .bouncyClick(soundManager = soundManager) {
                                 viewModel.clearNewCreditData()
                             }
@@ -281,13 +281,13 @@ fun NewCreditScreen(
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
                             contentDescription = "Limpiar",
-                            tint = if (isDark) Color.White.copy(alpha = 0.6f) else Color(0xFF64748B),
+                            tint = if (isDark) Color.White.copy(alpha = 0.6f) else ConsuTextSecondary,
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
                             text = "LIMPIAR",
-                            color = if (isDark) Color.White.copy(alpha = 0.6f) else Color(0xFF64748B),
+                            color = if (isDark) Color.White.copy(alpha = 0.6f) else ConsuTextSecondary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 9.sp
                         )
@@ -306,7 +306,7 @@ fun NewCreditScreen(
                 JuicyButton(
                     text = "COMPARAR OFERTAS",
                     color = GoldAccentDark,
-                    shadowColor = Color(0xFF8B6914),
+                    shadowColor = ConsuOrangeDark,
                     textColor = Color.White,
                     icon = Icons.AutoMirrored.Rounded.CompareArrows,
                     soundManager = soundManager
