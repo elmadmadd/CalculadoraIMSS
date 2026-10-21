@@ -101,10 +101,21 @@ class PortalComparisonRegressionTest {
     @Test
     fun csbVipMatchesOfficialFactorGuide() {
         // Guía 2026-10-21: factor 0.0309541837 a 60 meses (CAT 31.5 %).
+        // 13 simulaciones oficiales más el caso de $350,000 del Excel.
         mapOf(
-            "157154.85" to "4864.60",
+            "170000" to "5262.21",
+            "180000" to "5571.75",
+            "253000" to "7831.41",
             "341400" to "10567.76",
+            "157154.85" to "4864.60",
             "150000" to "4643.13",
+            "185500" to "5742.00",
+            "164500" to "5091.96",
+            "410500" to "12706.69",
+            "208181.23" to "6444.08",
+            "202500" to "6268.22",
+            "384000" to "11886.41",
+            "516500" to "15987.84",
             "350000" to "10833.96"
         ).forEach { (amount, payment) ->
             val result = FinancialEngine.calculate(
@@ -122,14 +133,21 @@ class PortalComparisonRegressionTest {
 
     @Test
     fun csbVipAmortizationFirstRowMatchesOfficialSimulation() {
-        val firstRow = calculateAmortizationTable(
-            amount = BigDecimal("157154.85"),
-            term = 60,
-            fixedPayment = BigDecimal("4864.60")
-        ).first()
-        assertEquals(BigDecimal("3127.12"), firstRow.interest)
-        assertEquals(BigDecimal("500.34"), firstRow.iva)
-        assertEquals(BigDecimal("1237.14"), firstRow.principal)
-        assertEquals(BigDecimal("155917.71"), firstRow.balance)
+        // monto, cuota, interés, IVA, abono a capital y saldo del mes 1.
+        listOf(
+            listOf("157154.85", "4864.60", "3127.12", "500.34", "1237.14", "155917.71"),
+            listOf("170000", "5262.21", "3382.72", "541.24", "1338.25", "168661.75")
+        ).forEach { row ->
+            val amount = row[0]
+            val firstRow = calculateAmortizationTable(
+                amount = BigDecimal(amount),
+                term = 60,
+                fixedPayment = BigDecimal(row[1])
+            ).first()
+            assertEquals("Interés $amount", BigDecimal(row[2]), firstRow.interest)
+            assertEquals("IVA $amount", BigDecimal(row[3]), firstRow.iva)
+            assertEquals("Capital $amount", BigDecimal(row[4]), firstRow.principal)
+            assertEquals("Saldo $amount", BigDecimal(row[5]), firstRow.balance)
+        }
     }
 }
