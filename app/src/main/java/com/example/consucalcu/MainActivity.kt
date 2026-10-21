@@ -131,14 +131,15 @@ class MainActivity : ComponentActivity() {
                 com.example.consucalcu.ui.theme.ConsucalcuTheme(darkTheme = isDarkTheme) {
                     var showSplash by rememberSaveable { mutableStateOf(value = true) }
 
+                    // La app se compone debajo del splash: así carga sus datos durante
+                    // la animación y el desvanecido final la revela, sin destello blanco.
                     Box(modifier = Modifier.fillMaxSize()) {
+                        ConsuCalcuApp(
+                            viewModel = viewModel,
+                            isDark = isDarkTheme,
+                        ) { isDarkTheme = !isDarkTheme }
                         if (showSplash) {
                             SplashScreen { showSplash = false }
-                        } else {
-                            ConsuCalcuApp(
-                                viewModel = viewModel,
-                                isDark = isDarkTheme,
-                            ) { isDarkTheme = !isDarkTheme }
                         }
                     }
                 }

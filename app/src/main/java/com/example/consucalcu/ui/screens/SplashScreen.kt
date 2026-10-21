@@ -10,7 +10,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -18,9 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBars
@@ -80,7 +77,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             return@LaunchedEffect
         }
 
-        val revealEnd = startedAt + (500L * animationScale).toLong()
+        val revealEnd = startedAt + (650L * animationScale).toLong()
         val splashEnd = revealEnd + (360L * animationScale).toLong()
         phase = 1
         delay((revealEnd - SystemClock.elapsedRealtime()).coerceAtLeast(0L))
@@ -92,20 +89,27 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     val entered = phase >= 1
     val collapsing = phase >= 2
 
-    val brandAlpha by animateFloatAsState(
+    // El logo arranca visible y en la misma posición que el splash del sistema,
+    // así el relevo no parpadea. Solo el texto hace la entrada.
+    val logoAlpha by animateFloatAsState(
+        targetValue = if (collapsing) 0f else 1f,
+        animationSpec = tween(120, easing = EaseInOutCubic),
+        label = "splashLogoAlpha",
+    )
+    val logoScale by animateFloatAsState(
+        targetValue = if (collapsing) 0.88f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 460f),
+        label = "splashLogoScale",
+    )
+    val textAlpha by animateFloatAsState(
         targetValue = if (entered && !collapsing) 1f else 0f,
         animationSpec = tween(if (collapsing) 120 else 260, easing = EaseInOutCubic),
-        label = "splashBrandAlpha",
+        label = "splashTextAlpha",
     )
-    val brandScale by animateFloatAsState(
-        targetValue = if (entered && !collapsing) 1f else 0.88f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = 460f),
-        label = "splashBrandScale",
-    )
-    val brandOffset by animateDpAsState(
-        targetValue = if (entered && !collapsing) 0.dp else 14.dp,
+    val textOffset by animateDpAsState(
+        targetValue = if (entered && !collapsing) 0.dp else 10.dp,
         animationSpec = tween(300, easing = FastOutSlowInEasing),
-        label = "splashBrandOffset",
+        label = "splashTextOffset",
     )
     val capsuleAlpha by animateFloatAsState(
         targetValue = if (collapsing) 1f else 0f,
@@ -144,69 +148,66 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             },
     ) {
         val compactLayout = maxHeight < 480.dp
+        // Mismas medidas que el splash del sistema: círculo de 160 dp y logo
+        // de 240 dp con 55 dp de margen (ver drawable/splash_icon.xml).
+        val circleSize = if (compactLayout) 120.dp else 160.dp
+        val logoSize = circleSize * 0.81f
         val density = LocalDensity.current
         val statusBarHeight = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
-        val navigationBarHeight = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
-        val safeContentHeight = (maxHeight - statusBarHeight - navigationBarHeight).coerceAtLeast(0.dp)
-        val safeContentCenter = statusBarHeight + (safeContentHeight / 2)
         val capsuleTop by animateDpAsState(
             // Keep the same anchor as DynamicIslandHeader: status bar + 4dp.
             // This prevents a visible jump when the custom splash is removed.
             targetValue = if (collapsing) {
                 statusBarHeight + 4.dp
             } else {
-                safeContentCenter - (capsuleHeight / 2)
+                // Nace en el centro del logo, igual que el splash del sistema.
+                (maxHeight - capsuleHeight) / 2
             },
             animationSpec = tween(340, easing = FastOutSlowInEasing),
             label = "splashCapsuleTop",
         )
 
+        // Fondo liso igual al del sistema; el degradado entra suavemente encima.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(backgroundAlpha)
-                .background(Brush.verticalGradient(listOf(ConsuNavy, ConsuNavyDark))),
-        )
+                .background(ConsuNavy),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(textAlpha)
+                    .background(Brush.verticalGradient(listOf(ConsuNavy, ConsuNavyDark))),
+            )
+        }
+
+        // El sistema centra el ícono en toda la ventana, no en el área segura.
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = (maxHeight - circleSize) / 2)
+                .size(circleSize)
+                .scale(logoScale)
+                .alpha(logoAlpha)
+                .clip(CircleShape)
+                .background(Color(0xFFF8FAFC)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.consucalcu_logo_mark),
+                contentDescription = null,
+                modifier = Modifier.size(logoSize),
+            )
+        }
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = statusBarHeight, bottom = navigationBarHeight)
-                .offset(y = brandOffset)
-                .scale(brandScale)
-                .alpha(brandAlpha),
+                .align(Alignment.TopCenter)
+                .offset(y = (maxHeight + circleSize) / 2 + (if (compactLayout) 12.dp else 20.dp) + textOffset)
+                .alpha(textAlpha),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
-            Box(
-                modifier = Modifier.size(if (compactLayout) 132.dp else 184.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.radialGradient(
-                                listOf(ConsuOrange.copy(alpha = 0.2f), Color.Transparent),
-                            ),
-                            shape = CircleShape,
-                        ),
-                )
-                Box(
-                    modifier = Modifier
-                        .size(if (compactLayout) 96.dp else 142.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF8FAFC)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.consucalcu_logo_mark),
-                        contentDescription = null,
-                        modifier = Modifier.size(if (compactLayout) 72.dp else 108.dp),
-                    )
-                }
-            }
-            Spacer(Modifier.height(if (compactLayout) 12.dp else 18.dp))
             Text(
                 text = buildAnnotatedString {
                     withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Black)) {

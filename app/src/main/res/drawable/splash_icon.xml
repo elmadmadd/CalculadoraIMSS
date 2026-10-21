@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    El splash del sistema dibuja el ícono a 240 dp y lo recorta a un círculo
+    de 160 dp. El logo llena casi todo el PNG, así que se reduce para que
+    las esquinas no queden recortadas: 55 dp por lado (23 % de 240 dp).
+    SplashScreen.kt usa la misma proporción.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/consucalcu_logo_mark"
+    android:inset="55dp" />
