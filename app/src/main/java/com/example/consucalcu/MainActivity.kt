@@ -148,15 +148,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-enum class NavigationTab(val route: String, val labelRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    REFINANCE("refinance", R.string.nav_refinance, Icons.Rounded.Loop),
+enum class NavigationTab(
+    val route: String,
+    val labelRes: Int,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val showInNavBar: Boolean = true,
+) {
+    // Oculta: la pantalla sigue registrada para restaurar borradores del historial.
+    REFINANCE("refinance", R.string.nav_refinance, Icons.Rounded.Loop, showInNavBar = false),
     NEW_CREDIT("new_credit", R.string.nav_quotation, Icons.Rounded.AttachMoney),
     INSURANCE("insurance", R.string.nav_simulator, Icons.Rounded.Savings),
     ACADEMY("academy", R.string.nav_academy, Icons.Rounded.School);
 
     companion object {
         fun fromRoute(route: String?): NavigationTab {
-            return entries.firstOrNull { it.route == route } ?: REFINANCE
+            return entries.firstOrNull { it.route == route } ?: NEW_CREDIT
         }
     }
 }
@@ -179,7 +185,7 @@ fun ConsuCalcuApp(
     val navController = rememberNavController()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: "refinance"
+    val currentRoute = navBackStackEntry?.destination?.route ?: NavigationTab.NEW_CREDIT.route
 
     val currentTabIndex = NavigationTab.fromRoute(currentRoute).ordinal
     var academyImmersiveMode by remember { mutableStateOf(false) }
@@ -265,7 +271,7 @@ fun ConsuCalcuApp(
                         containerColor = MaterialTheme.colorScheme.surface,
                         tonalElevation = 2.dp
                     ) {
-                        NavigationTab.entries.forEach { tab ->
+                        NavigationTab.entries.filter { it.showInNavBar }.forEach { tab ->
                             val selected = currentTabIndex == tab.ordinal
                             NavigationBarItem(
                             selected = selected,
@@ -330,7 +336,7 @@ fun ConsuCalcuApp(
 
                     NavHost(
                         navController = navController,
-                        startDestination = "refinance",
+                        startDestination = NavigationTab.NEW_CREDIT.route,
                         enterTransition = {
                             val from = routeToIndex(initialState.destination.route)
                             val to = routeToIndex(targetState.destination.route)
