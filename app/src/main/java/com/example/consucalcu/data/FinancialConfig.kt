@@ -17,6 +17,9 @@ object FinancialConfig {
     ) {
         fun catTradForTerm(term: Int): String = catTradByTerm[term] ?: meta.catTrad
         fun tasaRefForTerm(term: Int): Double = tasaRefByTerm[term] ?: meta.tasaRef
+        /** Tasa para mostrar, siempre con dos decimales: 2.40 %, no 2.4 %. */
+        fun tasaRefLabel(term: Int): String =
+            String.format(java.util.Locale.US, "%.2f%%", tasaRefForTerm(term))
     }
 
     data class AgreementConfig(

@@ -244,7 +244,12 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
     }
 
     fun toggleCalculationMode(byAmount: Boolean) {
-        _uiState.update { it.copy(isByAmount = byAmount) }
+        // El mismo número significa algo distinto en cada modo (monto o
+        // capacidad): al cambiar de modo se limpian captura y resultados.
+        _uiState.update {
+            if (it.isByAmount == byAmount) it
+            else it.copy(isByAmount = byAmount, newCreditInput = "", offersNew = emptyList())
+        }
     }
 
     fun clearNewCreditData() {
@@ -368,7 +373,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                                     res.payment,
                                     term,
                                     cat = config.catTradForTerm(term),
-                                    tipoTasa = "${config.tasaRefForTerm(term)}%"
+                                    tipoTasa = config.tasaRefLabel(term)
                                 )
                                 if (offer.amount >= config.minGlobal) {
                                     val (viable, reasons) = FinancialEngine.checkNormative(
@@ -453,7 +458,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                                             mainValue = res.amount,
                                             mainLabel = "MONTO PRÉSTAMO",
                                             cat = config.catTradForTerm(60),
-                                            tipoTasa = "${config.tasaRefForTerm(60)}%",
+                                            tipoTasa = config.tasaRefLabel(60),
                                             agreementId = selectedAgreement.id,
                                             agreementLabel = selectedAgreement.label,
                                             paymentFrequency = selectedAgreement.paymentFrequency
@@ -482,7 +487,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                                         results.add(LoanOffer(displayProduct, res.amount, res.payment, term,
                                             mainValue = res.amount, mainLabel = "MONTO PRÉSTAMO",
                                             cat = config.catTradForTerm(term),
-                                            tipoTasa = "${config.tasaRefForTerm(term)}%",
+                                            tipoTasa = config.tasaRefLabel(term),
                                             agreementId = selectedAgreement.id,
                                             agreementLabel = selectedAgreement.label,
                                             paymentFrequency = selectedAgreement.paymentFrequency))

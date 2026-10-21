@@ -42,6 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -989,7 +992,9 @@ fun GroupedResultsSection(
     onTogglePremium: () -> Unit,
     onSelectOffer: (LoanOffer) -> Unit,
     onShowAmortization: (LoanOffer) -> Unit,
-    emptyContent: @Composable () -> Unit
+    emptyContent: @Composable () -> Unit,
+    highlightPayment: Boolean = false,
+    onCompare: (() -> Unit)? = null
 ) {
     val allBrands = buildList {
         addAll(FinancialConfig.IMSS_PRODUCTS_BY_BRAND.keys)
@@ -1035,27 +1040,61 @@ fun GroupedResultsSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "RESULTADOS",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
+                Column {
+                    Text(
+                        text = "RESULTADOS",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = "${visibleOffers.size} oferta${if (visibleOffers.size != 1) "s" else ""}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                if (onCompare != null && visibleOffers.size > 1) {
+                    // Acción secundaria: no compite con COTIZAR.
+                    TextButton(onClick = onCompare) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.CompareArrows,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Comparar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
+                }
+            }
+        }
+
+        if (rawGrouped.isEmpty()) {
+            emptyContent()
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 14.dp)
+                    .horizontalScroll(rememberScrollState())
+            ) {
                 if (hasPremiumOffers) {
                     FilterChip(
                         selected = showPremium,
                         onClick = onTogglePremium,
                         label = {
                             Text(
-                                if (showPremium) "MAX/ESP/VIP" else "Base",
-                                fontSize = 12.sp,
-                                fontWeight = if (showPremium) FontWeight.ExtraBold else FontWeight.Medium
+                                "MAX · ESP · VIP",
+                                fontSize = 11.sp,
+                                fontWeight = if (showPremium) FontWeight.Bold else FontWeight.Medium
                             )
                         },
                         leadingIcon = {
                             Icon(
-                                if (showPremium) Icons.Rounded.Business else Icons.Rounded.Business,
+                                if (showPremium) Icons.Rounded.Check else Icons.Rounded.Add,
                                 null,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -1077,20 +1116,13 @@ fun GroupedResultsSection(
                         ),
                         shape = RoundedCornerShape(50)
                     )
+                    Box(
+                        Modifier
+                            .width(1.dp)
+                            .height(20.dp)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                    )
                 }
-            }
-        }
-
-        if (rawGrouped.isEmpty()) {
-            emptyContent()
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 14.dp)
-                    .horizontalScroll(rememberScrollState())
-            ) {
                 SortMode.entries.forEach { mode ->
                     val isSelected = mode == sortMode
                     val label = when (mode) {
@@ -1171,7 +1203,8 @@ fun GroupedResultsSection(
                                 onShowAmortization = { onShowAmortization(offer) },
                                 rankIndex          = if (isGlobalBest) 0 else if (isPremiumElement) -1 else i + 1,
                                 accentColor        = color,
-                                isPremium          = isPremiumElement
+                                isPremium          = isPremiumElement,
+                                highlightPayment   = highlightPayment
                             )
                         }
                         if (i < sortedOffers.lastIndex) Spacer(Modifier.height(10.dp))
@@ -1189,7 +1222,8 @@ fun ResultCard(
     onShowAmortization: (() -> Unit)? = null,
     rankIndex: Int = 0,
     accentColor: Color = MaterialTheme.colorScheme.primary,
-    isPremium: Boolean = false
+    isPremium: Boolean = false,
+    highlightPayment: Boolean = false
 ) {
     // IMSS Bienestar uses a compact information hierarchy because its offers
     // contain both months and quincenas. Keep the existing card unchanged for
@@ -1221,6 +1255,13 @@ fun ResultCard(
         else       -> null
     }
 
+    // La cifra grande es la que cambia entre ofertas: con monto fijo, la
+    // mensualidad; con capacidad fija, el monto. La otra queda como secundaria.
+    val isRemnant = offer.amount > offer.mainValue
+    val heroIsPayment = highlightPayment && !isRemnant
+    val amountLabel = if (isRemnant) "REMANENTE" else "MONTO A RECIBIR"
+    val mutedText = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -1232,251 +1273,192 @@ fun ResultCard(
                 isPremium && variant == "VIP" -> ConsuOrange.copy(alpha = 0.4f)
                 isPremium -> accentColor.copy(alpha = 0.3f)
                 isBest    -> ConsuOrange.copy(alpha = 0.5f)
-                else      -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                else      -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
             }
         ),
-        shadowElevation = if (isBest || isPremium) 4.dp else 0.dp
+        shadowElevation = if (isBest) 2.dp else 0.dp
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = offer.product.take(4).uppercase(),
-                fontSize = 110.sp,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.015f),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 24.dp, y = 30.dp)
-            )
-
-            Column(
-                modifier = Modifier.padding(ConsuSpacing.xxl)
+        Column(
+            modifier = Modifier.padding(horizontal = ConsuSpacing.lg, vertical = ConsuSpacing.md + 2.dp)
+        ) {
+            // ── Encabezado: producto, condiciones y distintivo ──
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column {
-                        val baseName = offer.product
-                            .replace(" TRADICIONAL", "")
-                            .replace(" ESPECIAL", "")
-                            .replace(" MAX", "")
-                            .replace(" ESP", "")
-                            .replace(" VIP", "")
-                        Text(
-                            text = baseName,
-                            fontWeight = FontWeight.Black,
-                            color = accentColor,
-                            fontSize = 15.sp,
-                            letterSpacing = 0.5.sp
-                        )
-                        if (offer.tipoTasa == "RETENCION") {
-                            Text(
-                                text = "TASA PREFERENCIAL",
-                                fontWeight = FontWeight.Bold,
-                                color = ConsuOrange,
-                                fontSize = 12.sp
-                            )
+                Column(modifier = Modifier.weight(1f)) {
+                    val baseName = offer.product
+                        .replace(" TRADICIONAL", "")
+                        .replace(" ESPECIAL", "")
+                        .replace(" MAX", "")
+                        .replace(" ESP", "")
+                        .replace(" VIP", "")
+                    Text(
+                        text = baseName,
+                        fontWeight = FontWeight.Black,
+                        color = accentColor,
+                        fontSize = 15.sp,
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        text = if (offer.tipoTasa == "RETENCION") {
+                            "Tasa preferencial · CAT ${offer.cat}"
                         } else {
-                        Text(
-                            text = offer.tipoTasa,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                fontSize = 12.sp
-                            )
-                        }
-                        if (offer.agreementLabel.isNotBlank()) {
-                            Text(
-                                text = offer.agreementLabel,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f),
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (variant != null && variantColor != null) {
-                            Surface(
-                                color = variantColor.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(ConsuRadius.sm),
-                                border = BorderStroke(1.dp, variantColor.copy(alpha = 0.4f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        if (variant == "VIP") Icons.Rounded.AutoAwesome else Icons.Rounded.Star,
-                                        contentDescription = null,
-                                        tint = variantColor,
-                                        modifier = Modifier.size(11.dp)
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(
-                                        text = variant,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = variantColor,
-                                        letterSpacing = 0.3.sp
-                                    )
-                                }
-                            }
-                        }
-                        if (isBest && variant == null) {
-                            Surface(
-                                color = ConsuOrange.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(ConsuRadius.sm),
-                                border = BorderStroke(1.dp, ConsuOrange.copy(alpha = 0.3f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Star,
-                                        contentDescription = null,
-                                        tint = ConsuOrange,
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(
-                                        text = "MEJOR OPCIÓN",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ConsuOrange,
-                                        letterSpacing = 0.5.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
+                            "Tasa mensual ${offer.tipoTasa} · CAT ${offer.cat}"
+                        },
+                        fontWeight = FontWeight.Medium,
+                        color = mutedText,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
-                if (offer.rejectionReason != null) {
-                    Spacer(Modifier.height(16.dp))
+                val badgeText = variant ?: if (isBest) "MEJOR OPCIÓN" else null
+                val badgeColor = variantColor ?: ConsuOrange
+                if (badgeText != null) {
+                    Spacer(Modifier.width(ConsuSpacing.sm))
                     Surface(
-                        modifier = Modifier.fillMaxWidth(),
+                        color = badgeColor.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(ConsuRadius.sm),
-                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, badgeColor.copy(alpha = 0.35f))
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Rounded.Info,
+                                if (variant == "VIP") Icons.Rounded.AutoAwesome else Icons.Rounded.Star,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(16.dp)
+                                tint = badgeColor,
+                                modifier = Modifier.size(11.dp)
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(4.dp))
                             Text(
-                                text = offer.rejectionReason,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.error,
-                                lineHeight = 14.sp
+                                text = badgeText,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = badgeColor,
+                                letterSpacing = 0.3.sp
                             )
                         }
                     }
                 }
+            }
 
-                Spacer(Modifier.height(32.dp))
+            if (offer.rejectionReason != null) {
+                Spacer(Modifier.height(ConsuSpacing.md))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(ConsuRadius.sm),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = offer.rejectionReason,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.error,
+                            lineHeight = 14.sp
+                        )
+                    }
+                }
+            }
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.height(ConsuSpacing.md))
+
+            // ── Cifra principal y plazo ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (offer.amount > offer.mainValue) "REMANENTE" else "MONTO A RECIBIR",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = if (heroIsPayment) offer.shortPaymentLabel else amountLabel,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        letterSpacing = 1.sp
+                        color = mutedText,
+                        letterSpacing = 0.8.sp
                     )
-
                     RollingCurrency(
-                        value = offer.mainValue,
+                        value = if (heroIsPayment) offer.monthlyPayment else offer.mainValue,
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Black,
-                            fontSize = 46.sp,
-                            letterSpacing = (-1).sp
+                            fontSize = 28.sp,
+                            letterSpacing = (-0.5).sp
                         ),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-
-                Spacer(Modifier.height(32.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                Spacer(Modifier.height(20.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            offer.shortPaymentLabel,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Text(
-                            "$${offer.monthlyPayment.toCurrency()}",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 20.sp
-                        )
-                    }
-
-                    Box(Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)))
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            "PLAZO",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Text(
-                            offer.termDisplay,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 20.sp
-                        )
-                    }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        "PLAZO",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = mutedText,
+                        letterSpacing = 0.8.sp
+                    )
+                    Text(
+                        offer.termDisplay,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 17.sp
+                    )
                 }
+            }
 
-                if (onShowAmortization != null) {
-                    Spacer(Modifier.height(24.dp))
-                    Surface(
-                        onClick = { onShowAmortization() },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(ConsuRadius.md),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Rounded.TableChart,
-                                contentDescription = "Ver Amortización",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Ver Tabla de Amortización",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                            )
+            Spacer(Modifier.height(ConsuSpacing.md))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+            // ── Dato secundario y acción discreta ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(SpanStyle(color = mutedText)) {
+                            append(if (heroIsPayment) "Monto " else "${offer.shortPaymentLabel.lowercase().replaceFirstChar { it.uppercase() }} ")
                         }
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                            append("$${(if (heroIsPayment) offer.mainValue else offer.monthlyPayment).toCurrency()}")
+                        }
+                    },
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                if (onShowAmortization != null) {
+                    TextButton(
+                        onClick = onShowAmortization,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.TableChart,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Amortización",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
                 }
             }

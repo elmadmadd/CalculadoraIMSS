@@ -309,25 +309,6 @@ fun NewCreditScreen(
             }
         }
 
-        // ========== COMPARAR OFERTAS ==========
-        item {
-            AnimatedVisibility(
-                visible = state.offersNew.isNotEmpty() && !state.isLoading,
-                enter = fadeIn(tween(400)) + expandVertically(tween(400, easing = FastOutSlowInEasing)),
-                exit = fadeOut(tween(200)) + shrinkVertically(tween(200))
-            ) {
-                JuicyButton(
-                    text = stringResource(R.string.compare_offers),
-                    color = GoldAccentDark,
-                    shadowColor = ConsuOrangeDark,
-                    textColor = Color.White,
-                    icon = Icons.AutoMirrored.Rounded.CompareArrows
-                ) {
-                    viewModel.toggleOffersComparator(true)
-                }
-            }
-        }
-
         // ========== RESULTADOS AGRUPADOS ==========
         item {
             AnimatedContent(
@@ -358,7 +339,9 @@ fun NewCreditScreen(
                                 message = stringResource(R.string.no_offers_desc),
                                 emoji = "🔍"
                             )
-                        }
+                        },
+                        highlightPayment = state.isByAmount,
+                        onCompare = { viewModel.toggleOffersComparator(true) }
                     )
                 }
             }
