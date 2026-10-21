@@ -340,7 +340,6 @@ fun NewCreditScreen(
                                 emoji = "🔍"
                             )
                         },
-                        highlightPayment = state.isByAmount,
                         onCompare = { viewModel.toggleOffersComparator(true) },
                         showRates = state.showRatesOnCards,
                         onToggleRates = { viewModel.toggleShowRatesOnCards(!state.showRatesOnCards) }

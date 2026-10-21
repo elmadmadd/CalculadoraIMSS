@@ -993,7 +993,6 @@ fun GroupedResultsSection(
     onSelectOffer: (LoanOffer) -> Unit,
     onShowAmortization: (LoanOffer) -> Unit,
     emptyContent: @Composable () -> Unit,
-    highlightPayment: Boolean = false,
     onCompare: (() -> Unit)? = null,
     showRates: Boolean = true,
     onToggleRates: (() -> Unit)? = null
@@ -1219,7 +1218,6 @@ fun GroupedResultsSection(
                                 rankIndex          = if (isGlobalBest) 0 else if (isPremiumElement) -1 else i + 1,
                                 accentColor        = color,
                                 isPremium          = isPremiumElement,
-                                highlightPayment   = highlightPayment,
                                 showRates          = showRates
                             )
                         }
@@ -1239,7 +1237,6 @@ fun ResultCard(
     rankIndex: Int = 0,
     accentColor: Color = MaterialTheme.colorScheme.primary,
     isPremium: Boolean = false,
-    highlightPayment: Boolean = false,
     showRates: Boolean = true
 ) {
     // IMSS Bienestar uses a compact information hierarchy because its offers
@@ -1272,10 +1269,8 @@ fun ResultCard(
         else       -> null
     }
 
-    // La cifra grande es la que cambia entre ofertas: con monto fijo, la
-    // mensualidad; con capacidad fija, el monto. La otra queda como secundaria.
+    // El monto es la cifra principal; la mensualidad queda como dato secundario.
     val isRemnant = offer.amount > offer.mainValue
-    val heroIsPayment = highlightPayment && !isRemnant
     val amountLabel = if (isRemnant) "REMANENTE" else "MONTO A RECIBIR"
     val mutedText = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
 
@@ -1404,14 +1399,14 @@ fun ResultCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (heroIsPayment) offer.shortPaymentLabel else amountLabel,
+                        text = amountLabel,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = mutedText,
                         letterSpacing = 0.8.sp
                     )
                     RollingCurrency(
-                        value = if (heroIsPayment) offer.monthlyPayment else offer.mainValue,
+                        value = offer.mainValue,
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Black,
@@ -1451,10 +1446,10 @@ fun ResultCard(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(color = mutedText)) {
-                            append(if (heroIsPayment) "Monto " else "${offer.shortPaymentLabel.lowercase().replaceFirstChar { it.uppercase() }} ")
+                            append("${offer.shortPaymentLabel.lowercase().replaceFirstChar { it.uppercase() }} ")
                         }
                         withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
-                            append("$${(if (heroIsPayment) offer.mainValue else offer.monthlyPayment).toCurrency()}")
+                            append("$${offer.monthlyPayment.toCurrency()}")
                         }
                     },
                     fontSize = 13.sp,
