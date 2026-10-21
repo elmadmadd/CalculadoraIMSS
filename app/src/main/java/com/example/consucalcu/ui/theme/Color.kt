@@ -3,39 +3,40 @@ package com.example.consucalcu
 import androidx.compose.ui.graphics.Color
 
 // =================================================================================================
-// CONSUCALC DESIGN SYSTEM — SINGLE SOURCE OF TRUTH FOR ALL COLORS (SLATE & ORANGE HARMONY)
+// CONSUCALC DESIGN SYSTEM — SINGLE SOURCE OF TRUTH FOR ALL COLORS (NAVY & ORANGE)
+// Paleta de referencia 2026-10-21: fondo #0D203E, tarjetas #193358, acento #EC511B.
 // =================================================================================================
 
-// ── PRIMARY BRAND (SLATE & NAVY) ─────────────────────────────────────────────
-val ConsuNavy       = Color(0xFF0F172A)   // Slate 900 — Deep Indigo/Navy
-val ConsuNavyLight  = Color(0xFF1E293B)   // Slate 800 — Dark Slate Grey
-val ConsuNavyDark   = Color(0xFF020617)   // Slate 950 — Almost Black Navy
+// ── PRIMARY BRAND (NAVY) ─────────────────────────────────────────────────────
+val ConsuNavy       = Color(0xFF0D203E)   // Azul marino de marca — fondo de referencia
+val ConsuNavyLight  = Color(0xFF193358)   // Azul de tarjetas y contenedores
+val ConsuNavyDark   = Color(0xFF071428)   // Azul casi negro — degradados
 
-val ConsuOrange     = Color(0xFFEA580C)   // Naranja Premium — Vibrant corporate accent
-val ConsuOrangeDark = Color(0xFFC2410C)   // Naranja Oscuro — Pressed states
-val ConsuOrangeLight= Color(0xFFFDBA74)   // Naranja Claro (Orange 300) — Highlights
-val ConsuOrangeGlow = Color(0x22EA580C)   // Naranja 13% — Subtle glows
+val ConsuOrange     = Color(0xFFEC511B)   // Naranja de marca — acento y acción
+val ConsuOrangeDark = Color(0xFFC9400F)   // Naranja oscuro — estados presionados
+val ConsuOrangeLight= Color(0xFFF9A47F)   // Naranja claro — resaltados
+val ConsuOrangeGlow = Color(0x22EC511B)   // Naranja 13 % — brillos sutiles
 
 // ── BACKGROUNDS ──────────────────────────────────────────────────────────────
-val ConsuBgLight    = Color(0xFFF8FAFC)   // Slate 50 — Soft Slate White
-val ConsuBgDark     = Color(0xFF090D16)   // Custom Slate Black — Ultra-dark background
+val ConsuBgLight    = Color(0xFFF4F7FB)   // Blanco azulado
+val ConsuBgDark     = Color(0xFF0A1B35)   // Azul marino un tono bajo la isla, para que se distinga
 
 // ── SURFACES (cards, chips, containers) ──────────────────────────────────────
-val ConsuSurfaceLight = Color.White              // Pure White for light cards
-val ConsuSurfaceDark  = Color(0xFF131B2E)        // Deep Navy-Slate for dark cards
-val ConsuSurfaceVarLight = Color(0xFFF1F5F9)     // Slate 100 for light inputs/containers
-val ConsuSurfaceVarDark  = Color(0xFF1E293B)      // Slate 800 for dark inputs/containers
-val ConsuChipBg     = Color(0xFFE2E8F0)          // Slate 200 for light chips
+val ConsuSurfaceLight = Color.White              // Tarjetas en modo claro
+val ConsuSurfaceDark  = Color(0xFF193358)        // Tarjetas en modo oscuro
+val ConsuSurfaceVarLight = Color(0xFFEDF2F8)     // Campos y contenedores claros
+val ConsuSurfaceVarDark  = Color(0xFF213F69)      // Campos y contenedores oscuros
+val ConsuChipBg     = Color(0xFFE3EAF3)          // Chips claros
 
 // ── TEXT ─────────────────────────────────────────────────────────────────────
-val ConsuTextPrimary    = Color(0xFF0F172A)  // Slate 900 for primary light text
-val ConsuTextLight      = Color(0xFFF8FAFC)  // Slate 50 for primary dark text
-val ConsuTextSecondary  = Color(0xFF475569)  // Slate 600 for secondary light text
-val ConsuTextMuted      = Color(0xFF64748B)  // Slate 500 for muted text
+val ConsuTextPrimary    = Color(0xFF0D203E)  // Texto principal en claro
+val ConsuTextLight      = Color(0xFFF4F7FB)  // Texto principal en oscuro
+val ConsuTextSecondary  = Color(0xFF4A5D7A)  // Texto secundario en claro
+val ConsuTextMuted      = Color(0xFF6B7C96)  // Texto atenuado
 
 // ── BORDERS & DIVIDERS ───────────────────────────────────────────────────────
-val ConsuDividerLight = Color(0xFFE2E8F0)  // Slate 200 for light dividers
-val ConsuDividerDark  = Color(0xFF1E293B)  // Slate 800 for dark dividers
+val ConsuDividerLight = Color(0xFFDDE5EF)
+val ConsuDividerDark  = Color(0xFF24416B)
 
 // ── STATE COLORS ─────────────────────────────────────────────────────────────
 val ConsuSuccess  = Color(0xFF10B981)  // Emerald 500
@@ -43,13 +44,13 @@ val ConsuWarning  = Color(0xFFF59E0B)  // Amber 500
 val ConsuError    = Color(0xFFEF4444)  // Red 500
 
 // ── SKELETON LOADING ─────────────────────────────────────────────────────────
-val ConsuSkeletonLight     = Color(0xFFE2E8F0)
-val ConsuSkeletonHighlight = Color(0xFFF1F5F9)
-val ConsuSkeletonDark      = Color(0xFF1E293B)
-val ConsuSkeletonDarkHi    = Color(0xFF334155)
+val ConsuSkeletonLight     = Color(0xFFDDE5EF)
+val ConsuSkeletonHighlight = Color(0xFFEDF2F8)
+val ConsuSkeletonDark      = Color(0xFF193358)
+val ConsuSkeletonDarkHi    = Color(0xFF26446F)
 
 // =================================================================================================
-// LEGACY ALIASES — kept for backward compatibility, mapped to new Slate palette
+// LEGACY ALIASES — kept for backward compatibility, mapped to the navy palette
 // =================================================================================================
 val JuicyBlue = ConsuNavy
 val JuicyBlueShadow = ConsuNavyLight

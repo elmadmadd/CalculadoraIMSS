@@ -191,7 +191,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 .scale(logoScale)
                 .alpha(logoAlpha)
                 .clip(CircleShape)
-                .background(Color(0xFFF8FAFC)),
+                .background(Color(0xFFF4F7FB)),
             contentAlignment = Alignment.Center,
         ) {
             Image(
