@@ -341,7 +341,9 @@ fun NewCreditScreen(
                             )
                         },
                         highlightPayment = state.isByAmount,
-                        onCompare = { viewModel.toggleOffersComparator(true) }
+                        onCompare = { viewModel.toggleOffersComparator(true) },
+                        showRates = state.showRatesOnCards,
+                        onToggleRates = { viewModel.toggleShowRatesOnCards(!state.showRatesOnCards) }
                     )
                 }
             }

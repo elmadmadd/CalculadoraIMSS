@@ -101,7 +101,10 @@ data class CalculatorUiState(
 
     // Ajustes globales de sonido y vibración
     val isSoundEnabled: Boolean = true,
-    val isHapticEnabled: Boolean = true
+    val isHapticEnabled: Boolean = true,
+
+    // Tasa y CAT en las tarjetas de ofertas (el promotor decide si se ven)
+    val showRatesOnCards: Boolean = false
 )
 
 // =================================================================================================
@@ -147,6 +150,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
 
                 isSoundEnabled = isSound,
                 isHapticEnabled = isHaptic,
+                showRatesOnCards = repository.getShowRatesOnCards(),
 
                 mandatoryConfigNeeded = p.name.isBlank() || p.username.isBlank() || p.password.isBlank() || p.supervisor.isBlank()
             )
@@ -171,7 +175,8 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                 insAntiquity = snapshot.insAntiquity,
                 creditAgreementId = snapshot.creditAgreementId,
                 isSoundEnabled = snapshot.isSoundEnabled,
-                isHapticEnabled = snapshot.isHapticEnabled
+                isHapticEnabled = snapshot.isHapticEnabled,
+                showRatesOnCards = snapshot.showRatesOnCards
             )
         }
     }
@@ -193,6 +198,10 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
 
     fun toggleHaptic(enabled: Boolean) {
         _uiState.update { it.copy(isHapticEnabled = enabled) }
+    }
+
+    fun toggleShowRatesOnCards(enabled: Boolean) {
+        _uiState.update { it.copy(showRatesOnCards = enabled) }
     }
 
     fun setTab(index: Int) {

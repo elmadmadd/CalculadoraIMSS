@@ -955,6 +955,42 @@ fun DynamicIslandHeader(
                                         modifier = Modifier.scale(0.9f)
                                     )
                                 }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(ConsuRadius.sm))
+                                        .toggleable(
+                                            value = state.showRatesOnCards,
+                                            role = Role.Switch,
+                                            onValueChange = viewModel::toggleShowRatesOnCards,
+                                        )
+                                        .padding(vertical = 4.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Percent,
+                                            contentDescription = null,
+                                            tint = Color.White.copy(alpha = 0.8f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            text = "Tasa y CAT en ofertas",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    Switch(
+                                        checked = state.showRatesOnCards,
+                                        onCheckedChange = null,
+                                        colors = consuSettingsSwitchColors(),
+                                        modifier = Modifier.scale(0.9f)
+                                    )
+                                }
                             }
                         }
                     }

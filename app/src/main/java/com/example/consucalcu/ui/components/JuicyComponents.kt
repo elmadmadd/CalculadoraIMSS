@@ -994,7 +994,9 @@ fun GroupedResultsSection(
     onShowAmortization: (LoanOffer) -> Unit,
     emptyContent: @Composable () -> Unit,
     highlightPayment: Boolean = false,
-    onCompare: (() -> Unit)? = null
+    onCompare: (() -> Unit)? = null,
+    showRates: Boolean = true,
+    onToggleRates: (() -> Unit)? = null
 ) {
     val allBrands = buildList {
         addAll(FinancialConfig.IMSS_PRODUCTS_BY_BRAND.keys)
@@ -1055,6 +1057,18 @@ fun GroupedResultsSection(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                if (onToggleRates != null) {
+                    // Atajo antes de tomar captura: muestra u oculta tasa y CAT.
+                    IconButton(onClick = onToggleRates) {
+                        Icon(
+                            if (showRates) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                            contentDescription = if (showRates) "Ocultar tasa y CAT" else "Mostrar tasa y CAT",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 if (onCompare != null && visibleOffers.size > 1) {
                     // Acción secundaria: no compite con COTIZAR.
                     TextButton(onClick = onCompare) {
@@ -1066,6 +1080,7 @@ fun GroupedResultsSection(
                         Spacer(Modifier.width(6.dp))
                         Text("Comparar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
+                }
                 }
             }
         }
@@ -1204,7 +1219,8 @@ fun GroupedResultsSection(
                                 rankIndex          = if (isGlobalBest) 0 else if (isPremiumElement) -1 else i + 1,
                                 accentColor        = color,
                                 isPremium          = isPremiumElement,
-                                highlightPayment   = highlightPayment
+                                highlightPayment   = highlightPayment,
+                                showRates          = showRates
                             )
                         }
                         if (i < sortedOffers.lastIndex) Spacer(Modifier.height(10.dp))
@@ -1223,7 +1239,8 @@ fun ResultCard(
     rankIndex: Int = 0,
     accentColor: Color = MaterialTheme.colorScheme.primary,
     isPremium: Boolean = false,
-    highlightPayment: Boolean = false
+    highlightPayment: Boolean = false,
+    showRates: Boolean = true
 ) {
     // IMSS Bienestar uses a compact information hierarchy because its offers
     // contain both months and quincenas. Keep the existing card unchanged for
@@ -1300,18 +1317,20 @@ fun ResultCard(
                         fontSize = 15.sp,
                         letterSpacing = 0.5.sp
                     )
-                    Text(
-                        text = if (offer.tipoTasa == "RETENCION") {
-                            "Tasa preferencial · CAT ${offer.cat}"
-                        } else {
-                            "Tasa mensual ${offer.tipoTasa} · CAT ${offer.cat}"
-                        },
-                        fontWeight = FontWeight.Medium,
-                        color = mutedText,
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if (showRates) {
+                        Text(
+                            text = if (offer.tipoTasa == "RETENCION") {
+                                "Tasa preferencial · CAT ${offer.cat}"
+                            } else {
+                                "Tasa mensual ${offer.tipoTasa} · CAT ${offer.cat}"
+                            },
+                            fontWeight = FontWeight.Medium,
+                            color = mutedText,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 val badgeText = variant ?: if (isBest) "MEJOR OPCIÓN" else null

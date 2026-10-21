@@ -81,6 +81,8 @@ class PreferenceRepository(context: Context) {
     }
     fun getIsSoundEnabled(): Boolean = prefs.getBoolean("isSoundEnabled", true)
     fun getIsHapticEnabled(): Boolean = prefs.getBoolean("isHapticEnabled", true)
+    // Apagado por defecto: las tarjetas suelen compartirse como captura con clientes.
+    fun getShowRatesOnCards(): Boolean = prefs.getBoolean("showRatesOnCards", false)
 
     @Synchronized
     fun incrementSupportCalculationCount(): Int {
@@ -138,7 +140,8 @@ class PreferenceRepository(context: Context) {
         insAntiquity: String,
         creditAgreementId: String,
         isSoundEnabled: Boolean,
-        isHapticEnabled: Boolean
+        isHapticEnabled: Boolean,
+        showRatesOnCards: Boolean
     ) {
         val encryptedDebts = encryptSecret(gson.toJson(debts))
         val encryptedClient = encryptSecret(gson.toJson(client))
@@ -161,6 +164,7 @@ class PreferenceRepository(context: Context) {
             putString("creditAgreementId", creditAgreementId)
             putBoolean("isSoundEnabled", isSoundEnabled)
             putBoolean("isHapticEnabled", isHapticEnabled)
+            putBoolean("showRatesOnCards", showRatesOnCards)
         }
     }
 
