@@ -1,6 +1,7 @@
 package com.example.consucalcu
 
 import com.example.consucalcu.features.FinancialEngine
+import com.example.consucalcu.utils.calculateAmortizationTable
 import org.junit.Assert.*
 import org.junit.Test
 import java.math.BigDecimal
@@ -95,5 +96,40 @@ class PortalComparisonRegressionTest {
         )!!
         assertEquals(BigDecimal("250000"), byCapacity.first.amount)
         assertEquals(BigDecimal("8314.31"), byCapacity.first.payment)
+    }
+
+    @Test
+    fun csbVipMatchesOfficialFactorGuide() {
+        // Guía 2026-10-21: factor 0.0309541837 a 60 meses (CAT 31.5 %).
+        mapOf(
+            "157154.85" to "4864.60",
+            "341400" to "10567.76",
+            "150000" to "4643.13",
+            "350000" to "10833.96"
+        ).forEach { (amount, payment) ->
+            val result = FinancialEngine.calculate(
+                "CSB VIP", BigDecimal(amount), 60, true, false, BigDecimal.ZERO
+            )!!
+            assertEquals("CSB VIP: $amount", BigDecimal(payment), result.first.payment)
+        }
+
+        val byCapacity = FinancialEngine.calculate(
+            "CSB VIP", BigDecimal("6000"), 60, false, false, BigDecimal("500")
+        )!!
+        assertEquals(BigDecimal("193500"), byCapacity.first.amount)
+        assertTrue(byCapacity.first.payment <= BigDecimal("6000"))
+    }
+
+    @Test
+    fun csbVipAmortizationFirstRowMatchesOfficialSimulation() {
+        val firstRow = calculateAmortizationTable(
+            amount = BigDecimal("157154.85"),
+            term = 60,
+            fixedPayment = BigDecimal("4864.60")
+        ).first()
+        assertEquals(BigDecimal("3127.12"), firstRow.interest)
+        assertEquals(BigDecimal("500.34"), firstRow.iva)
+        assertEquals(BigDecimal("1237.14"), firstRow.principal)
+        assertEquals(BigDecimal("155917.71"), firstRow.balance)
     }
 }

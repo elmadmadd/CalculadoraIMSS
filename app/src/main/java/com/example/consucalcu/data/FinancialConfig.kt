@@ -146,9 +146,10 @@ object FinancialConfig {
             minTermMap = mapOf(60 to BigDecimal("100000"))
         ),
         "CSB VIP" to ProductData(
-            // Calibración Excel 2026-09-08: conservar siete decimales para
-            // reproducir las siete cuotas VIP, incluida $350,000 -> $10,833.96.
-            factorsTrad = mapOf(60 to BigDecimal("30.9541845")),
+            // Guía oficial 2026-10-21: CAT con IVA 31.5 % como tasa efectiva
+            // anual, i = 1.315^(1/12) - 1 y anualidad a 60 meses => 0.0309541837
+            // por peso. Reproduce las cuotas del Excel 2026-09-08 y de la guía.
+            factorsTrad = mapOf(60 to BigDecimal("30.9541837")),
             meta = ProductMeta(1.99, "31.50%", "31.50%"),
             minGlobal = BigDecimal("150000"),
             minInc = BigDecimal("500"),

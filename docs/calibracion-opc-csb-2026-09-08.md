@@ -69,3 +69,24 @@ factores a ambos modos del motor: por monto y por capacidad.
 
 Pruebas: `PortalComparisonRegressionTest.baseProductsMatchUserPaymentsAndTotalsAtSixtyMonths`
 comprueba las ocho cuotas y los ocho totales sin tolerancias numéricas.
+
+## Actualización CSB VIP — 2026-10-21
+
+La guía del factor de cálculo de Consubanco VIP fija el factor en
+**0.0309541837** por peso (**30.9541837** por $1,000). Se obtiene del CAT con
+IVA de 31.5 % tratado como tasa efectiva anual: `i = 1.315^(1/12) - 1`
+(2.308208 % mensual con IVA) y la anualidad `i / (1 - (1 + i)^-60)`.
+Sustituye a 30.9541845; ambos están dentro de la intersección compatible
+con el Excel, así que las 32 cuotas no cambian. La guía añade estas
+referencias, cubiertas en `PortalComparisonRegressionTest`:
+
+| Monto | Cuota |
+| ---: | ---: |
+| 157154.85 | 4864.60 |
+| 341400.00 | 10567.76 |
+| 150000.00 | 4643.13 |
+
+El primer renglón de la tabla de amortización de $157,154.85 es: interés
+$3,127.12, IVA $500.34, abono a capital $1,237.14. Por capacidad, la app
+redondea el monto hacia abajo a múltiplos de $500: $6,000 da $193,500,
+no los $193,834.86 del ejemplo de la guía.
