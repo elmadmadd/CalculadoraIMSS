@@ -1,4 +1,6 @@
 package com.example.consucalcu.academy
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -55,30 +57,30 @@ fun BattleScreen(
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
     var showFeedback by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf(false) }
-    
+
     val currentQuestion = if (battleState.currentQuestionIndex < lesson.questions.size) {
         lesson.questions[battleState.currentQuestionIndex]
     } else null
-    
+
     // Haptics
     val haptic = LocalHapticFeedback.current
-    
+
     // Animaciones de inmersión para daño
     val shakeOffset = remember { Animatable(0f) }
     var showDamageFlash by remember { mutableStateOf(false) }
-    
+
     // Nombres dinámicos de enemigos para mayor inmersión
     val enemyName = remember(lesson.id) {
         val names = listOf("Cliente Indeciso", "Evaluador IMSS", "Sistema Lento", "Gestor de Competencia")
         names[lesson.id.length % names.size]
     }
-    
+
     // Shake violento y flash rojo cuando el jugador pierde HP
     LaunchedEffect(battleState.playerHP) {
         if (battleState.playerHP < 100 && battleState.playerHP != 0) { // No vibrar al inicio ni si está muerto y ya vibró antes (opcional, pero simplificamos)
             showDamageFlash = true
             haptic.performHapticFeedback(HapticFeedbackType.LongPress) // Vibración fuerte
-            
+
             // Shake más agresivo (30dp en vez de 10dp) con más rebotes
             shakeOffset.animateTo(35f, tween(40))
             shakeOffset.animateTo(-35f, tween(50))
@@ -86,18 +88,18 @@ fun BattleScreen(
             shakeOffset.animateTo(-25f, tween(50))
             shakeOffset.animateTo(10f, tween(40))
             shakeOffset.animateTo(0f, tween(50))
-            
+
             showDamageFlash = false
         }
     }
-    
+
     // Haptic sutil al atacar (cuando el enemigo pierde HP)
     LaunchedEffect(battleState.enemyHP) {
         if (battleState.enemyHP < 100) {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) // Vibración suave
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -112,7 +114,7 @@ fun BattleScreen(
     ) {
         // --- EFECTO DE CÁMARA (SHAKE) Y FLASH DE DAÑO A TODA LA PANTALLA ---
         val scrollState = rememberScrollState()
-        
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -139,14 +141,14 @@ fun BattleScreen(
                         tint = Color.White
                     )
                 }
-                
+
                 Text(
                     text = "Pregunta ${battleState.currentQuestionIndex + 1}/${battleState.totalQuestions}",
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-            
+
             // Área de combate
             Column(
                 modifier = Modifier.weight(1f),
@@ -160,7 +162,7 @@ fun BattleScreen(
                     isEnemy = true,
                     emoji = if (enemyName.contains("Cliente")) "🙍‍♂️" else "👹"
                 )
-                
+
                 // VS
                 Text(
                     text = "⚔️ VS ⚔️",
@@ -168,7 +170,7 @@ fun BattleScreen(
                     color = JuicyYellow,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-                
+
                 // Jugador
                 BattleEntity(
                     name = "Tú",
@@ -178,7 +180,7 @@ fun BattleScreen(
                     emoji = "🛡️"
                 )
             }
-            
+
             // Área de pregunta
             if (!battleState.isVictory && !battleState.isDefeat && currentQuestion != null) {
                 QuestionCard(
@@ -198,7 +200,7 @@ fun BattleScreen(
                     }
                 )
             }
-            
+
             // Resultado de la batalla
             if (battleState.isVictory || battleState.isDefeat) {
                 BattleResult(
@@ -212,7 +214,7 @@ fun BattleScreen(
             }
         } // cierra el Column superior
         } // cierra el Box del shakeOffset
-        
+
         // RED FLASH OVERLAY (Daño Crítico)
         AnimatedVisibility(
             visible = showDamageFlash,
@@ -245,13 +247,13 @@ private fun BattleEntity(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .offset(x = shakeOffset.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)
     ) {
         // Emoji
         Text(
@@ -259,7 +261,7 @@ private fun BattleEntity(
             fontSize = 64.sp,
             modifier = Modifier.scale(scale)
         )
-        
+
         // Nombre
         Text(
             text = name,
@@ -267,11 +269,11 @@ private fun BattleEntity(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
-        
+
         // Barra de HP
         Column(
             modifier = Modifier.fillMaxWidth(0.8f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(ConsuSpacing.xs)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -289,13 +291,13 @@ private fun BattleEntity(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             LinearProgressIndicator(
                 progress = { hp.toFloat() / maxHP.toFloat() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(16.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(ConsuRadius.sm)),
                 color = when {
                     hp > 60 -> JuicyGreen
                     hp > 30 -> JuicyYellow
@@ -322,10 +324,10 @@ private fun QuestionCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(ConsuRadius.xxl))
             .background(MaterialTheme.colorScheme.surface)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(ConsuSpacing.xl),
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         // Pregunta
         Text(
@@ -335,7 +337,7 @@ private fun QuestionCard(
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
-        
+
         // Opciones
         question.options.forEach { option ->
             AnswerOption(
@@ -347,14 +349,14 @@ private fun QuestionCard(
                 onClick = { onAnswerSelected(option) }
             )
         }
-        
+
         // Explicación y botón continuar
         if (showFeedback) {
             AnimatedVisibility(
                 visible = true,
                 enter = fadeIn() + expandVertically()
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                     if (question.explanation.isNotEmpty()) {
                         Text(
                             text = if (isCorrect) "✅ ¡Correcto!" else "❌ Incorrecto",
@@ -368,7 +370,7 @@ private fun QuestionCard(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
                     }
-                    
+
                     Button(
                         onClick = onContinue,
                         modifier = Modifier.fillMaxWidth(),
@@ -402,30 +404,30 @@ private fun AnswerOption(
         isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
-    
+
     val borderColor = when {
         isCorrect -> JuicyGreen
         isWrong -> JuicyRed
         isSelected -> MaterialTheme.colorScheme.primary
         else -> Color.Transparent
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(ConsuRadius.md))
             .background(backgroundColor)
             .border(
                 width = 2.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(ConsuRadius.md)
             )
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(16.dp)
+            .padding(ConsuSpacing.lg)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
         ) {
             if (isCorrect || isWrong) {
                 Icon(
@@ -435,7 +437,7 @@ private fun AnswerOption(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            
+
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
@@ -458,7 +460,7 @@ private fun BattleResult(
     onContinue: () -> Unit
 ) {
     var showConfetti by remember { mutableStateOf(false) }
-    
+
     // Transición infinita para el efecto holográfico (Foil)
     val infiniteTransition = rememberInfiniteTransition(label = "foil")
     val foilOffset by infiniteTransition.animateFloat(
@@ -470,10 +472,10 @@ private fun BattleResult(
         ),
         label = "foilOffset"
     )
-    
+
     // Haptic al ganar
     val haptic = LocalHapticFeedback.current
-    
+
     LaunchedEffect(Unit) {
         if (isVictory) {
             delay(300)
@@ -485,14 +487,14 @@ private fun BattleResult(
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
-    
+
     // Si tienes 3 estrellas, es una carta premium
     val isPremiumFoil = isVictory && stars == 3
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(ConsuRadius.xxl))
             .background(
                 if (isVictory) Brush.linearGradient(
                     colors = listOf(JuicyGreen, JuicyBlue)
@@ -520,9 +522,9 @@ private fun BattleResult(
                     }
                 } else Modifier
             )
-            .padding(32.dp),
+            .padding(ConsuSpacing.xxxl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         Text(
             text = if (isVictory) "🎉 ¡VICTORIA! 🎉" else "💔 Derrota 💔",
@@ -531,10 +533,10 @@ private fun BattleResult(
             color = Color.White,
             textAlign = TextAlign.Center
         )
-        
+
         if (isVictory) {
             // Estrellas
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)) {
                 repeat(3) { index ->
                     Icon(
                         imageVector = if (index < stars) Icons.Rounded.Star else Icons.Rounded.StarOutline,
@@ -544,13 +546,13 @@ private fun BattleResult(
                     )
                 }
             }
-            
+
             Text(
                 text = "$correctAnswers / $totalQuestions respuestas correctas",
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium
             )
-            
+
             Text(
                 text = "+$xpEarned XP",
                 fontSize = 28.sp,
@@ -564,7 +566,7 @@ private fun BattleResult(
                 style = MaterialTheme.typography.titleMedium
             )
         }
-        
+
         Button(
             onClick = onContinue,
             modifier = Modifier.fillMaxWidth(),

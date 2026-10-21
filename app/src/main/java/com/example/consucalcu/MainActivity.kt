@@ -1,43 +1,48 @@
 package com.example.consucalcu
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
-import android.content.Context
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.CompareArrows
-import androidx.compose.material.icons.outlined.AttachMoney
-import androidx.compose.material.icons.outlined.Loop
-import androidx.compose.material.icons.outlined.Savings
-import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.*
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -47,6 +52,7 @@ import com.example.consucalcu.academy.AcademyScreen
 import com.example.consucalcu.features.DigitalTicket
 import com.example.consucalcu.features.TicketGenerator
 import com.example.consucalcu.manager.HapticManager
+import com.example.consucalcu.manager.LottieCache
 import com.example.consucalcu.manager.SoundManager
 import com.example.consucalcu.model.*
 import com.example.consucalcu.ui.components.*
@@ -54,17 +60,17 @@ import com.example.consucalcu.ui.screens.*
 import com.example.consucalcu.data.PreferenceRepository
 import com.example.consucalcu.viewmodel.CalculatorViewModel
 import com.example.consucalcu.viewmodel.CalculatorViewModelFactory
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.consucalcu.viewmodel.CalculatorUiState
 
-// ========== HAPTIC FEEDBACK SYSTEM ==========
+// ========== RESOURCE MANAGERS SYSTEM ==========
 val LocalHapticManager = compositionLocalOf<HapticManager?> { null }
+val LocalSoundManager = compositionLocalOf<SoundManager?> { null }
 
 class SettingsAwareHapticFeedback(
     private val delegate: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    private val isHapticEnabled: () -> Boolean
+    private val isHapticEnabled: () -> Boolean,
 ) : androidx.compose.ui.hapticfeedback.HapticFeedback {
-    override fun performHapticFeedback(hapticFeedbackType: androidx.compose.ui.hapticfeedback.HapticFeedbackType) {
+    override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) {
         if (isHapticEnabled()) {
             delegate.performHapticFeedback(hapticFeedbackType)
         }
@@ -72,141 +78,80 @@ class SettingsAwareHapticFeedback(
 }
 
 class MainActivity : ComponentActivity() {
+    @android.annotation.SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
             val hapticManager = remember { HapticManager(context) }
+            val soundManager = remember { SoundManager(context, hapticManager) }
             val repository = remember { PreferenceRepository(context) }
             val viewModel: CalculatorViewModel = viewModel(
-                factory = CalculatorViewModelFactory(repository)
+                factory = CalculatorViewModelFactory(repository),
             )
             val state by viewModel.uiState.collectAsState()
 
-            LaunchedEffect(state.isHapticEnabled) {
+            LaunchedEffect(state.isHapticEnabled, state.isSoundEnabled) {
                 hapticManager.isHapticEnabled = state.isHapticEnabled
+                soundManager.isSoundEnabled = state.isSoundEnabled
+            }
+
+            DisposableEffect(Unit) {
+                onDispose {
+                    soundManager.release()
+                }
             }
 
             val standardHaptic = LocalHapticFeedback.current
             val customHapticFeedback = remember(standardHaptic, state.isHapticEnabled) {
                 SettingsAwareHapticFeedback(standardHaptic) { state.isHapticEnabled }
             }
-            
+
             LaunchedEffect(Unit) {
-               LottieCache.preload(context, listOf(
-                   R.raw.lottie_fire, 
-                   R.raw.lottie_levelup
-               ))
+                LottieCache.preload(
+                    context,
+                    listOf(
+                        R.raw.lottie_fire,
+                        R.raw.lottie_levelup,
+                    ),
+                )
             }
 
+            // Centralized Theme Management
             val systemDark = isSystemInDarkTheme()
-            var isDarkTheme by remember { mutableStateOf(systemDark) }
+            var isDarkTheme by rememberSaveable { mutableStateOf(systemDark) }
 
             CompositionLocalProvider(
                 LocalHapticManager provides hapticManager,
+                LocalSoundManager provides soundManager,
                 LocalHapticFeedback provides customHapticFeedback
             ) {
-                val dynamicColors = if (isDarkTheme) {
-                    darkColorScheme(
-                        primary = Color.White,
-                        onPrimary = Color.Black,
-                        primaryContainer = ConsuSurfaceDark,
-                        onPrimaryContainer = Color.White,
-                        secondary = ConsuOrange,
-                        onSecondary = Color.Black,
-                        secondaryContainer = ConsuNavyLight,
-                        onSecondaryContainer = Color.White,
-                        tertiary = ConsuOrangeLight,
-                        onTertiary = Color.Black,
-                        background = ConsuBgDark,
-                        onBackground = ConsuTextLight,
-                        surface = ConsuSurfaceDark,
-                        onSurface = ConsuTextLight,
-                        surfaceVariant = ConsuSurfaceVarDark,
-                        onSurfaceVariant = ConsuTextLight.copy(alpha = 0.7f),
-                        outline = ConsuDividerDark,
-                        error = ConsuError,
-                        onError = Color.White
-                    )
-                } else {
-                    lightColorScheme(
-                        primary = ConsuNavy,
-                        onPrimary = Color.White,
-                        primaryContainer = ConsuChipBg,
-                        onPrimaryContainer = ConsuTextPrimary,
-                        secondary = ConsuOrangeDark,
-                        onSecondary = Color.White,
-                        secondaryContainer = ConsuSurfaceVarLight,
-                        onSecondaryContainer = ConsuTextPrimary,
-                        tertiary = ConsuOrange,
-                        onTertiary = Color.White,
-                        background = ConsuBgLight,
-                        onBackground = ConsuTextPrimary,
-                        surface = ConsuSurfaceLight,
-                        onSurface = ConsuTextPrimary,
-                        surfaceVariant = ConsuSurfaceVarLight,
-                        onSurfaceVariant = ConsuTextPrimary.copy(alpha = 0.7f),
-                        outline = ConsuDividerLight,
-                        error = ConsuError,
-                        onError = Color.White
-                    )
-                }
+                com.example.consucalcu.ui.theme.ConsucalcuTheme(darkTheme = isDarkTheme) {
+                    var showSplash by rememberSaveable { mutableStateOf(value = true) }
 
-                MaterialTheme(
-                    colorScheme = dynamicColors,
-                    typography = JuicyTypography
-                ) {
-                    ConsuCalcuApp(
-                        viewModel = viewModel,
-                        isDark = isDarkTheme,
-                        onToggleTheme = { isDarkTheme = !isDarkTheme }
-                    )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (showSplash) {
+                            SplashScreen { showSplash = false }
+                        } else {
+                            ConsuCalcuApp(
+                                viewModel = viewModel,
+                                isDark = isDarkTheme,
+                            ) { isDarkTheme = !isDarkTheme }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-val JuicyTypography = Typography(
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        letterSpacing = 0.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp,
-        letterSpacing = 0.5.sp
-    )
-)
-
-enum class NavigationTab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    REFINANCE("refinance", "Refinanciar", Icons.Rounded.Loop),
-    NEW_CREDIT("new_credit", "Cotizador", Icons.Rounded.AttachMoney),
-    INSURANCE("insurance", "Simulador", Icons.Rounded.Savings),
-    ACADEMY("academy", "Educación", Icons.Rounded.School);
+enum class NavigationTab(val route: String, val labelRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    REFINANCE("refinance", R.string.nav_refinance, Icons.Rounded.Loop),
+    NEW_CREDIT("new_credit", R.string.nav_quotation, Icons.Rounded.AttachMoney),
+    INSURANCE("insurance", R.string.nav_simulator, Icons.Rounded.Savings),
+    ACADEMY("academy", R.string.nav_academy, Icons.Rounded.School);
 
     companion object {
         fun fromRoute(route: String?): NavigationTab {
@@ -227,46 +172,20 @@ fun ConsuCalcuApp(
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
-    val soundManager = remember { SoundManager(ctx) }
-    LaunchedEffect(state.isSoundEnabled) {
-        soundManager.isSoundEnabled = state.isSoundEnabled
-    }
+    val soundManager = LocalSoundManager.current
 
-    var showMenu by remember { mutableStateOf(false) }
+
     val navController = rememberNavController()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "refinance"
 
     val currentTabIndex = NavigationTab.fromRoute(currentRoute).ordinal
+    var academyImmersiveMode by remember { mutableStateOf(false) }
 
-    val pillLeading = remember { Animatable(0f) }
-    val pillTrailing = remember { Animatable(1f) }
-    val prevTabIndex = remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(currentTabIndex) {
-        val prev = prevTabIndex.intValue
-        val curr = currentTabIndex
-        prevTabIndex.intValue = curr
-
-        val fastSpec = spring<Float>(
-            dampingRatio = 0.82f,
-            stiffness = 300f
-        )
-        val slowSpec = spring<Float>(
-            dampingRatio = 0.85f,
-            stiffness = 120f
-        )
-
-        if (curr > prev) {
-            launch { pillTrailing.animateTo(curr + 1f, fastSpec) }
-            launch { pillLeading.animateTo(curr.toFloat(), slowSpec) }
-        } else if (curr < prev) {
-            launch { pillLeading.animateTo(curr.toFloat(), fastSpec) }
-            launch { pillTrailing.animateTo(curr + 1f, slowSpec) }
-        } else {
-            launch { pillLeading.snapTo(curr.toFloat()) }
-            launch { pillTrailing.snapTo(curr + 1f) }
+    LaunchedEffect(currentRoute) {
+        if (currentRoute != NavigationTab.ACADEMY.route) {
+            academyImmersiveMode = false
         }
     }
 
@@ -276,15 +195,14 @@ fun ConsuCalcuApp(
         }
     }
 
-    DisposableEffect(Unit) { onDispose { soundManager.release() } }
-    LaunchedEffect(Unit) { viewModel.loadData(); delay(50) }
+    LaunchedEffect(Unit) { viewModel.loadData() }
     LaunchedEffect(state) { viewModel.saveData() }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is CalculatorEffect.PlaySound -> {
-                    soundManager.play(effect.soundName)
+                    soundManager?.play(effect.soundName)
                 }
                 is CalculatorEffect.TriggerHaptics -> {
                     if (state.isHapticEnabled) {
@@ -303,6 +221,19 @@ fun ConsuCalcuApp(
         }
     }
 
+    val navigateToRoute: (String) -> Unit = { route ->
+        if (navController.currentDestination?.route != route) {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            navController.navigate(route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -310,487 +241,84 @@ fun ConsuCalcuApp(
     ) {
         Scaffold(
             containerColor = Color.Transparent,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(style = SpanStyle(color = if (isSystemInDarkTheme()) Color.White else ConsuNavy, fontWeight = FontWeight.Bold)) {
-                                    append("Consu")
-                                }
-                                withStyle(style = SpanStyle(color = ConsuOrange, fontWeight = FontWeight.Bold)) {
-                                    append("Calc")
-                                }
-                            },
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                    ),
-                    actions = {
-                        val firstName = state.userProfile.name.trim().split(" ").firstOrNull { it.isNotEmpty() } ?: "U"
-                        val initial = firstName.take(1).uppercase()
-                        
-                        IconButton(
-                            onClick = { showMenu = true },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isDark) GoldAccent.copy(alpha = 0.15f)
-                                        else ConsuNavy.copy(alpha = 0.08f)
-                                    )
-                                    .border(
-                                        1.5.dp,
-                                        if (isDark) GoldAccent.copy(alpha = 0.4f)
-                                        else ConsuNavy.copy(alpha = 0.15f),
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    initial,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isDark) GoldAccent else ConsuNavy
-                                )
-                            }
-                        }
-                        Spacer(Modifier.width(4.dp))
-                    }
-                )
-
-                if (showMenu) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showMenu = false },
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 0.dp,
-                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                        dragHandle = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 12.dp, bottom = 4.dp)
-                                    .width(36.dp)
-                                    .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
-                            )
-                        }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp)
-                                .padding(bottom = 32.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                val userFirstName = state.userProfile.name.trim().split(" ").firstOrNull { it.isNotEmpty() } ?: "U"
-                                val userInitial = userFirstName.take(1).uppercase()
-                                
-                                Box(
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (isDark) GoldAccent.copy(alpha = 0.12f)
-                                            else ConsuNavy.copy(alpha = 0.06f)
-                                        )
-                                        .border(
-                                            2.dp,
-                                            if (isDark) GoldAccent.copy(alpha = 0.3f)
-                                            else ConsuNavy.copy(alpha = 0.1f),
-                                            CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        userInitial,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isDark) GoldAccent else ConsuNavy
-                                    )
-                                }
-                                
-                                Spacer(Modifier.width(14.dp))
-                                
-                                Column {
-                                    Text(
-                                        userFirstName,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        "Asesor Financiero",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                    )
-                                }
-                            }
-                            
-                            Spacer(Modifier.height(8.dp))
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            
-                            Surface(
-                                onClick = {
-                                    showMenu = false
-                                    soundManager.play("pop")
-                                    viewModel.toggleHistory()
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                color = Color.Transparent
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Rounded.History,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                    Spacer(Modifier.width(14.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(
-                                            "Historial",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            "Cotizaciones guardadas",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
-                                        )
-                                    }
-                                    Icon(
-                                        Icons.Rounded.KeyboardArrowRight,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                            
-                            Surface(
-                                onClick = {
-                                    showMenu = false
-                                    viewModel.toggleConfigDialog(true)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                color = Color.Transparent
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Rounded.Settings,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                    Spacer(Modifier.width(14.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(
-                                            "Configuración",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            "Datos de usuario y convenio",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
-                                        )
-                                    }
-                                    Icon(
-                                        Icons.Rounded.KeyboardArrowRight,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                            
-                            Spacer(Modifier.height(8.dp))
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            
-                            Surface(
-                                onClick = { onToggleTheme() },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(
-                                                if (isDark) ConsuSurfaceDark
-                                                else ConsuChipBg
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            if (isDark) Icons.Rounded.DarkMode else Icons.Rounded.LightMode,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = if (isDark) GoldAccent else ConsuOrange
-                                        )
-                                    }
-                                    Spacer(Modifier.width(14.dp))
-                                    Text(
-                                        if (isDark) "Modo Oscuro" else "Modo Claro",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    
-                                    Switch(
-                                        checked = isDark,
-                                        onCheckedChange = { onToggleTheme() },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = GoldAccent,
-                                            checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
-                                            uncheckedThumbColor = ConsuTextSecondary,
-                                            uncheckedTrackColor = ConsuTextSecondary.copy(alpha = 0.2f),
-                                            uncheckedBorderColor = Color.Transparent,
-                                            checkedBorderColor = Color.Transparent
-                                        )
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-                            
-                            Surface(
-                                onClick = { viewModel.toggleSound(!state.isSoundEnabled) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(
-                                                if (isDark) ConsuSurfaceDark
-                                                else ConsuChipBg
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            if (state.isSoundEnabled) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = if (state.isSoundEnabled) (if (isDark) GoldAccent else ConsuSuccess) else ConsuTextSecondary
-                                        )
-                                    }
-                                    Spacer(Modifier.width(14.dp))
-                                    Text(
-                                        "Efectos de Sonido",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    
-                                    Switch(
-                                        checked = state.isSoundEnabled,
-                                        onCheckedChange = { viewModel.toggleSound(it) },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = GoldAccent,
-                                            checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
-                                            uncheckedThumbColor = ConsuTextSecondary,
-                                            uncheckedTrackColor = ConsuTextSecondary.copy(alpha = 0.2f),
-                                            uncheckedBorderColor = Color.Transparent,
-                                            checkedBorderColor = Color.Transparent
-                                        )
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-                            
-                            Surface(
-                                onClick = { viewModel.toggleHaptic(!state.isHapticEnabled) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(
-                                                if (isDark) ConsuSurfaceDark
-                                                else ConsuChipBg
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Rounded.Vibration,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = if (state.isHapticEnabled) (if (isDark) GoldAccent else ConsuNavyLight) else ConsuTextSecondary
-                                        )
-                                    }
-                                    Spacer(Modifier.width(14.dp))
-                                    Text(
-                                        "Vibración Háptica",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    
-                                    Switch(
-                                        checked = state.isHapticEnabled,
-                                        onCheckedChange = { viewModel.toggleHaptic(it) },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = GoldAccent,
-                                            checkedTrackColor = GoldAccent.copy(alpha = 0.25f),
-                                            uncheckedThumbColor = ConsuTextSecondary,
-                                            uncheckedTrackColor = ConsuTextSecondary.copy(alpha = 0.2f),
-                                            uncheckedBorderColor = Color.Transparent,
-                                            checkedBorderColor = Color.Transparent
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            bottomBar = {
-                Box(
+                if (!academyImmersiveMode) Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 20.dp),
-                    contentAlignment = Alignment.Center
+                        .statusBarsPadding()
+                        .height(64.dp),
+                )
+            },
+            bottomBar = {
+                if (!academyImmersiveMode) Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    val onTabClick: (String) -> Unit = { route ->
-                        if (navController.currentDestination?.route != route) {
-                            soundManager.play("pop")
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            navController.navigate(route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    }
-
-                    AnimatedNavigationBar(
-                        selectedIndex = currentTabIndex,
-                        selectedIcon = NavigationTab.entries[currentTabIndex].icon,
+                    NavigationBar(
                         modifier = Modifier
-                            .widthIn(max = 560.dp)
-                            .fillMaxWidth(),
-                        containerColor = if (isDark) SurfaceDark else Color.White,
-                        ballColor = ConsuOrange,
-                        cornerRadius = 28.dp
+                            .fillMaxWidth()
+                            .widthIn(max = 720.dp),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 2.dp
                     ) {
                         NavigationTab.entries.forEach { tab ->
-                            AnimatedNavBarItem(
-                                icon = tab.icon,
-                                label = tab.label,
-                                selected = currentTabIndex == tab.ordinal,
-                                onClick = { onTabClick(tab.route) },
-                                unselectedColor = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Gray
+                            val selected = currentTabIndex == tab.ordinal
+                            NavigationBarItem(
+                            selected = selected,
+                            onClick = { navigateToRoute(tab.route) },
+                            icon = {
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = null
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(tab.labelRes),
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                indicatorColor = ConsuOrange,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             )
                         }
                     }
+
+                    SporadicNavBarMascot(
+                        enabled = !academyImmersiveMode,
+                        onAppearance = { soundManager?.play("mascot_appear") },
+                        modifier = Modifier.matchParentSize()
+                    )
                 }
             }
         ) { padding ->
             Box(
                 modifier = Modifier
-                    .padding(
-                        top = padding.calculateTopPadding(),
-                        bottom = 0.dp
-                    )
                     .fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
+                        .padding(padding)
                         .widthIn(max = 640.dp)
                         .fillMaxWidth()
                 ) {
                     fun routeToIndex(route: String?) = NavigationTab.fromRoute(route).ordinal
 
-                    val navTweenSpec = tween<IntOffset>(
-                        durationMillis = 460,
-                        easing = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)
+                    val navSlideSpec = spring<IntOffset>(
+                        dampingRatio = 0.9f,
+                        stiffness = 420f
                     )
                     val scaleTweenSpec = tween<Float>(
-                        durationMillis = 460,
-                        easing = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
                     )
 
                     NavHost(
@@ -799,79 +327,83 @@ fun ConsuCalcuApp(
                         enterTransition = {
                             val from = routeToIndex(initialState.destination.route)
                             val to = routeToIndex(targetState.destination.route)
-                            if (to > from) {
-                                slideIntoContainer(
-                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                    animationSpec = navTweenSpec
-                                ) + fadeIn(tween(300))
-                            } else {
-                                fadeIn(tween(400)) + scaleIn(
-                                    initialScale = 0.94f,
-                                    animationSpec = scaleTweenSpec
-                                )
-                            }
+                            val direction = if (to > from) 1 else -1
+                            slideInHorizontally(
+                                initialOffsetX = { width -> direction * (width / 9) },
+                                animationSpec = navSlideSpec
+                            ) + fadeIn(tween(220, delayMillis = 35)) + scaleIn(
+                                initialScale = 0.992f,
+                                animationSpec = scaleTweenSpec
+                            )
                         },
                         exitTransition = {
                             val from = routeToIndex(initialState.destination.route)
                             val to = routeToIndex(targetState.destination.route)
-                            if (to > from) {
-                                fadeOut(tween(300)) + scaleOut(
-                                    targetScale = 0.94f,
-                                    animationSpec = scaleTweenSpec
-                                )
-                            } else {
-                                slideOutOfContainer(
-                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                    animationSpec = navTweenSpec
-                                ) + fadeOut(tween(300))
-                            }
+                            val direction = if (to > from) -1 else 1
+                            slideOutHorizontally(
+                                targetOffsetX = { width -> direction * (width / 14) },
+                                animationSpec = navSlideSpec
+                            ) + fadeOut(tween(170)) + scaleOut(
+                                targetScale = 0.995f,
+                                animationSpec = scaleTweenSpec
+                            )
                         },
                         popEnterTransition = {
                             val from = routeToIndex(initialState.destination.route)
                             val to = routeToIndex(targetState.destination.route)
-                            if (to > from) {
-                                slideIntoContainer(
-                                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                    animationSpec = navTweenSpec
-                                ) + fadeIn(tween(300))
-                            } else {
-                                fadeIn(tween(400)) + scaleIn(
-                                    initialScale = 0.94f,
-                                    animationSpec = scaleTweenSpec
-                                )
-                            }
+                            val direction = if (to > from) 1 else -1
+                            slideInHorizontally(
+                                initialOffsetX = { width -> direction * (width / 9) },
+                                animationSpec = navSlideSpec
+                            ) + fadeIn(tween(220, delayMillis = 35)) + scaleIn(
+                                initialScale = 0.992f,
+                                animationSpec = scaleTweenSpec
+                            )
                         },
                         popExitTransition = {
                             val from = routeToIndex(initialState.destination.route)
                             val to = routeToIndex(targetState.destination.route)
-                            if (to > from) {
-                                fadeOut(tween(300)) + scaleOut(
-                                    targetScale = 0.94f,
-                                    animationSpec = scaleTweenSpec
-                                )
-                            } else {
-                                slideOutOfContainer(
-                                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                    animationSpec = navTweenSpec
-                                ) + fadeOut(tween(300))
-                            }
+                            val direction = if (to > from) -1 else 1
+                            slideOutHorizontally(
+                                targetOffsetX = { width -> direction * (width / 14) },
+                                animationSpec = navSlideSpec
+                            ) + fadeOut(tween(170)) + scaleOut(
+                                targetScale = 0.995f,
+                                animationSpec = scaleTweenSpec
+                            )
                         }
                     ) {
                         composable("refinance") {
-                            RefinanceScreen(viewModel, state, soundManager, ctx)
+                            RefinanceScreen(viewModel, state, isDark)
                         }
                         composable("new_credit") {
-                            NewCreditScreen(viewModel, state, soundManager, ctx)
+                            NewCreditScreen(viewModel, state, isDark)
                         }
                         composable("insurance") {
-                            InsuranceScreen(viewModel, state, soundManager, ctx)
+                            InsuranceScreen(viewModel, state)
                         }
                         composable("academy") {
-                            AcademyScreen(soundManager = soundManager)
+                            AcademyScreen(
+                                onImmersiveModeChange = { academyImmersiveMode = it }
+                            )
                         }
                     }
                 }
             }
+        }
+
+        if (!academyImmersiveMode) {
+            DynamicIslandHeader(
+                state = state,
+                viewModel = viewModel,
+                isDark = isDark,
+                onToggleTheme = onToggleTheme,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(top = 4.dp)
+                    .zIndex(10f),
+            )
         }
 
         state.selectedOfferForLayout?.let { selectedOffer ->
@@ -879,8 +411,6 @@ fun ConsuCalcuApp(
                 OfferPreviewModal(
                     offer = selectedOffer,
                     viewModel = viewModel,
-                    soundManager = soundManager,
-                    context = ctx,
                     onDismiss = { viewModel.dismissPreview() },
                     onContinue = { viewModel.continueToClientForm() }
                 )
@@ -896,8 +426,7 @@ fun ConsuCalcuApp(
                 ClientFormContent(
                     viewModel,
                     onGenerate = { layout ->
-                        soundManager.play("magic")
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        soundManager?.play("ui_success")
                         clipboard.setText(AnnotatedString(layout))
                         viewModel.dismissForm()
                         viewModel.triggerSuccess()
@@ -906,28 +435,29 @@ fun ConsuCalcuApp(
                 )
             }
         }
-        
-        if (state.showTicketPreview && state.activeTicketData != null) {
-            Dialog(onDismissRequest = { viewModel.dismissTicketPreview() }) {
-                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                 ) {
-                     DigitalTicket(
-                         data = state.activeTicketData!!,
-                         modifier = Modifier.padding(16.dp)
-                     )
-                     Spacer(Modifier.height(16.dp))
-                     JuicyButton(
-                         text = "CERRAR",
-                         color = Color.White,
-                         shadowColor = Color.Gray,
-                         textColor = Color.Black,
-                         height = 48.dp, 
-                         soundManager = soundManager,
-                         onClick = { viewModel.dismissTicketPreview() }
-                     )
-                 }
+
+        if (state.showTicketPreview && (state.activeTicketData != null)) {
+            state.activeTicketData?.let { ticketData ->
+                Dialog(onDismissRequest = { viewModel.dismissTicketPreview() }) {
+                     Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                     ) {
+                         DigitalTicket(
+                             data = ticketData,
+                             modifier = Modifier.padding(ConsuSpacing.lg)
+                         )
+                         Spacer(Modifier.height(16.dp))
+                         JuicyButton(
+                             text = stringResource(R.string.action_close),
+                             color = Color.White,
+                             shadowColor = Color.Gray,
+                             textColor = Color.Black,
+                             height = 48.dp,
+                             onClick = { viewModel.dismissTicketPreview() }
+                         )
+                     }
+                }
             }
         }
 
@@ -938,27 +468,34 @@ fun ConsuCalcuApp(
             ) {
                 HistorySheet(
                     history = state.history,
-                    onRestore = { draft -> 
+                    onRestore = { draft ->
                          viewModel.restoreHistory(draft)
-                         soundManager.play("magic")
+                         soundManager?.play("ui_success")
+                         navigateToRoute(
+                             if (draft.type == "Refinanciamiento") {
+                                 NavigationTab.REFINANCE.route
+                             } else {
+                                 NavigationTab.NEW_CREDIT.route
+                             }
+                         )
                     },
-                    onClear = { 
+                    onClear = {
                         viewModel.clearHistory()
-                        soundManager.play("delete")
+                        soundManager?.play("delete")
                     },
                     onDelete = { draft ->
                         viewModel.deleteDraft(draft)
-                        soundManager.play("delete")
+                        soundManager?.play("delete")
                     }
                 )
             }
         }
 
-        if (state.mandatoryConfigNeeded) {
-            MandatoryConfigScreen(viewModel, ctx, soundManager)
+            if (state.mandatoryConfigNeeded) {
+            MandatoryConfigScreen(viewModel)
         } else {
             if (state.showConfigDialog) {
-                ConfigDialog(viewModel, ctx, soundManager)
+                ConfigDialog(viewModel)
             }
 
             if (state.showOffersComparator) {
@@ -967,24 +504,24 @@ fun ConsuCalcuApp(
                     OffersComparator(
                         offers = offers,
                         onDismiss = {
-                            soundManager.play("pop")
+                            soundManager?.play("pop")
                             viewModel.toggleOffersComparator(false)
                         },
                         onSelectOffer = { offer ->
-                            soundManager.play("magic")
+                            soundManager?.play("ui_success")
                             viewModel.onSelectOffer(offer)
                             viewModel.toggleOffersComparator(false)
                         }
                     )
                 }
             }
-            
-            if (state.showAmortizationSimulator && state.selectedOfferForAmortization != null) {
+
+            if (state.showAmortizationSimulator && (state.selectedOfferForAmortization != null)) {
                 AmortizationSimulator(
                     offer = state.selectedOfferForAmortization!!,
                     amortizationTable = state.amortizationTable,
                     onDismiss = {
-                        soundManager.play("pop")
+                        soundManager?.play("pop")
                         viewModel.dismissAmortizationSimulator()
                     }
                 )
@@ -994,5 +531,441 @@ fun ConsuCalcuApp(
         if (state.showSuccessAnim) {
             SuccessOverlay { viewModel.hideSuccess() }
         }
+
+        if (state.showSupportModal && !state.mandatoryConfigNeeded) {
+            VoluntarySupportModal(
+                onDismiss = { viewModel.dismissSupportModal() }
+            )
+        }
     }
+}
+
+
+
+@Composable
+fun DynamicIslandHeader(
+    state: CalculatorUiState,
+    viewModel: CalculatorViewModel,
+    isDark: Boolean,
+    onToggleTheme: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var islandState by remember { mutableStateOf(IslandState.COLLAPSED) }
+    val configuration = LocalConfiguration.current
+    val settingsWidth = (configuration.screenWidthDp.dp - 32.dp)
+        .coerceAtLeast(240.dp)
+        .coerceAtMost(400.dp)
+    val settingsHeight = (configuration.screenHeightDp.dp - 120.dp)
+        .coerceAtLeast(280.dp)
+        .coerceAtMost(440.dp)
+
+    BackHandler(enabled = islandState != IslandState.COLLAPSED) {
+        islandState = IslandState.COLLAPSED
+    }
+
+    val width by animateDpAsState(
+        targetValue = when (islandState) {
+            IslandState.COLLAPSED -> 132.dp
+            IslandState.PREVIEW -> 280.dp
+            IslandState.SETTINGS -> settingsWidth
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "islandWidth"
+    )
+
+    val height by animateDpAsState(
+        targetValue = when (islandState) {
+            IslandState.COLLAPSED -> 32.dp
+            IslandState.PREVIEW -> 56.dp
+            IslandState.SETTINGS -> settingsHeight
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "islandHeight"
+    )
+
+    val cornerRadius by animateDpAsState(
+        targetValue = when (islandState) {
+            IslandState.COLLAPSED -> 16.dp
+            IslandState.PREVIEW -> 28.dp
+            IslandState.SETTINGS -> 24.dp
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "islandCorner"
+    )
+
+    val soundManager = LocalSoundManager.current
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        if (islandState == IslandState.SETTINGS) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.24f))
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Cerrar ajustes",
+                    ) {
+                        soundManager?.play("island_collapse")
+                        islandState = IslandState.COLLAPSED
+                    },
+            )
+        }
+
+        Surface(
+            color = ConsuNavy,
+            shape = RoundedCornerShape(cornerRadius),
+            modifier = Modifier
+                .width(width)
+                .height(height)
+                .clickable(
+                    enabled = islandState != IslandState.SETTINGS,
+                    role = Role.Button,
+                    onClickLabel = if (islandState == IslandState.COLLAPSED) "Expandir ConsuCalcu" else "Contraer ConsuCalcu",
+                ) {
+                    val nextState = if (islandState == IslandState.COLLAPSED) {
+                        IslandState.PREVIEW
+                    } else IslandState.COLLAPSED
+                    soundManager?.play(
+                        if (nextState == IslandState.PREVIEW) "island_expand" else "island_collapse"
+                    )
+                    islandState = nextState
+                },
+            shadowElevation = 2.dp,
+        ) {
+        AnimatedContent(
+            targetState = islandState,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
+                fadeOut(animationSpec = tween(90))
+            },
+            label = "islandContent"
+        ) { targetState ->
+            Box(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                when (targetState) {
+                    IslandState.COLLAPSED -> {
+                        Text(
+                            text = "ConsuCalcu",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 13.sp,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                    IslandState.PREVIEW -> {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "ConsuCalcu",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    text = "Propuestas de Crédito",
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+
+                            val firstName = state.userProfile.name.trim().split(" ").firstOrNull { it.isNotEmpty() } ?: "U"
+                            val initial = firstName.take(1).uppercase()
+
+                            Box(
+                                modifier = Modifier
+                                    // 48dp touch target, 36dp visual circle (padding insets the drawn shape)
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .clickable(
+                                        role = Role.Button,
+                                        onClickLabel = "Abrir ajustes del asesor",
+                                    ) {
+                                        soundManager?.play("island_full_expand")
+                                        islandState = IslandState.SETTINGS
+                                    }
+                                    .padding(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = initial,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                    IslandState.SETTINGS -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Header de ajustes
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Ajustes de Asesor",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 16.sp
+                                    )
+                                    Text(
+                                        text = state.userProfile.name.ifEmpty { "Asesor Firmado" },
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontWeight = FontWeight.Medium,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        // 48dp touch target, 32dp visual circle
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            role = Role.Button,
+                                            onClickLabel = "Cerrar ajustes",
+                                        ) {
+                                            soundManager?.play("island_collapse")
+                                            islandState = IslandState.COLLAPSED
+                                        }
+                                        .padding(8.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.1f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Cerrar",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                // Ajustes de opciones
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            soundManager?.play("island_collapse")
+                                            islandState = IslandState.COLLAPSED
+                                            viewModel.toggleHistory()
+                                        }
+                                        .padding(vertical = 10.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.History,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = "Historial de Cotizaciones",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            soundManager?.play("island_collapse")
+                                            islandState = IslandState.COLLAPSED
+                                            viewModel.toggleConfigDialog(true)
+                                        }
+                                        .padding(vertical = 10.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Settings,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = "Configuración de Convenio",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(ConsuRadius.sm))
+                                        .toggleable(
+                                            value = isDark,
+                                            role = Role.Switch,
+                                            onValueChange = { onToggleTheme() },
+                                        )
+                                        .padding(vertical = 4.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = if (isDark) Icons.Rounded.DarkMode else Icons.Rounded.LightMode,
+                                            contentDescription = null,
+                                            tint = Color.White.copy(alpha = 0.8f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            text = "Modo Oscuro",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    Switch(
+                                        checked = isDark,
+                                        onCheckedChange = null,
+                                        colors = consuSettingsSwitchColors(),
+                                        modifier = Modifier.scale(0.9f)
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(ConsuRadius.sm))
+                                        .toggleable(
+                                            value = state.isSoundEnabled,
+                                            role = Role.Switch,
+                                            onValueChange = viewModel::toggleSound,
+                                        )
+                                        .padding(vertical = 4.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = if (state.isSoundEnabled) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff,
+                                            contentDescription = null,
+                                            tint = Color.White.copy(alpha = 0.8f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            text = "Efectos de Sonido",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    Switch(
+                                        checked = state.isSoundEnabled,
+                                        onCheckedChange = null,
+                                        colors = consuSettingsSwitchColors(),
+                                        modifier = Modifier.scale(0.9f)
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(ConsuRadius.sm))
+                                        .toggleable(
+                                            value = state.isHapticEnabled,
+                                            role = Role.Switch,
+                                            onValueChange = viewModel::toggleHaptic,
+                                        )
+                                        .padding(vertical = 4.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Vibration,
+                                            contentDescription = null,
+                                            tint = Color.White.copy(alpha = 0.8f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            text = "Vibración Háptica",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    Switch(
+                                        checked = state.isHapticEnabled,
+                                        onCheckedChange = null,
+                                        colors = consuSettingsSwitchColors(),
+                                        modifier = Modifier.scale(0.9f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    }
+}
+
+@Composable
+private fun consuSettingsSwitchColors() = SwitchDefaults.colors(
+    checkedThumbColor = Color.White,
+    checkedTrackColor = ConsuOrange,
+    checkedBorderColor = ConsuOrange,
+    uncheckedThumbColor = Color.White.copy(alpha = 0.8f),
+    uncheckedTrackColor = Color.White.copy(alpha = 0.14f),
+    uncheckedBorderColor = Color.White.copy(alpha = 0.24f),
+    disabledCheckedThumbColor = Color.White.copy(alpha = 0.5f),
+    disabledCheckedTrackColor = ConsuOrange.copy(alpha = 0.35f)
+)
+
+enum class IslandState {
+    COLLAPSED,
+    PREVIEW,
+    SETTINGS
 }

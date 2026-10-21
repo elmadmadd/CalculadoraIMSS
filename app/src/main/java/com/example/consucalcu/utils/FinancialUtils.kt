@@ -38,10 +38,10 @@ fun BigDecimal.toCurrency(): String = DecimalFormat("#,###.00").format(this)
 fun String.isValidNSS(): Boolean {
     if (this.length != 11) return false
     if (!this.all { it.isDigit() }) return false
-    
+
     val digits = this.map { it.toString().toInt() }
     var sum = 0
-    
+
     // Algoritmo Luhn (usado por IMSS)
     for (i in 0..9) {
         var digit = digits[i]
@@ -49,7 +49,7 @@ fun String.isValidNSS(): Boolean {
         if (digit > 9) digit -= 9
         sum += digit
     }
-    
+
     val checkDigit = (10 - (sum % 10)) % 10
     return checkDigit == digits[10]
 }
@@ -77,7 +77,8 @@ data class AmortizationRow(
 fun calculateAmortizationTable(
     amount: BigDecimal,
     term: Int,
-    fixedPayment: BigDecimal
+    fixedPayment: BigDecimal,
+    periodsPerYear: Int = 12
 ): List<AmortizationRow> {
     if (amount <= BigDecimal.ZERO || term <= 0 || fixedPayment <= BigDecimal.ZERO) return emptyList()
 
@@ -85,44 +86,44 @@ fun calculateAmortizationTable(
     // Buscamos una tasa 'r' (sin IVA) tal que al aplicar (Interés + IVA + Capital) el saldo llegue a 0.
     var low = 0.0
     var high = 1.0 // 100% de interés mensual como cota superior
-    var monthlyRate = 0.0
+    var periodicRate = 0.0
     val targetError = 0.01 // Precisión deseada de 1 centavo
-    
+
     for (i in 0..100) {
-        monthlyRate = (low + high) / 2.0
+        periodicRate = (low + high) / 2.0
         var tempBalance = amount.toDouble()
-        
+
         for (m in 1..term) {
-            val interest = tempBalance * monthlyRate
+            val interest = tempBalance * periodicRate
             val iva = interest * 0.16
             val principal = fixedPayment.toDouble() - interest - iva
             tempBalance -= principal
         }
-        
+
         if (Math.abs(tempBalance) <= targetError) {
             break
         } else if (tempBalance > 0) {
             // Tasa es muy alta (genera mucho interés y se abona poco capital)
-            high = monthlyRate
+            high = periodicRate
         } else {
             // Tasa es muy baja (se abona demasiado capital y el saldo queda negativo)
-            low = monthlyRate
+            low = periodicRate
         }
     }
-    
+
     // 2. Construir la tabla usando la tasa exacta calculada
-    val finalMonthlyRate = BigDecimal(monthlyRate.toString()).setScale(10, RoundingMode.HALF_UP)
-    
+    val finalPeriodicRate = BigDecimal(periodicRate.toString()).setScale(10, RoundingMode.HALF_UP)
+
     val rows = mutableListOf<AmortizationRow>()
     var balance = amount
-    
+
     for (month in 1..term) {
-        val interest = balance.multiply(finalMonthlyRate).setScale(2, RoundingMode.HALF_UP)
+        val interest = balance.multiply(finalPeriodicRate).setScale(2, RoundingMode.HALF_UP)
         val iva = interest.multiply(BigDecimal("0.16")).setScale(2, RoundingMode.HALF_UP)
-        
+
         var payment = fixedPayment
         var principal = payment.subtract(interest).subtract(iva)
-        
+
         // Ajuste fino en el último mes para cuadrar a 0.00 exactos
         if (month == term) {
             principal = balance
@@ -131,9 +132,9 @@ fun calculateAmortizationTable(
             principal = balance
             payment = principal.add(interest).add(iva).setScale(2, RoundingMode.HALF_UP)
         }
-        
+
         balance = balance.subtract(principal).max(BigDecimal.ZERO)
-        
+
         rows.add(
             AmortizationRow(
                 month = month,
@@ -145,6 +146,6 @@ fun calculateAmortizationTable(
             )
         )
     }
-    
+
     return rows
 }

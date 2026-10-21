@@ -42,6 +42,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -56,24 +57,26 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.gson)
 
     // 2. Para el efecto de fiesta (Confeti)
-    implementation("nl.dionsegijn:konfetti-compose:2.0.4")
+    implementation(libs.konfetti.compose)
 
-    // 3. Para los iconos bonitos (RocketLaunch, Analytics, etc.)
-    // ¡OJO! Sin esto, la mitad de tus iconos darán error.
-    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    // The Compose BOM owns all Compose versions. Keeping explicit versions
+    // here previously mixed incompatible UI/Material artifacts.
+    implementation(libs.androidx.compose.material.icons.extended)
 
-    // 4. Asegúrate de tener Material3 actualizado para usar SwipeToDismissBox
-    implementation("androidx.compose.material3:material3:1.2.1")
-
-    // 5. ViewModel para Compose
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // 6. Lottie Compose for Juicy Animations
-    implementation("com.airbnb.android:lottie-compose:6.3.0")
+    implementation(libs.lottie.compose)
 
     // 7. Navigation Compose
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation(libs.androidx.navigation.compose)
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("androidx.concurrent:concurrent-futures:1.2.0")
+    }
 }

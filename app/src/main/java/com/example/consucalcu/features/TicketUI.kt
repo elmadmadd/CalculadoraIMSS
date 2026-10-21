@@ -1,4 +1,6 @@
 package com.example.consucalcu.features
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import android.content.Context
 import android.content.Intent
@@ -41,7 +43,9 @@ data class TicketData(
     val payment: String,
     val term: Int,
     val previousPayment: String,
-    val savings: String
+    val savings: String,
+    val paymentLabel: String = "PAGO",
+    val termDisplay: String = "$term Meses"
 )
 
 @Composable
@@ -55,7 +59,7 @@ fun DigitalTicket(
                 .fillMaxWidth()
                 .clip(TicketShape(20.dp.value)) // Forma personalizada con zig-zag abajo (simulado visualmente o simple rounded)
                 .background(Color.White)
-                .border(1.dp, ConsuDividerLight, RoundedCornerShape(16.dp))
+                .border(1.dp, ConsuDividerLight, RoundedCornerShape(ConsuRadius.lg))
         ) {
             // Header
             Box(
@@ -64,9 +68,9 @@ fun DigitalTicket(
                     .height(8.dp)
                     .background(ConsuNavy)
             )
-            
+
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(ConsuSpacing.xxl),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Logo / Icono
@@ -79,9 +83,9 @@ fun DigitalTicket(
                         Text("💸", fontSize = 32.sp)
                     }
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
-                
+
                 Text(
                     "OFERTA APROBADA",
                     style = MaterialTheme.typography.titleMedium,
@@ -89,15 +93,15 @@ fun DigitalTicket(
                     color = JuicyBlue,
                     letterSpacing = 2.sp
                 )
-                
+
                 Text(
                     data.date,
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
-                
+
                 Spacer(Modifier.height(24.dp))
-                
+
                 // Línea punteada personalizada
                 Canvas(modifier = Modifier.fillMaxWidth().height(1.dp)) {
                     drawLine(
@@ -108,24 +112,24 @@ fun DigitalTicket(
                         pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                     )
                 }
-                
-                
+
+
                 Spacer(Modifier.height(24.dp))
-                
+
                 // Detalles Principales
                 TicketRow("Cliente", data.clientName)
                 TicketRow("Producto", data.product)
-                TicketRow("Plazo", "${data.term} Meses")
-                
+                TicketRow("Plazo", data.termDisplay)
+
                 Spacer(Modifier.height(16.dp))
-                
+
                 // Highlight Amount
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(ConsuBgLight, RoundedCornerShape(8.dp))
-                        .padding(16.dp)
+                        .background(ConsuBgLight, RoundedCornerShape(ConsuRadius.sm))
+                        .padding(ConsuSpacing.lg)
                 ) {
                     Text("MONTO A RECIBIR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ConsuTextSecondary)
                     Text(
@@ -135,12 +139,12 @@ fun DigitalTicket(
                         color = ConsuNavy
                     )
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
-                
+
                 Row(Modifier.fillMaxWidth()) {
                     Column(Modifier.weight(1f)) {
-                        Text("NUEVA RESEÑA", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                        Text(data.paymentLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
                         Text(data.payment, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
@@ -148,9 +152,9 @@ fun DigitalTicket(
                         Text(data.savings, fontSize = 16.sp, fontWeight = FontWeight.Black, color = JuicyGreen)
                     }
                 }
-                
+
                 Spacer(Modifier.height(32.dp))
-                
+
                 // Footer
                 Text(
                     "Generado por ConsuCalcu App",
@@ -159,7 +163,7 @@ fun DigitalTicket(
                     textAlign = TextAlign.Center
                 )
             }
-            
+
             // Decorative ZigZag bottom
             Canvas(modifier = Modifier.fillMaxWidth().height(12.dp)) {
                 val width = size.width
@@ -204,18 +208,17 @@ fun shareTicket(context: Context, ticketBitmap: Bitmap) {
         val stream = FileOutputStream("$cachePath/ticket_offer.png")
         ticketBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         stream.close()
-        
+
         val newFile = File(cachePath, "ticket_offer.png")
         val contentUri: Uri = FileProvider.getUriForFile(context, "com.example.consucalcu.fileprovider", newFile)
-        
-        if (contentUri != null) {
-            val shareIntent = Intent()
-            shareIntent.action = Intent.ACTION_SEND
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            shareIntent.setDataAndType(contentUri, context.contentResolver.getType(contentUri))
-            shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri)
-            context.startActivity(Intent.createChooser(shareIntent, "Compartir Oferta"))
+
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            setDataAndType(contentUri, context.contentResolver.getType(contentUri))
+            putExtra(Intent.EXTRA_STREAM, contentUri)
         }
+        context.startActivity(Intent.createChooser(shareIntent, "Compartir Oferta"))
     } catch (e: Exception) {
         e.printStackTrace()
     }

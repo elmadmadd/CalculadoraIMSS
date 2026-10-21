@@ -1,21 +1,19 @@
 package com.example.consucalcu.features
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import com.example.consucalcu.model.ClientData
 import com.example.consucalcu.model.LoanOffer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -58,7 +56,7 @@ object TicketGenerator {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
         }
-        
+
         val textSubtitle = Paint().apply {
             color = android.graphics.Color.parseColor("#94A3B8") // Slate 400
             textSize = 36f
@@ -89,7 +87,7 @@ object TicketGenerator {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
         }
-        
+
         val dividerPaint = Paint().apply {
             color = colorDivider
             strokeWidth = 2f
@@ -101,7 +99,12 @@ object TicketGenerator {
 
         // 2. HEADER
         canvas.drawText("CONSUCALCU PRO", width / 2f, 150f, textTitle)
-        canvas.drawText("Simulación Oficial de Crédito", width / 2f, 210f, textSubtitle)
+        canvas.drawText(
+            offer.agreementLabel.ifBlank { "Simulación Oficial de Crédito" },
+            width / 2f,
+            210f,
+            textSubtitle
+        )
 
         // 3. TARJETA FLOTANTE
         val cardMargin = 60f
@@ -126,7 +129,7 @@ object TicketGenerator {
         )
         val badgePaint = Paint().apply { color = android.graphics.Color.parseColor("#DCFCE7"); style = Paint.Style.FILL } // Green 100
         canvas.drawRoundRect(badgeRect, 40f, 40f, badgePaint)
-        
+
         val textBadge = Paint().apply {
             color = colorSuccess // Green 600
             textSize = 40f
@@ -155,11 +158,11 @@ object TicketGenerator {
             textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
-        
+
         canvas.drawText("MONTO AUTORIZADO", width / 2f, y, textCurrencyLabel)
         y += 140f
         canvas.drawText("$${offer.amount.toCurrency()}", width / 2f, y, textCurrency)
-        
+
         y += 100f
         canvas.drawLine(xLeft, y, xRight, y, dividerPaint)
         y += 80f
@@ -167,7 +170,7 @@ object TicketGenerator {
         // Función Helper para filas
         fun drawDetailRow(label: String, value: String, highlight: Boolean = false) {
             canvas.drawText(label, xLeft, y, textLabel)
-            
+
             // Safe Paint Clone
             val valPaint = Paint(textValue).apply {
                  if(highlight) {
@@ -181,35 +184,35 @@ object TicketGenerator {
 
         drawDetailRow("Cliente", client.name.take(20) + if(client.name.length>20)"..." else "")
         drawDetailRow("Producto", offer.product)
-        drawDetailRow("Plazo", "${offer.term} Meses")
-        
+        drawDetailRow("Plazo", offer.termDisplay)
+
         y += 20f
         // Caja secundaria para pago
         val paymentBg = Paint().apply { color = android.graphics.Color.parseColor("#F1F5F9"); style = Paint.Style.FILL } // Slate 100
         val paymentRect = android.graphics.RectF(cardMargin + 20f, y, width - cardMargin - 20f, y + 140f)
         canvas.drawRoundRect(paymentRect, 20f, 20f, paymentBg)
-        
+
         val oldY = y
         y += 90f // Centrar verticalmente en la caja
         val paymentLabelX = xLeft + 40f
         val paymentValueX = xRight - 40f
-        
+
         // Safe Paint Clones
         val paymentLabelPaint = Paint(textLabel).apply { typeface = Typeface.DEFAULT_BOLD }
-        canvas.drawText("MENSUALIDAD", paymentLabelX, y, paymentLabelPaint)
-        
+        canvas.drawText(offer.paymentLabel, paymentLabelX, y, paymentLabelPaint)
+
         val paymentValuePaint = Paint(textValue).apply { textSize = 60f; color = colorTextMain }
         canvas.drawText("$${offer.monthlyPayment.toCurrency()}", paymentValueX, y, paymentValuePaint)
-        
+
         y = oldY + 140f + 60f // Salir de la caja + margen
 
         drawDetailRow("CAT Promedio", offer.cat)
         drawDetailRow("Tasa de Interés", offer.tipoTasa)
-        
+
         y += 40f
         canvas.drawLine(xLeft, y, xRight, y, dividerPaint)
         y += 80f
-        
+
         // Footer de la tarjeta
         val textFooter = Paint().apply {
              color = colorTextSec
@@ -222,49 +225,39 @@ object TicketGenerator {
         // 5. FOOTER GLOBAL
         val footerY = height - 150f
         canvas.drawText("ASESOR CERTIFICADO", width / 2f, footerY, textGold)
-        
+
         val footerNamePaint = Paint(textTitle).apply { textSize = 44f }
         canvas.drawText(advisor.uppercase(), width / 2f, footerY + 60f, footerNamePaint)
 
         try {
-            val filename = "Ticket_${System.currentTimeMillis()}.jpg"
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ConsuCalcu")
-                } else {
-                    // Legacy Support (API < 29)
-                    @Suppress("DEPRECATION")
-                    val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                    val imageDir = File(imagesDir, "ConsuCalcu")
-                    if (!imageDir.exists()) {
-                        imageDir.mkdirs()
-                    }
-                    val imageFile = File(imageDir, filename)
-                    put(MediaStore.MediaColumns.DATA, imageFile.absolutePath)
+            // Cache + FileProvider works on every supported API without broad storage permissions.
+            val shareDirectory = File(context.cacheDir, "shared_tickets").apply {
+                check(exists() || mkdirs()) { "No se pudo crear el directorio temporal" }
+            }
+            val imageFile = File(shareDirectory, "Ticket_${System.currentTimeMillis()}.jpg")
+            FileOutputStream(imageFile).use { output ->
+                check(bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)) {
+                    "No se pudo codificar el ticket"
                 }
             }
-            val imageUri = context.contentResolver.insert(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
+            val imageUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile
             )
-            imageUri?.let { uri ->
-                context.contentResolver.openOutputStream(uri)
-                    ?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
-                withContext(Dispatchers.Main) {
-                    val shareIntent = Intent().apply {
-                        action = Intent.ACTION_SEND; putExtra(Intent.EXTRA_STREAM, uri); type =
-                        "image/jpeg"; addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    context.startActivity(
-                        Intent.createChooser(
-                            shareIntent,
-                            "Enviar Ticket Dorado"
-                        )
+
+            withContext(Dispatchers.Main) {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/jpeg"
+                    putExtra(Intent.EXTRA_STREAM, imageUri)
+                    clipData = android.content.ClipData.newUri(
+                        context.contentResolver,
+                        "Ticket ConsuCalcu",
+                        imageUri
                     )
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
+                context.startActivity(Intent.createChooser(shareIntent, "Enviar Ticket"))
             }
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
@@ -274,6 +267,8 @@ object TicketGenerator {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+        } finally {
+            bitmap.recycle()
         }
     }
 }

@@ -1,17 +1,17 @@
 <resources>
-    <string name="app_name">consucalcu</string>
-    
+    <string name="app_name">ConsuCalcu</string>
+
     <!-- Empty State Strings -->
     <string name="empty_results_title">Sin Resultados</string>
     <string name="empty_results_subtitle">No encontramos ofertas que cumplan con los criterios. Intenta ajustar los montos o plazos.</string>
     <string name="empty_results_cta">Nueva Búsqueda</string>
     <string name="search_empty_content_description">Animación de búsqueda sin resultados</string>
-    
+
     <!-- Legacy support (backward compatibility) -->
     <string name="search_empty_title">@string/empty_results_title</string>
     <string name="search_empty_subtitle">@string/empty_results_subtitle</string>
     <string name="search_empty_action">@string/empty_results_cta</string>
-    
+
     <!-- Client Form -->
     <string name="client_form_title">Datos del Cliente</string>
     <string name="client_form_subtitle">Completa la información para generar la propuesta</string>
@@ -24,7 +24,7 @@
     <string name="client_form_clabe_label">CLABE</string>
     <string name="client_form_generate_ticket">🎫 GENERAR TICKET (JPG)</string>
     <string name="client_form_copy_text">📋 COPIAR TEXTO</string>
-    
+
     <!-- Validation Errors -->
     <string name="error_empty_field">Este campo es obligatorio</string>
     <string name="error_invalid_nss">NSS debe tener 11 dígitos</string>
@@ -35,4 +35,82 @@
     <string name="error_invalid_amount">Monto inválido</string>
     <string name="error_min_amount">Monto mínimo: $%1$s</string>
     <string name="error_max_amount">Monto máximo: $%1$s</string>
+
+    <!-- Navigation -->
+    <string name="nav_refinance">Refinanciar</string>
+    <string name="nav_quotation">Cotizador</string>
+    <string name="nav_simulator">Seguro</string>
+    <string name="nav_academy">Educación</string>
+
+    <!-- App Menu -->
+    <string name="menu_user_role">Asesor Financiero</string>
+    <string name="menu_history">Historial</string>
+    <string name="menu_history_desc">Cotizaciones guardadas</string>
+    <string name="menu_settings">Configuración</string>
+    <string name="menu_settings_desc">Datos de usuario y convenio</string>
+    <string name="menu_dark_mode">Modo Oscuro</string>
+    <string name="menu_light_mode">Modo Claro</string>
+    <string name="menu_sound_effects">Efectos de Sonido</string>
+    <string name="menu_haptic_feedback">Vibración Háptica</string>
+
+    <!-- General -->
+    <string name="action_close">CERRAR</string>
+    <string name="app_title_prefix">Consu</string>
+    <string name="app_title_suffix">Calcu</string>
+
+    <!-- Refinance Screen -->
+    <string name="refinance_title">REFINANCIAMIENTO</string>
+    <string name="refinance_subtitle">Consolidación de deudas</string>
+    <string name="debts_to_liquidate">Deudas</string>
+    <string name="add_debt">AÑADIR\nDEUDA</string>
+    <string name="add_debt_desc">Registra tus deudas</string>
+    <string name="calc_liq">CALC.\nLIQ.</string>
+    <string name="calc_liq_desc">Calcula cuánto puedes liquidar</string>
+    <string name="payment_capacity">Capacidad de pago</string>
+    <string name="payment_capacity_desc">Define cuánto puedes destinar para pagar tus deudas.</string>
+    <string name="liquidity_adjustment">AJUSTE DE LIQUIDEZ (+/-)</string>
+    <string name="liquidity_adjustment_desc">Ajuste este valor para ver diferentes escenarios.</string>
+    <string name="action_calculate">CALCULAR</string>
+    <string name="calculate_desc">Ver mi plan de liquidación</string>
+    <string name="action_clear">LIMPIAR</string>
+    <string name="results_label">RESULTADOS</string>
+    <string name="estimated_savings">Ahorro Estimado</string>
+
+    <!-- New Credit Screen -->
+    <string name="new_credit_title">CRÉDITO NUEVO</string>
+    <string name="new_credit_subtitle">Cotizador multi-producto</string>
+    <string name="quotation_data">Configura tu crédito</string>
+    <string name="by_capacity">Por capacidad</string>
+    <string name="by_amount">Por monto</string>
+    <string name="how_much_needed">¿CUÁNTO NECESITAS?</string>
+    <string name="how_much_can_pay">¿CUÁNTO PUEDES PAGAR?</string>
+    <string name="action_quote">COTIZAR</string>
+    <string name="compare_offers">COMPARAR OFERTAS</string>
+    <string name="no_offers_title">Sin ofertas para ti</string>
+    <string name="no_offers_desc">Ajusta la capacidad de pago o plazo</string>
+
+    <!-- Insurance Screen -->
+    <string name="insurance_calculator_title">SEGURO DE CRÉDITO</string>
+    <string name="imss_pensioners">IMSS Pensionados</string>
+    <string name="credit_data">Crédito</string>
+    <string name="credit_amount_label">MONTO DEL CRÉDITO</string>
+    <string name="client_data_header">Cliente</string>
+    <string name="pension_type">TIPO DE PENSIÓN</string>
+    <string name="pension_invalidity">Invalidez</string>
+    <string name="pension_oldage">Vejez</string>
+    <string name="pension_other">Otro</string>
+    <string name="client_age">EDAD DEL CLIENTE</string>
+    <string name="age_exceeds_limit">EDAD (EXCEDE LÍMITE)</string>
+    <string name="is_new_client">Es Cliente Nuevo</string>
+    <string name="antiquity_months">ANTIGÜEDAD (MESES)</string>
+    <string name="status_rejected">RECHAZADO</string>
+    <string name="status_free">SIN COSTO</string>
+    <string name="status_with_cost">CON COSTO</string>
+    <string name="insurance_cost">COSTO DEL SEGURO</string>
+    <string name="total_payment_term">PAGO TOTAL PLAZO</string>
+    <string name="cost_first_year">Costo 1er Año</string>
+    <string name="approx_monthly_payment">MENSUALIDAD APROXIMADA</string>
+    <string name="hide_analysis">Ocultar análisis</string>
+    <string name="view_detailed_analysis">Ver análisis detallado</string>
+    <string name="analysis_of_ruling">Análisis del Dictamen</string>
 </resources>

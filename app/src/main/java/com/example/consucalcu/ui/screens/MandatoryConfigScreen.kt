@@ -1,7 +1,8 @@
 package com.example.consucalcu.ui.screens
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import com.example.consucalcu.R
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -11,9 +12,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,17 +25,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.consucalcu.*
 import com.example.consucalcu.manager.SoundManager
+import com.example.consucalcu.LocalSoundManager
 import com.example.consucalcu.model.*
 import com.example.consucalcu.ui.components.*
 import com.example.consucalcu.viewmodel.*
@@ -44,14 +52,29 @@ private data class OnboardingData(
     val supervisor: String = ""
 )
 
+private val OnboardingDataSaver = listSaver<OnboardingData, String>(
+    // Never place the credential in SavedState, which the OS may persist.
+    save = { listOf(it.name, it.username, it.supervisor) },
+    restore = { values ->
+        OnboardingData(
+            name = values.getOrElse(0) { "" },
+            username = values.getOrElse(1) { "" },
+            password = "",
+            supervisor = values.getOrElse(2) { "" }
+        )
+    }
+)
+
 @Composable
-fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundManager: SoundManager) {
-    val isDark = isSystemInDarkTheme()
+fun MandatoryConfigScreen(viewModel: CalculatorViewModel) {
+    val soundManager = LocalSoundManager.current
     val hapticManager = LocalHapticManager.current
 
     // ── Estado de pasos (0, 1, 2) ──
-    var step by remember { mutableIntStateOf(0) }
-    var data by remember { mutableStateOf(OnboardingData()) }
+    var step by rememberSaveable { mutableIntStateOf(0) }
+    var data by rememberSaveable(stateSaver = OnboardingDataSaver) {
+        mutableStateOf(OnboardingData())
+    }
 
     // Validaciones por paso
     val step0Valid = data.name.isNotBlank()
@@ -71,12 +94,10 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
         label = "mascotScale"
     )
 
-    val bgBase = if (isDark) BgDark else BgLight
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgBase),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -107,7 +128,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                 Box(
                     modifier = Modifier
                         .graphicsLayer { scaleX = mascotScale; scaleY = mascotScale }
-                        .size(110.dp)
+                        .size(128.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                         .border(
@@ -117,11 +138,11 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.avatar_mascot),
-                        contentDescription = "Buddy",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    OnboardingGreetingMascot(
+                        playGreeting = step == 0,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(4.dp)
                     )
                 }
 
@@ -145,8 +166,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                             0 -> {
                                 OnboardingStepHeader(
                                     title = "¡Bienvenido, Asesor!",
-                                    subtitle = "Empecemos conociéndonos.\n¿Cuál es tu nombre completo?",
-                                    isDark = isDark
+                                    subtitle = "Empecemos conociéndonos.\n¿Cuál es tu nombre completo?"
                                 )
                                 Spacer(Modifier.height(28.dp))
                                 OnboardingInputField(
@@ -155,7 +175,6 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                                     onValueChange = { data = data.copy(name = it) },
                                     icon = Icons.Rounded.Person,
                                     placeholder = "Ej. María García López",
-                                    isDark = isDark,
                                     imeAction = ImeAction.Done
                                 )
                             }
@@ -163,8 +182,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                             1 -> {
                                 OnboardingStepHeader(
                                     title = "Tus Credenciales",
-                                    subtitle = "Se usan para generar el\nlayout de captura automático.",
-                                    isDark = isDark
+                                    subtitle = "Se usan para generar el\nlayout de captura automático."
                                 )
                                 Spacer(Modifier.height(28.dp))
                                 OnboardingInputField(
@@ -172,8 +190,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                                     value = data.username,
                                     onValueChange = { data = data.copy(username = it) },
                                     icon = Icons.Rounded.Badge,
-                                    placeholder = "Ej. MGARCIA01",
-                                    isDark = isDark
+                                    placeholder = "Ej. MGARCIA01"
                                 )
                                 Spacer(Modifier.height(16.dp))
                                 OnboardingInputField(
@@ -182,7 +199,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                                     onValueChange = { data = data.copy(password = it) },
                                     icon = Icons.Rounded.Lock,
                                     placeholder = "Tu contraseña de acceso",
-                                    isDark = isDark,
+                                    isPassword = true,
                                     imeAction = ImeAction.Done
                                 )
                             }
@@ -190,8 +207,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                             2 -> {
                                 OnboardingStepHeader(
                                     title = "Último Detalle",
-                                    subtitle = "¿Quién es tu supervisor?\nAparecerá en tus reportes.",
-                                    isDark = isDark
+                                    subtitle = "¿Quién es tu supervisor?\nAparecerá en tus reportes."
                                 )
                                 Spacer(Modifier.height(28.dp))
                                 OnboardingInputField(
@@ -200,11 +216,10 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                                     onValueChange = { data = data.copy(supervisor = it) },
                                     icon = Icons.Rounded.Person,
                                     placeholder = "Ej. Carlos Ramírez",
-                                    isDark = isDark,
                                     imeAction = ImeAction.Done
                                 )
                                 Spacer(Modifier.height(16.dp))
-                                OnboardingProfileSummary(data = data, isDark = isDark)
+                                OnboardingProfileSummary(data = data)
                             }
                         }
                     }
@@ -214,7 +229,7 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
             // ── Botones de navegación ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Botón ATRÁS
@@ -223,13 +238,10 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                         modifier = Modifier
                             .size(52.dp)
                             .clip(CircleShape)
-                            .background(
-                                if (isDark) Color.White.copy(alpha = 0.08f)
-                                else Color.Black.copy(alpha = 0.06f)
-                            )
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                             .bouncyClick {
                                 hapticManager?.light()
-                                soundManager.play("pop")
+                                soundManager?.play("pop")
                                 if (step > 0) {
                                     step--
                                 }
@@ -237,9 +249,9 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Rounded.KeyboardArrowRight,
+                            Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                             contentDescription = "Atrás",
-                            tint = if (isDark) Color.White.copy(0.7f) else Color.Black.copy(0.6f),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             modifier = Modifier
                                 .size(24.dp)
                                 .graphicsLayer { scaleX = -1f }
@@ -250,17 +262,16 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                 // Botón SIGUIENTE / COMENZAR
                 val isLastStep = step == 2
                 val btnColor = if (currentStepValid) {
-                    if (isLastStep) GoldAccent else JuicyBlue
+                    MaterialTheme.colorScheme.primary
                 } else {
-                    if (isDark) ConsuSurfaceDark else ConsuChipBg
+                    MaterialTheme.colorScheme.surfaceVariant
                 }
-                val btnShadow = if (currentStepValid) {
-                    if (isLastStep) GoldAccentDark else JuicyBlueShadow
+
+                val btnTextColor = if (currentStepValid) {
+                    MaterialTheme.colorScheme.onPrimary
                 } else {
-                    if (isDark) ConsuNavy else ConsuDividerLight
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(0.3f)
                 }
-                val btnTextColor = if (currentStepValid) Color.White
-                else if (isDark) Color.White.copy(0.25f) else Color.Black.copy(0.25f)
 
                 JuicyButton(
                     text = when {
@@ -269,9 +280,8 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                         else -> "SIGUIENTE  →"
                     },
                     color = btnColor,
-                    shadowColor = btnShadow,
+                    shadowColor = Color.Transparent,
                     textColor = btnTextColor,
-                    soundManager = soundManager,
                     modifier = Modifier.weight(1f)
                 ) {
                     val isValidDynamic = when (step) {
@@ -282,14 +292,13 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
                     }
                     if (isValidDynamic) {
                         if (step == 2) {
-                            soundManager.play("magic")
-                            hapticManager?.success()
+                            soundManager?.play("ui_success")
                             viewModel.saveProfile(
                                 UserProfile(data.name, data.username, data.password, data.supervisor)
                             )
                         } else if (step < 2) {
                             hapticManager?.medium()
-                            soundManager.play("pop")
+                            soundManager?.play("pop")
                             step++
                         }
                     }
@@ -302,8 +311,8 @@ fun MandatoryConfigScreen(viewModel: CalculatorViewModel, ctx: Context, soundMan
 
 @Composable
 private fun OnboardingStepDots(currentStep: Int, totalSteps: Int) {
-    val isDark = isSystemInDarkTheme()
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    val activeColor = MaterialTheme.colorScheme.primary
+    Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)) {
         repeat(totalSteps) { i ->
             val isActive = i == currentStep
             val isPast = i < currentStep
@@ -323,9 +332,9 @@ private fun OnboardingStepDots(currentStep: Int, totalSteps: Int) {
                     .clip(CircleShape)
                     .background(
                         when {
-                            isActive -> GoldAccent.copy(alpha = dotAlpha)
-                            isPast -> GoldAccent.copy(alpha = 0.6f)
-                            else -> if (isDark) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
+                            isActive -> activeColor.copy(alpha = dotAlpha)
+                            isPast -> activeColor.copy(alpha = 0.6f)
+                            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                         }
                     )
             )
@@ -334,20 +343,20 @@ private fun OnboardingStepDots(currentStep: Int, totalSteps: Int) {
 }
 
 @Composable
-private fun OnboardingStepHeader(title: String, subtitle: String, isDark: Boolean) {
+private fun OnboardingStepHeader(title: String, subtitle: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Black,
-            color = if (isDark) Color.White else ConsuNavy,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (isDark) Color.White.copy(alpha = 0.55f) else ConsuNavy.copy(alpha = 0.55f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,
             lineHeight = 22.sp
         )
@@ -361,23 +370,23 @@ private fun OnboardingInputField(
     onValueChange: (String) -> Unit,
     icon: ImageVector,
     placeholder: String,
-    isDark: Boolean,
+    isPassword: Boolean = false,
     imeAction: ImeAction = ImeAction.Next
 ) {
     val hapticManager = LocalHapticManager.current
     var isFocused by remember { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
     val isValid = value.isNotBlank()
 
     val borderColor by animateColorAsState(
         targetValue = when {
-            isValid -> SuccessGreen
-            isFocused -> GoldAccent
-            else -> if (isDark) Color.White.copy(0.12f) else Color.Black.copy(0.10f)
+            isValid -> ConsuSuccess
+            isFocused -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
         },
         animationSpec = tween(250),
         label = "borderColor"
     )
-    val bgColor = if (isDark) ConsuNavyDark else Color.White
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -388,7 +397,7 @@ private fun OnboardingInputField(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isDark) Color.White.copy(0.5f) else Color.Black.copy(0.4f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 letterSpacing = 1.2.sp
             )
             if (isValid) {
@@ -396,7 +405,7 @@ private fun OnboardingInputField(
                 Icon(
                     Icons.Rounded.CheckCircle,
                     contentDescription = null,
-                    tint = SuccessGreen,
+                    tint = ConsuSuccess,
                     modifier = Modifier.size(14.dp)
                 )
             }
@@ -404,10 +413,11 @@ private fun OnboardingInputField(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(58.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(bgColor)
-                .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                .heightIn(min = 58.dp)
+                .clip(RoundedCornerShape(ConsuRadius.md))
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, borderColor, RoundedCornerShape(ConsuRadius.md))
+                .semantics { contentDescription = label }
                 .onFocusChanged {
                     if (it.isFocused != isFocused) {
                         isFocused = it.isFocused
@@ -420,9 +430,9 @@ private fun OnboardingInputField(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = if (isValid) SuccessGreen
-                       else if (isFocused) GoldAccent
-                       else if (isDark) Color.White.copy(0.35f) else Color.Black.copy(0.3f),
+                tint = if (isValid) ConsuSuccess
+                       else if (isFocused) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(Modifier.width(12.dp))
@@ -437,19 +447,24 @@ private fun OnboardingInputField(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = FontFamily.SansSerif,
-                    color = if (isDark) Color.White else ConsuNavy
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
+                    keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
                     imeAction = imeAction
                 ),
+                visualTransformation = if (isPassword && !passwordVisible) {
+                    PasswordVisualTransformation()
+                } else {
+                    VisualTransformation.None
+                },
                 singleLine = true,
                 decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (value.isEmpty()) {
                             Text(
                                 placeholder,
-                                color = if (isDark) Color.White.copy(0.22f) else Color.Black.copy(0.22f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal)
                             )
                         }
@@ -457,76 +472,86 @@ private fun OnboardingInputField(
                     }
                 }
             )
-            AnimatedVisibility(visible = isValid) {
+            if (isPassword) {
+                IconButton(
+                    onClick = { passwordVisible = !passwordVisible },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
+                    )
+                }
+            } else AnimatedVisibility(visible = isValid) {
                 Box(
                     modifier = Modifier
                         .padding(end = 14.dp)
                         .size(22.dp)
                         .clip(CircleShape)
-                        .background(SuccessGreen.copy(alpha = 0.15f)),
+                        .background(ConsuSuccess.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Rounded.Check,
                         contentDescription = null,
-                        tint = SuccessGreen,
+                        tint = ConsuSuccess,
                         modifier = Modifier.size(13.dp)
                     )
                 }
             }
-            if (!isValid) Spacer(Modifier.width(14.dp))
+            if (!isPassword && !isValid) Spacer(Modifier.width(14.dp))
         }
     }
 }
 
 @Composable
-private fun OnboardingProfileSummary(data: OnboardingData, isDark: Boolean) {
-    val cardBg = if (isDark) ConsuNavyDark else Color.White
+private fun OnboardingProfileSummary(data: OnboardingData) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(cardBg)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-            .padding(16.dp)
+            .clip(RoundedCornerShape(ConsuRadius.md))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(ConsuRadius.md))
+            .padding(ConsuSpacing.lg)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
                 "RESUMEN DE TU PERFIL",
                 style = MaterialTheme.typography.labelMedium,
-                color = GoldAccent,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-            ProfileSummaryRow(Icons.Rounded.Person, "Nombre", data.name, isDark)
-            ProfileSummaryRow(Icons.Rounded.Badge, "Usuario", data.username, isDark)
-            ProfileSummaryRow(Icons.Rounded.Lock, "Contraseña", "••••••", isDark)
-            ProfileSummaryRow(Icons.Rounded.Person, "Supervisor", data.supervisor.ifBlank { "—" }, isDark)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+            ProfileSummaryRow(Icons.Rounded.Person, "Nombre", data.name)
+            ProfileSummaryRow(Icons.Rounded.Badge, "Usuario", data.username)
+            ProfileSummaryRow(Icons.Rounded.Lock, "Contraseña", "••••••")
+            ProfileSummaryRow(Icons.Rounded.Person, "Supervisor", data.supervisor.ifBlank { "—" })
         }
     }
 }
 
 @Composable
-private fun ProfileSummaryRow(icon: ImageVector, label: String, value: String, isDark: Boolean) {
+private fun ProfileSummaryRow(icon: ImageVector, label: String, value: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             icon, contentDescription = null,
-            tint = GoldAccent.copy(alpha = 0.7f),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
             modifier = Modifier.size(15.dp)
         )
         Spacer(Modifier.width(8.dp))
         Text(
             "$label:",
             style = MaterialTheme.typography.labelSmall,
-            color = if (isDark) Color.White.copy(0.45f) else Color.Black.copy(0.45f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             modifier = Modifier.width(80.dp)
         )
         Text(
             value,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
-            color = if (isDark) Color.White.copy(0.85f) else ConsuNavy,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1
         )
     }

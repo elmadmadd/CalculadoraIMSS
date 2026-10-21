@@ -5,7 +5,6 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.consucalcu.*
 import androidx.compose.foundation.background
@@ -97,8 +97,10 @@ fun AnimatedTabContent(
             )
         },
         label = "tabContent"
-    ) { _ ->
-        content()
+    ) { targetTab ->
+        key(targetTab) {
+            content()
+        }
     }
 }
 
@@ -114,12 +116,12 @@ fun NavBarItem(
     val hapticManager = LocalHapticManager.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val selectedIconBg = if (isSystemInDarkTheme()) Color.White else ConsuNavy
     val selectedIconTint = if (isSystemInDarkTheme()) ConsuNavy else Color.White
     val selectedTextColor = ConsuOrange
     val unselectedColor = ConsuTextMuted
-    
+
     val animatedScale by animateFloatAsState(
         targetValue = when {
             isPressed -> 0.9f
@@ -141,6 +143,7 @@ fun NavBarItem(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
+                role = Role.Button,
                 onClick = {
                     if (!selected) hapticManager?.medium()
                     onClick()
@@ -159,9 +162,9 @@ fun NavBarItem(
                 .clip(RoundedCornerShape(1.5.dp))
                 .background(if (selected) ConsuOrange else Color.Transparent)
         )
-        
+
         Spacer(Modifier.height(6.dp))
-        
+
         // Icon container
         Box(
             contentAlignment = Alignment.Center,
@@ -177,13 +180,13 @@ fun NavBarItem(
                 tint = if (selected) selectedIconTint else unselectedColor
             )
         }
-        
+
         Spacer(Modifier.height(4.dp))
-        
+
         // Label Text
         Text(
             text = label,
-            fontSize = 10.sp,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             color = if (selected) selectedTextColor else unselectedColor
         )

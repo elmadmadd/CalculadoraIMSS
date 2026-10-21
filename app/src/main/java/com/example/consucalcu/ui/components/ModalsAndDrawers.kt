@@ -1,10 +1,11 @@
 package com.example.consucalcu.ui.components
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import com.example.consucalcu.R
 import androidx.compose.ui.draw.scale
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -37,7 +38,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,16 +130,16 @@ fun ClientFormContent(
 
     Column(
         modifier = Modifier
-            .padding(16.dp)
+            .padding(ConsuSpacing.lg)
             .navigationBarsPadding()
             .fillMaxWidth()
     ) {
         Text(
             "Formulario de Captura",
-            style = JuicyTypography.titleLarge,
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        
+
         Text(
             "Completa todos los campos para generar el layout o ticket",
             style = MaterialTheme.typography.bodyLarge,
@@ -156,7 +159,7 @@ fun ClientFormContent(
                         KeyboardType.Text,
                         Icons.Rounded.Person
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                         Box(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.weight(1f)) {
@@ -176,11 +179,11 @@ fun ClientFormContent(
                             JuicyInput(
                                 "CURP", d.curp,
                                 { if (it.length <= 18) viewModel.updateClientData(d.copy(curp = it)) },
-                                keyboardTypeFromString(d.curp) ?: KeyboardType.Text, Icons.Rounded.Badge
+                                keyboardTypeFromString(), Icons.Rounded.Badge
                             )
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                         Box(Modifier.weight(1f)) {
                             JuicyInput(
                                 "RFC (con homoclave)", d.rfc,
@@ -206,7 +209,7 @@ fun ClientFormContent(
                         { viewModel.updateClientData(d.copy(email = it)) },
                         KeyboardType.Email, Icons.Rounded.Person
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                         Box(Modifier.weight(1f)) {
                             JuicyInput(
                                 "Teléfono", d.phone,
@@ -256,14 +259,14 @@ fun ClientFormContent(
                         selected = d.transactionType,
                         onSelect = { viewModel.updateClientData(d.copy(transactionType = it)) }
                     )
-                    
+
                     if (d.transactionType != "NUEVO") {
                         JuicyInput(
                             "ID (Crédito a Liquidar)", d.creditId,
                             { viewModel.updateClientData(d.copy(creditId = it)) },
                             KeyboardType.Text, Icons.Rounded.Numbers
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                             Box(Modifier.weight(1f)) {
                                 JuicyInput(
                                     "Descuento Mensual", d.discountAmount,
@@ -305,7 +308,7 @@ fun ClientFormContent(
                         { if (it.length <= 10) viewModel.updateClientData(d.copy(ref1Phone = it)) },
                         KeyboardType.Phone, Icons.Rounded.Phone
                     )
-                    
+
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.1f))
 
                     Text(
@@ -332,31 +335,31 @@ fun ClientFormContent(
 
         JuicyButton(
             text = "COPIAR TEXTO AL PORTAPAPELES",
-            color = JuicyGreen,
-            shadowColor = JuicyGreenShadow,
+            color = ConsuSuccess,
+            shadowColor = Color.Transparent,
             textColor = Color.White,
             height = 60.dp,
             icon = Icons.AutoMirrored.Rounded.ReceiptLong,
             onClick = { onGenerate(viewModel.generateLayout()) }
         )
-        
+
         Spacer(Modifier.height(12.dp))
-        
+
         JuicyButton(
             text = "COMPARTIR TICKET DORADO",
-            color = ConsuNavy,
-            shadowColor = ConsuNavyDark,
-            textColor = ConsuOrange,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shadowColor = Color.Transparent,
+            textColor = MaterialTheme.colorScheme.primary,
             height = 60.dp,
             icon = Icons.Rounded.Star,
-            iconColor = ConsuOrange,
+            iconColor = MaterialTheme.colorScheme.primary,
             isLoading = state.isGeneratingTicket,
             onClick = onGenerateTicket
         )
     }
 }
 
-private fun keyboardTypeFromString(s: String) = KeyboardType.Text
+private fun keyboardTypeFromString() = KeyboardType.Text
 
 // ==========================================
 // 3. OFFER PREVIEW MODAL
@@ -366,11 +369,11 @@ private fun keyboardTypeFromString(s: String) = KeyboardType.Text
 fun OfferPreviewModal(
     offer: LoanOffer,
     viewModel: CalculatorViewModel,
-    soundManager: SoundManager,
-    context: Context,
     onDismiss: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val soundManager = LocalSoundManager.current
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -387,7 +390,7 @@ fun OfferPreviewModal(
             item {
                 if (offer.isBest) {
                     Surface(
-                        color = JuicyOrange,
+                        color = MaterialTheme.colorScheme.primary,
                         shape = RoundedCornerShape(50),
                         modifier = Modifier.padding(bottom = 16.dp)
                     ) {
@@ -398,20 +401,20 @@ fun OfferPreviewModal(
                             Icon(
                                 Icons.Rounded.EmojiEvents,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 "MEJOR OPCIÓN",
                                 fontWeight = FontWeight.Black,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 14.sp
                             )
                         }
                     }
                 }
-                
+
                 Text(
                     text = offer.product,
                     style = MaterialTheme.typography.titleLarge,
@@ -422,12 +425,20 @@ fun OfferPreviewModal(
                     text = offer.tipoTasa,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = JuicyBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
                 )
-                
+                if (offer.agreementLabel.isNotBlank()) {
+                    Text(
+                        text = offer.agreementLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Spacer(Modifier.height(32.dp))
-                
+
                 Text(
                     text = if(offer.amount > offer.mainValue) "REMANENTE" else "MONTO A RECIBIR",
                     style = MaterialTheme.typography.labelMedium,
@@ -435,17 +446,17 @@ fun OfferPreviewModal(
                     letterSpacing = 2.sp,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Spacer(Modifier.height(8.dp))
-                
+
                 var heroScaleTarget by remember { mutableFloatStateOf(0.8f) }
                 var heroAlphaTarget by remember { mutableFloatStateOf(0f) }
-                
+
                 LaunchedEffect(Unit) {
                     heroScaleTarget = 1f
                     heroAlphaTarget = 1f
                 }
-                
+
                 val heroScale by animateFloatAsState(
                     targetValue = heroScaleTarget,
                     animationSpec = spring(
@@ -454,20 +465,13 @@ fun OfferPreviewModal(
                     ),
                     label = "heroScale"
                 )
-                
+
                 val heroAlpha by animateFloatAsState(
                     targetValue = heroAlphaTarget,
-                    animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+                    animationSpec = tween(durationMillis = 600, easing = EaseOutCubic),
                     label = "heroAlpha"
                 )
-                
-                val productColors = remember(offer.product, offer.tipoTasa) {
-                    ProductBranding.getColors(
-                        offer.product, 
-                        offer.tipoTasa == "RETENCION"
-                    )
-                }
-                
+
                 Text(
                     text = "$${offer.mainValue.toCurrency()}",
                     style = TextStyle(
@@ -476,14 +480,14 @@ fun OfferPreviewModal(
                         fontSize = 56.sp,
                         letterSpacing = (-2).sp
                     ),
-                    color = productColors.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.graphicsLayer {
                         scaleX = heroScale
                         scaleY = heroScale
                         alpha = heroAlpha
                     }
                 )
-                
+
                 if (offer.amount > offer.mainValue) {
                     Spacer(Modifier.height(12.dp))
                     Surface(
@@ -510,34 +514,34 @@ fun OfferPreviewModal(
                         }
                     }
                 }
-                
+
                 Spacer(Modifier.height(40.dp))
-                
+
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(ConsuRadius.lg),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                     shadowElevation = 8.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
+                    Column(modifier = Modifier.padding(ConsuSpacing.xxl)) {
                         DetailRow(
                             icon = Icons.Rounded.AttachMoney,
-                            label = "MENSUALIDAD",
+                            label = offer.paymentLabel,
                             value = "$${offer.monthlyPayment.toCurrency()}",
-                            valueColor = JuicyOrange
+                            valueColor = MaterialTheme.colorScheme.primary
                         )
-                        
+
                         DashedDivider()
-                        
+
                         DetailRow(
                             icon = Icons.Rounded.CalendarMonth,
                             label = "PLAZO",
-                            value = "${offer.term} Meses",
+                            value = offer.termDisplay,
                             valueColor = MaterialTheme.colorScheme.onSurface
                         )
                         DashedDivider()
-                        
+
                         DetailRow(
                             icon = Icons.AutoMirrored.Rounded.TrendingDown,
                             label = "CAT",
@@ -546,13 +550,13 @@ fun OfferPreviewModal(
                         )
                     }
                 }
-                
+
                 val isRefinance = state.selectedTab == 0
                 if (isRefinance) {
-                    val currentPayment = remember(state.debts) { 
-                        state.debts.sumOf { it.payment.toBD() } 
+                    val currentPayment = remember(state.debts) {
+                        state.debts.sumOf { it.payment.toBD() }
                     }
-                    
+
                     if (currentPayment > BigDecimal.ZERO) {
                         Spacer(Modifier.height(24.dp))
                         BeforeAfterChart(
@@ -564,32 +568,32 @@ fun OfferPreviewModal(
 
                 if (offer.reasons.isNotEmpty()) {
                     Spacer(Modifier.height(24.dp))
-                    
+
                     Text(
                         "RAZONES DE APROBACIÓN",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
+
                     Spacer(Modifier.height(12.dp))
-                    
+
                     offer.reasons.forEach { reason ->
                         Surface(
-                            color = JuicyGreen.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(8.dp),
+                            color = ConsuSuccess.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(ConsuRadius.sm),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
                         ) {
                             Row(
-                                modifier = Modifier.padding(12.dp),
+                                modifier = Modifier.padding(ConsuSpacing.md),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     Icons.Rounded.EmojiEmotions,
                                     contentDescription = null,
-                                    tint = JuicyGreen,
+                                    tint = ConsuSuccess,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(Modifier.width(12.dp))
@@ -603,22 +607,96 @@ fun OfferPreviewModal(
                         }
                     }
                 }
-                
+
+                Spacer(Modifier.height(24.dp))
+
+                Text(
+                    "GUARDAR O IMPRIMIR PROPUESTA",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                var clientInputName by remember { mutableStateOf(state.clientData.name) }
+                var advisorInputName by remember { mutableStateOf(state.userProfile.name) }
+
+                JuicyInput(
+                    label = "Nombre del Cliente",
+                    value = clientInputName,
+                    onValChange = {
+                        clientInputName = it
+                        viewModel.updateClientData(state.clientData.copy(name = it))
+                    },
+                    type = KeyboardType.Text,
+                    leadingIcon = Icons.Rounded.Person
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                JuicyInput(
+                    label = "Nombre del Asesor",
+                    value = advisorInputName,
+                    onValChange = {
+                        advisorInputName = it
+                        viewModel.saveProfile(state.userProfile.copy(name = it))
+                    },
+                    type = KeyboardType.Text,
+                    leadingIcon = Icons.Rounded.Badge
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                JuicyButton(
+                    text = "ABRIR IMPRESIÓN EN PDF",
+                    icon = Icons.Rounded.PictureAsPdf,
+                    color = MaterialTheme.colorScheme.secondary,
+                    shadowColor = Color.Transparent,
+                    textColor = MaterialTheme.colorScheme.onSecondary,
+                    height = 56.dp
+                ) {
+                    val table = calculateAmortizationTable(
+                        amount = offer.amount,
+                        term = offer.periodCount,
+                        fixedPayment = offer.monthlyPayment,
+                        periodsPerYear = offer.periodsPerYear
+                    )
+                    PdfExporter.exportToPdf(
+                        context = context,
+                        offer = offer,
+                        clientName = clientInputName.ifEmpty { "Cliente General" },
+                        advisorName = advisorInputName.ifEmpty { "Asesor ConsuCalcu" },
+                        table = table,
+                        onCompleted = {
+                            viewModel.recordPdfGeneratedForSupport()
+                            soundManager?.play("pdf_ready")
+                        }
+                    )
+                    soundManager?.play("pop")
+                }
+
+                Text(
+                    text = "Se abrirá el diálogo del sistema para guardar como PDF o imprimir.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
                 ) {
                     Box(Modifier.weight(0.3f)) {
                          JuicyButton(
                             text = "",
                             icon = Icons.Rounded.Share,
                             color = MaterialTheme.colorScheme.surfaceVariant,
-                            shadowColor = MaterialTheme.colorScheme.outline.copy(alpha=0.15f),
+                            shadowColor = Color.Transparent,
                             textColor = MaterialTheme.colorScheme.onSurface,
-                            height = 60.dp,
-                            soundManager = soundManager
+                            height = 60.dp
                          ) {
-                             soundManager.play("pop")
+                             soundManager?.play("pop")
                              viewModel.prepareTicketSharing(context, offer)
                          }
                     }
@@ -626,16 +704,15 @@ fun OfferPreviewModal(
                     Box(Modifier.weight(1f)) {
                          JuicyButton(
                             text = "CONTINUAR",
-                            color = productColors.primary,
-                            shadowColor = productColors.shadow,
-                            textColor = Color.White,
+                            color = MaterialTheme.colorScheme.primary,
+                            shadowColor = Color.Transparent,
+                            textColor = MaterialTheme.colorScheme.onPrimary,
                             height = 60.dp,
-                            soundManager = soundManager,
                             onClick = onContinue
                         )
                     }
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
             }
         }
@@ -646,13 +723,13 @@ fun OfferPreviewModal(
 // 4. CONFIG DIALOG & CONFIG FORM CONTENT
 // ==========================================
 @Composable
-fun ConfigDialog(viewModel: CalculatorViewModel, ctx: Context, soundManager: SoundManager) {
+fun ConfigDialog(viewModel: CalculatorViewModel) {
     Dialog(onDismissRequest = { viewModel.toggleConfigDialog(false) }) {
         JuicyCard(
             color = MaterialTheme.colorScheme.surface,
             shadowColor = MaterialTheme.colorScheme.outline
         ) {
-            ConfigFormContent(viewModel, ctx, soundManager)
+            ConfigFormContent(viewModel)
         }
     }
 }
@@ -660,8 +737,6 @@ fun ConfigDialog(viewModel: CalculatorViewModel, ctx: Context, soundManager: Sou
 @Composable
 fun ConfigFormContent(
     viewModel: CalculatorViewModel,
-    ctx: Context,
-    soundManager: SoundManager,
     isMandatory: Boolean = false,
     onSaved: () -> Unit = {}
 ) {
@@ -676,7 +751,7 @@ fun ConfigFormContent(
 
     Column(
         Modifier
-            .padding(24.dp)
+            .padding(ConsuSpacing.xxl)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -687,15 +762,15 @@ fun ConfigFormContent(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(JuicyOrange, CircleShape)
-                    .border(3.dp, JuicyOrange, CircleShape),
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
             Spacer(Modifier.height(16.dp))
             Text(
                 "¡Bienvenido Asesor!",
                 style = MaterialTheme.typography.headlineMedium,
-                color = JuicyBlue,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Black
             )
             Text(
@@ -709,14 +784,14 @@ fun ConfigFormContent(
             Icon(
                 Icons.Rounded.Settings,
                 contentDescription = null,
-                tint = JuicyBlue,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(48.dp)
             )
             Spacer(Modifier.height(8.dp))
             Text(
                 "CONFIGURACIÓN",
                 style = MaterialTheme.typography.titleLarge,
-                color = JuicyBlue,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Black
             )
             Text(
@@ -751,8 +826,9 @@ fun ConfigFormContent(
             "Contraseña del Sistema",
             tempPwd,
             { tempPwd = it },
-            KeyboardType.Text,
-            Icons.Rounded.Business
+            KeyboardType.Password,
+            Icons.Rounded.Lock,
+            visualTransformation = PasswordVisualTransformation(),
         )
 
         Spacer(Modifier.height(12.dp))
@@ -779,11 +855,10 @@ fun ConfigFormContent(
 
         JuicyButton(
             text = if (isMandatory) "¡COMENZAR AHORA!" else "GUARDAR CONFIGURACIÓN",
-            color = if (isValid) JuicyGreen else Color.Gray,
-            shadowColor = if (isValid) JuicyGreenShadow else Color.DarkGray,
-            textColor = Color.White,
-            icon = if (isMandatory) Icons.Rounded.PlayArrow else Icons.Rounded.EmojiEvents,
-            soundManager = soundManager
+            color = if (isValid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            shadowColor = Color.Transparent,
+            textColor = if (isValid) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.3f),
+            icon = if (isMandatory) Icons.Rounded.PlayArrow else Icons.Rounded.EmojiEvents
         ) {
             if (isValid) {
                 viewModel.saveProfile(
@@ -812,7 +887,7 @@ fun OffersComparator(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(ConsuSpacing.lg)
                 .navigationBarsPadding()
         ) {
             Text(
@@ -821,62 +896,128 @@ fun OffersComparator(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
-            Row(
+
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .weight(1f, fill = false),
             ) {
-                Text("Producto", Modifier.weight(1.2f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("Monto", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
-                Text("Mensualidad", Modifier.weight(1.2f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
-                Text("Plazo", Modifier.weight(0.8f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.Center)
-            }
-            
-            Spacer(Modifier.height(8.dp))
-            
-            LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
-                itemsIndexed(offers) { index, offer ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable { onSelectOffer(offer) },
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (offer.isBest) JuicyGreen.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant,
-                        border = if (offer.isBest) BorderStroke(2.dp, JuicyGreen) else null
-                    ) {
+                val compact = maxWidth < 420.dp
+
+                Column {
+                    if (!compact) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(ConsuRadius.sm))
+                                .padding(ConsuSpacing.md),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(Modifier.weight(1.2f)) {
-                                Text(offer.product, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                                if (offer.isBest) {
-                                    Text("⭐ Mejor Opción", fontSize = 9.sp, color = JuicyGreen)
-                                }
-                            }
-                            Text("$${offer.amount.toCurrency()}", Modifier.weight(1f), fontSize = 13.sp, textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
-                            Text("$${offer.monthlyPayment.toCurrency()}", Modifier.weight(1.2f), fontSize = 13.sp, textAlign = TextAlign.End)
-                            Text("${offer.term}m", Modifier.weight(0.8f), fontSize = 11.sp, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text("Producto", Modifier.weight(1.2f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text("Monto", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+                            Text(
+                                if (offers.any { it.paymentFrequency == "QUINCENAL" }) "Quincenal" else "Mensualidad",
+                                Modifier.weight(1.2f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.End
+                            )
+                            Text("Plazo", Modifier.weight(0.8f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.Center)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    LazyColumn {
+                        items(offers, key = { "${it.product}-${it.term}-${it.amount}" }) { offer ->
+                            ComparatorOfferRow(
+                                offer = offer,
+                                compact = compact,
+                                onClick = { onSelectOffer(offer) },
+                            )
                         }
                     }
                 }
             }
-            
+
             Spacer(Modifier.height(16.dp))
-            
+
             JuicyButton(
                 text = "CERRAR",
                 color = MaterialTheme.colorScheme.secondary,
-                shadowColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                textColor = Color.White,
+                shadowColor = Color.Transparent,
+                textColor = MaterialTheme.colorScheme.onSecondary,
                 onClick = onDismiss
             )
         }
+    }
+}
+
+@Composable
+private fun ComparatorOfferRow(
+    offer: LoanOffer,
+    compact: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(ConsuRadius.md),
+        color = if (offer.isBest) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant,
+        border = if (offer.isBest) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+    ) {
+        if (compact) {
+            Column(
+                modifier = Modifier.padding(ConsuSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = offer.product,
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (offer.isBest) {
+                        Text(
+                            text = "MEJOR",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)) {
+                    ComparatorMetric("Monto", "$${offer.amount.toCurrency()}", Modifier.weight(1f))
+                    ComparatorMetric(offer.shortPaymentLabel, "$${offer.monthlyPayment.toCurrency()}", Modifier.weight(1f))
+                }
+                ComparatorMetric("Plazo", offer.termDisplay, Modifier.fillMaxWidth())
+            }
+        } else {
+            Row(
+                modifier = Modifier.padding(ConsuSpacing.md),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1.2f)) {
+                    Text(offer.product, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (offer.isBest) Text("★ Mejor Opción", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                }
+                Text("$${offer.amount.toCurrency()}", Modifier.weight(1f), fontSize = 13.sp, textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
+                Text("$${offer.monthlyPayment.toCurrency()}", Modifier.weight(1.2f), fontSize = 13.sp, textAlign = TextAlign.End)
+                Text(offer.termDisplay, Modifier.weight(0.8f), fontSize = 12.sp, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ComparatorMetric(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -897,7 +1038,7 @@ fun AmortizationSimulator(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(ConsuSpacing.lg)
                 .navigationBarsPadding()
         ) {
             Text(
@@ -906,86 +1047,149 @@ fun AmortizationSimulator(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "${offer.product} - ${offer.term} meses",
+                "${offer.product} - ${offer.termDisplay}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = JuicyBlue.copy(alpha = 0.1f)
+                shape = RoundedCornerShape(ConsuRadius.md),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Monto", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                        Text("$${offer.amount.toCurrency()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = JuicyBlue)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Mensualidad", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                        Text("$${offer.monthlyPayment.toCurrency()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = JuicyGreen)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Total a Pagar", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                        val totalPaid = amortizationTable.sumOf { it.payment }
-                        Text("$${totalPaid.toCurrency()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = JuicyOrange)
+                BoxWithConstraints {
+                    val compact = maxWidth < 420.dp
+                    val totalPaid = amortizationTable.sumOf { it.payment }
+                    if (compact) {
+                        Column(
+                            modifier = Modifier.padding(ConsuSpacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(ConsuSpacing.sm),
+                        ) {
+                            AmortizationSummaryMetric("Monto", "$${offer.amount.toCurrency()}", MaterialTheme.colorScheme.primary)
+                            AmortizationSummaryMetric(offer.shortPaymentLabel, "$${offer.monthlyPayment.toCurrency()}", ConsuSuccess)
+                            AmortizationSummaryMetric("Total a pagar", "$${totalPaid.toCurrency()}", MaterialTheme.colorScheme.secondary)
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.padding(ConsuSpacing.lg),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                        ) {
+                            AmortizationSummaryMetric("Monto", "$${offer.amount.toCurrency()}", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+                            AmortizationSummaryMetric(offer.shortPaymentLabel, "$${offer.monthlyPayment.toCurrency()}", ConsuSuccess, Modifier.weight(1f))
+                            AmortizationSummaryMetric("Total a pagar", "$${totalPaid.toCurrency()}", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+                        }
                     }
                 }
             }
-            
+
             Spacer(Modifier.height(16.dp))
-            
-            LazyColumn(
+
+            BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Mes", Modifier.weight(0.5f), fontWeight = FontWeight.Bold, fontSize = 10.sp)
-                        Text("Interés", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
-                        Text("IVA", Modifier.weight(0.7f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
-                        Text("Capital", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
-                        Text("Saldo", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 10.sp, textAlign = TextAlign.End)
+                val compact = maxWidth < 420.dp
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    if (!compact) {
+                        item {
+                            AmortizationTableHeader(offer.paymentFrequency == "QUINCENAL")
+                        }
                     }
-                }
-                
-                itemsIndexed(amortizationTable) { index, row ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(if (index % 2 == 0) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("${row.month}", Modifier.weight(0.5f), fontSize = 11.sp)
-                        Text("$${row.interest.toCurrency()}", Modifier.weight(1f), fontSize = 11.sp, textAlign = TextAlign.End, color = JuicyRed.copy(alpha = 0.7f))
-                        Text("$${row.iva.toCurrency()}", Modifier.weight(0.7f), fontSize = 11.sp, textAlign = TextAlign.End, color = JuicyOrange.copy(alpha = 0.7f))
-                        Text("$${row.principal.toCurrency()}", Modifier.weight(1f), fontSize = 11.sp, textAlign = TextAlign.End, color = JuicyGreen.copy(alpha = 0.7f))
-                        Text("$${row.balance.toCurrency()}", Modifier.weight(1f), fontSize = 11.sp, textAlign = TextAlign.End, fontWeight = FontWeight.SemiBold)
+                    itemsIndexed(amortizationTable) { index, row ->
+                        AmortizationTableRow(
+                            row = row,
+                            index = index,
+                            compact = compact,
+                            periodLabel = if (offer.paymentFrequency == "QUINCENAL") "Quincena" else "Mes",
+                        )
                     }
                 }
             }
-            
+
             Spacer(Modifier.height(16.dp))
-            
+
             JuicyButton(
                 text = "CERRAR",
                 color = MaterialTheme.colorScheme.secondary,
-                shadowColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                textColor = Color.White,
+                shadowColor = Color.Transparent,
+                textColor = MaterialTheme.colorScheme.onSecondary,
                 onClick = onDismiss
             )
+        }
+    }
+}
+
+@Composable
+private fun AmortizationSummaryMetric(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun AmortizationTableHeader(isBiweekly: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(topStart = ConsuRadius.sm, topEnd = ConsuRadius.sm))
+            .padding(ConsuSpacing.sm),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(if (isBiweekly) "Quincena" else "Mes", Modifier.weight(0.5f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Text("Interés", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+        Text("IVA", Modifier.weight(0.7f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+        Text("Capital", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+        Text("Saldo", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.End)
+    }
+}
+
+@Composable
+private fun AmortizationTableRow(
+    row: AmortizationRow,
+    index: Int,
+    compact: Boolean,
+    periodLabel: String,
+) {
+    val background = if (index % 2 == 0) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+    if (compact) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(background, RoundedCornerShape(ConsuRadius.sm))
+                .padding(ConsuSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("$periodLabel ${row.month}", Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                ComparatorMetric("Saldo", "$${row.balance.toCurrency()}")
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)) {
+                ComparatorMetric("Interés", "$${row.interest.toCurrency()}", Modifier.weight(1f))
+                ComparatorMetric("IVA", "$${row.iva.toCurrency()}", Modifier.weight(1f))
+                ComparatorMetric("Capital", "$${row.principal.toCurrency()}", Modifier.weight(1f))
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(background)
+                .padding(ConsuSpacing.sm),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("${row.month}", Modifier.weight(0.5f), fontSize = 12.sp)
+            Text("$${row.interest.toCurrency()}", Modifier.weight(1f), fontSize = 12.sp, textAlign = TextAlign.End, color = ConsuError)
+            Text("$${row.iva.toCurrency()}", Modifier.weight(0.7f), fontSize = 12.sp, textAlign = TextAlign.End, color = MaterialTheme.colorScheme.secondary)
+            Text("$${row.principal.toCurrency()}", Modifier.weight(1f), fontSize = 12.sp, textAlign = TextAlign.End, color = ConsuSuccess)
+            Text("$${row.balance.toCurrency()}", Modifier.weight(1f), fontSize = 12.sp, textAlign = TextAlign.End, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -1003,18 +1207,18 @@ fun HistorySheet(
 ) {
     Column(
         Modifier
-            .padding(24.dp)
+            .padding(ConsuSpacing.xxl)
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
         Row(
-           Modifier.fillMaxWidth(), 
+           Modifier.fillMaxWidth(),
            horizontalArrangement = Arrangement.SpaceBetween,
            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Historial Reciente", 
-                style = MaterialTheme.typography.titleLarge, 
+                "Historial Reciente",
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black
             )
             if (history.isNotEmpty()) {
@@ -1025,16 +1229,16 @@ fun HistorySheet(
                 Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.primary)
             }
         }
-        
+
         Spacer(Modifier.height(24.dp))
-        
+
         if (history.isEmpty()) {
             Column(
-                Modifier.fillMaxWidth(), 
+                Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "📭", 
+                    "📭",
                     fontSize = 48.sp
                 )
                 Spacer(Modifier.height(16.dp))
@@ -1045,7 +1249,7 @@ fun HistorySheet(
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(history, key = { it.timestamp }) { draft ->
@@ -1065,14 +1269,14 @@ fun HistorySheet(
                         state = dismissState,
                         enableDismissFromStartToEnd = false,
                         backgroundContent = {
-                            val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) 
-                                MaterialTheme.colorScheme.errorContainer 
+                            val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart)
+                                MaterialTheme.colorScheme.errorContainer
                             else Color.Transparent
 
                             Box(
                                 Modifier
                                     .fillMaxSize()
-                                    .background(color, RoundedCornerShape(20.dp))
+                                    .background(color, RoundedCornerShape(ConsuRadius.xl))
                                     .padding(horizontal = 20.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
@@ -1086,24 +1290,24 @@ fun HistorySheet(
                             modifier = Modifier.clickable { onRestore(draft) }
                         ) {
                             Row(
-                                Modifier.padding(16.dp).fillMaxWidth(),
+                                Modifier.padding(ConsuSpacing.lg).fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(Modifier.weight(1f)) {
                                     Text(
-                                        draft.type, 
+                                        draft.type,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
-                                        "${draft.debts.size} deudas • Cap: $${draft.capacity}", 
-                                        style = MaterialTheme.typography.bodySmall, 
+                                        "${draft.debts.size} deudas • Cap: $${draft.capacity}",
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f)
                                     )
                                 }
-                                
+
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(draft.timestamp),
@@ -1159,9 +1363,9 @@ data class LiquidationResultData(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiquidationCalculatorModal(
-    onDismiss: () -> Unit,
-    soundManager: SoundManager? = null
+    onDismiss: () -> Unit
 ) {
+    val soundManager = LocalSoundManager.current
     var capitalInput by remember { mutableStateOf("") }
     var paymentInput by remember { mutableStateOf("") }
     var monthsInput by remember { mutableStateOf("") }
@@ -1172,7 +1376,9 @@ fun LiquidationCalculatorModal(
     val haptic = LocalHapticFeedback.current
 
     val formatCurrency = { amount: Double ->
-        java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es", "MX")).format(amount)
+        java.text.DecimalFormat.getCurrencyInstance(
+            java.util.Locale.Builder().setLanguage("es").setRegion("MX").build()
+        ).format(amount)
     }
 
     val calculationResult = remember(capitalInput, paymentInput, monthsInput, paymentsMadeInput, daysStr, isQuincenal) {
@@ -1186,7 +1392,7 @@ fun LiquidationCalculatorModal(
             if (p > 0 && r > 0 && n > 0 && hechos >= 0 && n > hechos) {
                 val iPeriodo = calculateMonthlyRate(p, r, n)
                 val periodsPerYear = if (isQuincenal) 24.0 else 12.0
-                
+
                 val iMensual = if (isQuincenal) iPeriodo * 2 else iPeriodo
                 val iAnual = iMensual * 12
                 val cat = (Math.pow(1 + iPeriodo, periodsPerYear) - 1) * 100
@@ -1271,19 +1477,19 @@ fun LiquidationCalculatorModal(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 JuicyGradientCard(
-                    brush = Brush.linearGradient(listOf(ConsuNavyDark, ConsuNavyLight)),
-                    shadowColor = ConsuNavyDark.copy(alpha=0.3f),
+                    brush = Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)),
+                    shadowColor = Color.Transparent,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                 ) {
                     Column(
-                        Modifier.padding(24.dp).fillMaxWidth(),
+                        Modifier.padding(ConsuSpacing.xxl).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "MONTO TOTAL A LIQUIDAR HOY",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                             letterSpacing = 1.sp
                         )
                         Spacer(Modifier.height(8.dp))
@@ -1291,19 +1497,19 @@ fun LiquidationCalculatorModal(
                             text = formatCurrency(calculationResult.saldoHoy),
                             fontSize = 40.sp,
                             fontWeight = FontWeight.Black,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             letterSpacing = (-1.5).sp
                         )
                         Spacer(Modifier.height(24.dp))
-                        
+
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
-                                Text("Al corte mensual", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha=0.6f))
-                                Text(formatCurrency(calculationResult.saldoCorte), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text("Al corte mensual", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha=0.6f))
+                                Text(formatCurrency(calculationResult.saldoCorte), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Tasa (Mensual)", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha=0.6f))
-                                Text(String.format(java.util.Locale.US, "%.2f %%", calculationResult.iMensual * 100), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text("Tasa (Mensual)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha=0.6f))
+                                Text(String.format(java.util.Locale.US, "%.2f %%", calculationResult.iMensual * 100), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                             }
                         }
                     }
@@ -1313,10 +1519,10 @@ fun LiquidationCalculatorModal(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.xl))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.3f))
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(ConsuSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1330,7 +1536,7 @@ fun LiquidationCalculatorModal(
                         color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 1.sp
                     )
-                    
+
                     Row(
                         modifier = Modifier
                             .clip(CircleShape)
@@ -1343,19 +1549,19 @@ fun LiquidationCalculatorModal(
                             color = if (!isQuincenal) MaterialTheme.colorScheme.primary else Color.Transparent,
                             shape = CircleShape
                         ) {
-                            Text("MEN", fontSize = 10.sp, modifier = Modifier.padding(horizontal=8.dp, vertical=4.dp), color = if(!isQuincenal) Color.White else Color.Gray, fontWeight = FontWeight.Bold)
+                            Text("MEN", fontSize = 12.sp, modifier = Modifier.padding(horizontal=8.dp, vertical=4.dp), color = if(!isQuincenal) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                         }
                         Surface(
                             onClick = { isQuincenal = true },
                             color = if (isQuincenal) MaterialTheme.colorScheme.primary else Color.Transparent,
                             shape = CircleShape
                         ) {
-                            Text("QUI", fontSize = 10.sp, modifier = Modifier.padding(horizontal=8.dp, vertical=4.dp), color = if(isQuincenal) Color.White else Color.Gray, fontWeight = FontWeight.Bold)
+                            Text("QUI", fontSize = 12.sp, modifier = Modifier.padding(horizontal=8.dp, vertical=4.dp), color = if(isQuincenal) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
-                
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                     CompactInput(
                         value = capitalInput,
                         label = "Capital Originado",
@@ -1372,7 +1578,7 @@ fun LiquidationCalculatorModal(
                     ) { paymentInput = it }
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                     CompactInput(
                         value = monthsInput,
                         label = if(isQuincenal) "Total Quincenas" else "Total Meses",
@@ -1387,16 +1593,16 @@ fun LiquidationCalculatorModal(
                     ) { paymentsMadeInput = it }
                 }
             }
-            
+
             Spacer(Modifier.height(16.dp))
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.xl))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.3f))
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(ConsuSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
             ) {
                 Text(
                     text = "INTERESES A HOY",
@@ -1405,7 +1611,7 @@ fun LiquidationCalculatorModal(
                     color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 1.sp
                 )
-                
+
                 CompactInput(
                     value = daysStr,
                     label = "Días desde el último pago (corte)",
@@ -1434,10 +1640,10 @@ fun TransactionTypeSelector(
     onSelect: (String) -> Unit
 ) {
     val options = listOf("NUEVO", "CNCA", "2ª DISP", "LCOM")
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)
     ) {
         options.forEach { option ->
             val isSelected = selected == option
@@ -1445,29 +1651,29 @@ fun TransactionTypeSelector(
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onSelect(option) },
-                color = if (isSelected) JuicyPurple else MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(ConsuRadius.md),
                 border = BorderStroke(
                     2.dp,
-                    if (isSelected) JuicyPurple else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(ConsuSpacing.md),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         if (isSelected) Icons.Rounded.EmojiEvents else Icons.Rounded.Loop,
                         contentDescription = null,
-                        tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         option,
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -1478,10 +1684,10 @@ fun TransactionTypeSelector(
 
 @Composable
 fun SuccessOverlay(onDismiss: () -> Unit) {
-    var offsetY by remember { mutableStateOf(-120f) }
-    var alpha by remember { mutableStateOf(0f) }
-    var scale by remember { mutableStateOf(0.8f) }
-    
+    var offsetY by remember { mutableFloatStateOf(-120f) }
+    var alpha by remember { mutableFloatStateOf(0f) }
+    var scale by remember { mutableFloatStateOf(0.8f) }
+
     LaunchedEffect(Unit) {
         // Animación de entrada estilo Telegram Pop
         launch {
@@ -1494,7 +1700,7 @@ fun SuccessOverlay(onDismiss: () -> Unit) {
                 )
             ) { value, _ -> offsetY = value }
         }
-        
+
         launch {
             animate(0f, 1f, animationSpec = tween(400)) { value, _ -> alpha = value }
         }
@@ -1509,22 +1715,22 @@ fun SuccessOverlay(onDismiss: () -> Unit) {
                 )
             ) { value, _ -> scale = value }
         }
-        
+
         delay(2400)
-        
+
         // Salida suave
         launch {
             animate(0f, -40f, animationSpec = tween(400)) { value, _ -> offsetY = value }
         }
         animate(1f, 0f, animationSpec = tween(300)) { value, _ -> alpha = value }
-        
+
         onDismiss()
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 80.dp),
+            .padding(top = 100.dp),
         contentAlignment = Alignment.TopCenter
     ) {
         Surface(
@@ -1532,48 +1738,30 @@ fun SuccessOverlay(onDismiss: () -> Unit) {
                 .offset(y = offsetY.dp)
                 .scale(scale)
                 .graphicsLayer { this.alpha = alpha },
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-            shadowElevation = 12.dp,
-            border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.2f))
+            shape = RoundedCornerShape(ConsuRadius.lg),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            shadowElevation = 6.dp,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
         ) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            JuicyGreen.copy(alpha = 0.12f),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.CheckCircle,
-                        contentDescription = null,
-                        tint = JuicyGreen,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                
-                Column {
-                    Text(
-                        "¡LISTO!",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        letterSpacing = 1.sp
-                    )
-                    Text(
-                        "Información copiada al portapapeles",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    tint = ConsuSuccess,
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Text(
+                    "Información copiada",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }

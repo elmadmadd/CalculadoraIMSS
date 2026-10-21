@@ -1,6 +1,7 @@
 package com.example.consucalcu.ui.screens
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -11,14 +12,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.CompareArrows
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.example.consucalcu.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,8 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.consucalcu.*
 import com.example.consucalcu.manager.SoundManager
+import com.example.consucalcu.data.FinancialConfig
 import com.example.consucalcu.model.*
 import com.example.consucalcu.ui.components.*
+import com.example.consucalcu.utils.*
 import com.example.consucalcu.viewmodel.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,70 +43,103 @@ import com.example.consucalcu.viewmodel.*
 fun NewCreditScreen(
     viewModel: CalculatorViewModel,
     state: CalculatorUiState,
-    soundManager: SoundManager,
-    ctx: Context
+    isDark: Boolean
 ) {
-    val isDark = isSystemInDarkTheme()
+    val soundManager = LocalSoundManager.current
+    val agreement = FinancialConfig.agreementFor(state.creditAgreementId)
+    val agreementOptions = FinancialConfig.ACTIVE_AGREEMENTS
+    val paymentInputLabel = if (agreement.isBiweekly) {
+        "¿CUÁNTO PUEDES PAGAR POR QUINCENA?"
+    } else {
+        stringResource(R.string.how_much_can_pay)
+    }
+
     LazyColumn(
-        modifier = Modifier.fillMaxSize().imePadding(),
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).imePadding(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         // ========== HEADER TEMÁTICO NAVY/ORANGE ==========
         item {
             AnimatedResultItem(index = 0) {
-                JuicyCard(
-                    color = if (isDark) SurfaceDark else ConsuNavy,
-                    shadowColor = Color.Transparent
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 8.dp)
                 ) {
+                    Text(
+                        text = stringResource(R.string.new_credit_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.new_credit_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.64f)
+                    )
+                }
+            }
+        }
+
+        if (agreementOptions.size > 1) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = "CONVENIO DE CÁLCULO",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.62f),
+                        letterSpacing = 0.8.sp
+                    )
+                    Spacer(Modifier.height(8.dp))
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(ConsuRadius.lg))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f))
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                contentAlignment = Alignment.Center,
+                        agreementOptions.forEach { option ->
+                            val selected = option.id == agreement.id
+                            Surface(
+                                onClick = {
+                                    soundManager?.play("pop")
+                                    viewModel.selectCreditAgreement(option.id)
+                                },
                                 modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isDark) ConsuSurfaceDark else ConsuNavyLight)
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp),
+                                shape = RoundedCornerShape(ConsuRadius.md),
+                                color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Description,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Box(
-                                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = 2.dp, y = 2.dp)
-                                ) {
-                                    Text("$", color = ConsuOrange, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = option.label,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
                                 }
                             }
-                            Spacer(Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    "CRÉDITO NUEVO",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Black
-                                )
-                                Text(
-                                    "Cotizador multi-producto",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 12.sp
-                                )
-                            }
                         }
-                        Icon(
-                            imageVector = Icons.Rounded.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = ConsuOrange,
-                            modifier = Modifier.size(28.dp)
-                        )
                     }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = agreement.description +
+                            (if (agreement.isBiweekly) " · 12-48 meses · mínimo $5,000" else "") +
+                            (if (!agreement.supportsConsolidation) " · sin consolidación" else ""),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.58f),
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
                 }
             }
         }
@@ -110,52 +151,42 @@ fun NewCreditScreen(
                     color = MaterialTheme.colorScheme.surface,
                     shadowColor = MaterialTheme.colorScheme.outline
                 ) {
-                    Column(Modifier.padding(20.dp).animateContentSize()) {
-                        Column {
-                            Text(
-                                "DATOS DE COTIZACIÓN",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .width(50.dp)
-                                    .height(3.dp)
-                                    .clip(RoundedCornerShape(1.5.dp))
-                                    .background(ConsuOrange)
-                            )
-                        }
-                        Spacer(Modifier.height(20.dp))
+                    Column(Modifier.padding(ConsuSpacing.xl).animateContentSize()) {
+                        Text(
+                            stringResource(R.string.quotation_data),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(16.dp))
 
                         // Toggle: Por capacidad / Por monto
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(ConsuRadius.lg))
                                 .background(if (isDark) ConsuDividerDark else ConsuChipBg)
-                                .padding(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                .padding(ConsuSpacing.xs),
+                            horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.xs)
                         ) {
                             val activeCap = !state.isByAmount
                             val activeMonto = state.isByAmount
-                            
+
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(44.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (activeCap) (if (isDark) Color.White else ConsuNavy) else Color.Transparent)
+                                    .heightIn(min = 48.dp)
+                                    .clip(RoundedCornerShape(ConsuRadius.md))
+                                    .background(if (activeCap) MaterialTheme.colorScheme.primary else Color.Transparent)
                                     .clickable {
-                                        soundManager.play("pop")
+                                        soundManager?.play("pop")
                                         viewModel.toggleCalculationMode(false)
                                     }
                             ) {
                                 Text(
-                                    text = "Por capacidad",
-                                    color = if (activeCap) (if (isDark) Color.Black else Color.White) else (if (isDark) Color.White else ConsuNavy),
+                                    text = stringResource(R.string.by_capacity),
+                                    color = if (activeCap) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
@@ -164,17 +195,17 @@ fun NewCreditScreen(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(44.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (activeMonto) (if (isDark) Color.White else ConsuNavy) else Color.Transparent)
+                                    .heightIn(min = 48.dp)
+                                    .clip(RoundedCornerShape(ConsuRadius.md))
+                                    .background(if (activeMonto) MaterialTheme.colorScheme.primary else Color.Transparent)
                                     .clickable {
-                                        soundManager.play("pop")
+                                        soundManager?.play("pop")
                                         viewModel.toggleCalculationMode(true)
                                     }
                             ) {
                                 Text(
-                                    text = "Por monto",
-                                    color = if (activeMonto) (if (isDark) Color.Black else Color.White) else (if (isDark) Color.White else ConsuNavy),
+                                    text = stringResource(R.string.by_amount),
+                                    color = if (activeMonto) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
@@ -184,17 +215,19 @@ fun NewCreditScreen(
                         Spacer(Modifier.height(20.dp))
 
                         if (state.isByAmount) {
-                            JuicySliderInput(
-                                label = "¿CUÁNTO NECESITAS?",
+                            JuicyInput(
+                                label = stringResource(R.string.how_much_needed),
                                 value = state.newCreditInput,
-                                range = 5000f..200000f,
-                                steps = 38,
-                                onValueChange = { viewModel.updateNewCreditInput(it) },
-                                isError = state.inputError
+                                onValChange = { viewModel.updateNewCreditInput(it) },
+                                type = KeyboardType.Number,
+                                leadingIcon = Icons.Rounded.AttachMoney,
+                                isCurrency = true,
+                                isError = state.inputError,
+                                imeAction = ImeAction.Done
                             )
                         } else {
                             JuicyInput(
-                                label = "¿CUÁNTO PUEDES PAGAR?",
+                                label = paymentInputLabel,
                                 value = state.newCreditInput,
                                 onValChange = { viewModel.updateNewCreditInput(it) },
                                 type = KeyboardType.Number,
@@ -214,7 +247,7 @@ fun NewCreditScreen(
             AnimatedResultItem(index = 2) {
                 Row(
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
                 ) {
                     // COTIZAR Button
                     Box(
@@ -222,15 +255,15 @@ fun NewCreditScreen(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isDark) Color.White else ConsuNavy)
-                            .bouncyClick(soundManager = soundManager) {
+                            .clip(RoundedCornerShape(ConsuRadius.lg))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .bouncyClick {
                                 viewModel.calculateNewCredit()
                             }
                     ) {
                         if (state.isLoading) {
                             CircularProgressIndicator(
-                                color = if (isDark) Color.Black else Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp
                             )
@@ -240,57 +273,37 @@ fun NewCreditScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Calculate,
-                                        contentDescription = null,
-                                        tint = if (isDark) ConsuNavy else ConsuOrange,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(Modifier.width(12.dp))
-                                    Text(
-                                        text = "COTIZAR",
-                                        color = if (isDark) Color.Black else Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp
-                                    )
-                                }
+                                Text(
+                                    text = stringResource(R.string.action_quote),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
                                 Icon(
-                                    imageVector = Icons.Rounded.ArrowForward,
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                                     contentDescription = null,
-                                    tint = if (isDark) ConsuNavy else ConsuOrange,
+                                    tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
                     }
 
-                    // LIMPIAR Button
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
+                    Surface(
+                        onClick = { viewModel.clearNewCreditData() },
                         modifier = Modifier
-                            .width(80.dp)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isDark) ConsuDividerDark else ConsuChipBg)
-                            .bouncyClick(soundManager = soundManager) {
-                                viewModel.clearNewCreditData()
-                            }
+                            .size(56.dp),
+                        shape = RoundedCornerShape(ConsuRadius.lg),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = "Limpiar",
-                            tint = if (isDark) Color.White.copy(alpha = 0.6f) else ConsuTextSecondary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = "LIMPIAR",
-                            color = if (isDark) Color.White.copy(alpha = 0.6f) else ConsuTextSecondary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 9.sp
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.DeleteOutline,
+                                contentDescription = stringResource(R.string.action_clear),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -304,12 +317,11 @@ fun NewCreditScreen(
                 exit = fadeOut(tween(200)) + shrinkVertically(tween(200))
             ) {
                 JuicyButton(
-                    text = "COMPARAR OFERTAS",
+                    text = stringResource(R.string.compare_offers),
                     color = GoldAccentDark,
                     shadowColor = ConsuOrangeDark,
                     textColor = Color.White,
-                    icon = Icons.AutoMirrored.Rounded.CompareArrows,
-                    soundManager = soundManager
+                    icon = Icons.AutoMirrored.Rounded.CompareArrows
                 ) {
                     viewModel.toggleOffersComparator(true)
                 }
@@ -333,17 +345,17 @@ fun NewCreditScreen(
                         showPremium = state.showPremiumOffers,
                         onTogglePremium = { viewModel.togglePremiumOffers() },
                         onSelectOffer = { offer ->
-                            soundManager.play("pop")
+                            soundManager?.play("pop")
                             viewModel.onSelectOffer(offer)
                         },
                         onShowAmortization = { offer ->
-                            soundManager.play("magic")
+                            soundManager?.play("ui_success")
                             viewModel.showAmortizationFor(offer)
                         },
                         emptyContent = {
                             EmptyStateIllustration(
-                                title = "Sin ofertas para ti",
-                                message = "Ajusta la capacidad de pago o plazo",
+                                title = stringResource(R.string.no_offers_title),
+                                message = stringResource(R.string.no_offers_desc),
                                 emoji = "🔍"
                             )
                         }
@@ -351,7 +363,5 @@ fun NewCreditScreen(
                 }
             }
         }
-        // Spacer para isla flotante
-        item { Spacer(Modifier.height(120.dp)) }
     }
 }

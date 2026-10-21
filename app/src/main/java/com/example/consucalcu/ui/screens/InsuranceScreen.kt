@@ -1,14 +1,13 @@
 package com.example.consucalcu.ui.screens
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import com.example.consucalcu.utils.*
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,22 +17,25 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.consucalcu.R
 import com.example.consucalcu.*
-import com.example.consucalcu.manager.SoundManager
 import com.example.consucalcu.model.*
+import com.example.consucalcu.data.FinancialConfig
 import com.example.consucalcu.ui.components.*
 import com.example.consucalcu.viewmodel.*
-import java.math.BigDecimal
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,105 +43,89 @@ import kotlinx.coroutines.delay
 fun InsuranceScreen(
     viewModel: CalculatorViewModel,
     state: CalculatorUiState,
-    soundManager: SoundManager,
-    ctx: Context
 ) {
+    val soundManager = LocalSoundManager.current
     val haptic = LocalHapticFeedback.current
-    val listState = rememberLazyListState() // Estado del scroll
-    val isDark = isSystemInDarkTheme()
-    
+    val listState = rememberLazyListState()
+
     // Auto-scroll cuando hay resultado
     LaunchedEffect(state.insResultStatus) {
         if (state.insResultStatus.isNotEmpty()) {
-            delay(500) // Esperar a que la UI se dibuje
-            listState.animateScrollToItem(index = 5) // Índice aproximado de la tarjeta de resultado
+            delay(500)
+            listState.animateScrollToItem(index = 5)
         }
     }
-    
+
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize().imePadding(),
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).imePadding(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         item {
             AnimatedResultItem(index = 0) {
-                JuicyGradientCard(
-                    brush = if (isDark) {
-                        Brush.horizontalGradient(listOf(ConsuNavy, ConsuSurfaceDark))
-                    } else {
-                        Brush.horizontalGradient(listOf(ConsuNavy, ConsuNavyLight))
-                    },
-                    shadowColor = ConsuNavyDark
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 8.dp)
                 ) {
-                    Column(Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Outlined.Savings,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    "CALCULADORA DE SEGURO",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Black
-                                )
-                                Text(
-                                    "IMSS Pensionados",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = stringResource(R.string.insurance_calculator_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.imss_pensioners),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.64f)
+                    )
                 }
             }
         }
-        
+
         item {
             AnimatedResultItem(index = 1) {
                 JuicyCard(
                     color = MaterialTheme.colorScheme.surface,
                     shadowColor = MaterialTheme.colorScheme.outline
                 ) {
-                    Column(Modifier.padding(20.dp)) {
+                    Column(Modifier.padding(ConsuSpacing.xl)) {
                         Text(
-                            "DATOS DEL CRÉDITO",
+                            stringResource(R.string.credit_data),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.height(20.dp))
-                        
-                        
-                        // 1. Selector de Financiera con Colores
+
                         JuicyProviderDropdown(
                             selectedValue = state.insProvider,
                             onSelectionChange = {
                                 viewModel.updateInsProvider(it)
-                                soundManager.play("pop")
+                                soundManager?.play("pop")
                             }
                         )
-                        
+
                         Spacer(Modifier.height(16.dp))
-                        
-                        // 2. Selector de Plazo con Icono y Estilo
+
                         JuicyTermDropdown(
                             selectedValue = state.insTerm,
+                            options = FinancialConfig.PRODUCTS[state.insProvider]
+                                ?.factorsTrad
+                                ?.keys
+                                ?.sorted()
+                                .orEmpty(),
                             onSelectionChange = {
                                 viewModel.updateInsTerm(it)
-                                soundManager.play("pop")
+                                soundManager?.play("pop")
                             }
                         )
-                        
+
                         Spacer(Modifier.height(16.dp))
-                        
+
                         JuicyInput(
-                            label = "MONTO DEL CRÉDITO",
+                            label = stringResource(R.string.credit_amount_label),
                             value = state.insAmount,
                             onValChange = { viewModel.updateInsAmount(it) },
                             type = KeyboardType.Number,
@@ -152,130 +138,111 @@ fun InsuranceScreen(
                 }
             }
         }
-        
+
         item {
             AnimatedResultItem(index = 2) {
                 JuicyCard(
                     color = MaterialTheme.colorScheme.surface,
                     shadowColor = MaterialTheme.colorScheme.outline
                 ) {
-                    Column(Modifier.padding(20.dp).animateContentSize()) {
+                    Column(Modifier.padding(ConsuSpacing.xl).animateContentSize()) {
                         Text(
-                            "DATOS DEL CLIENTE",
+                            stringResource(R.string.client_data_header),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.height(20.dp))
-                        
-                        // Selector Tipo de Pensión (FilterChips)
+
+
+
+                        // 2. Tipo de Pensión Dropdown
                         Text(
-                            "TIPO DE PENSIÓN",
+                            "Tipo de Pensión",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                         Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf("Invalidez", "Vejez", "Otro").forEach { type ->
-                                FilterChip(
-                                    selected = state.insPensionType == type,
-                                    onClick = {
-                                        viewModel.updateInsPensionType(type)
-                                        soundManager.play("pop")
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    },
-                                    label = { Text(type) },
-                                    leadingIcon = if (state.insPensionType == type) {
-                                        { Icon(Icons.Rounded.Check, null, modifier = Modifier.size(16.dp)) }
-                                    } else null,
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = JuicyBlue,
-                                        selectedLabelColor = Color.White,
-                                        selectedLeadingIconColor = Color.White
-                                    )
-                                )
+                        var pensionExpanded by remember { mutableStateOf(false) }
+                        val pensionTypes = listOf(
+                            "Jubilación", "Vejez", "Cesantía", "Viudez", "Invalidez", "Orfandad", "Riesgo de Trabajo", "Ascendencia", "Otra"
+                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            ExposedDropdownMenuBox(
+                                expanded = pensionExpanded,
+                                onExpandedChange = { pensionExpanded = !pensionExpanded }
+                            ) {
+                                Surface(
+                                    onClick = { pensionExpanded = true },
+                                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable, true),
+                                    shape = RoundedCornerShape(ConsuRadius.md),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(state.insPensionType, color = MaterialTheme.colorScheme.onSurface)
+                                        Icon(
+                                            if (pensionExpanded) Icons.Rounded.ArrowDropUp else Icons.Rounded.ArrowDropDown,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+                                ExposedDropdownMenu(
+                                    expanded = pensionExpanded,
+                                    onDismissRequest = { pensionExpanded = false }
+                                ) {
+                                    pensionTypes.forEach { type ->
+                                        DropdownMenuItem(
+                                            text = { Text(type) },
+                                            onClick = {
+                                                viewModel.updateInsPensionType(type)
+                                                pensionExpanded = false
+                                                soundManager?.play("pop")
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
-                        
+
                         Spacer(Modifier.height(16.dp))
-                        
-                        // Input Edad con Validación Visual
+
+                        // 3. Edad Input
                         val ageInt = state.insAge.toIntOrNull() ?: 0
                         val isAgeWarning = ageInt > 75
                         val isAgeError = ageInt > 85
-                        
+
                         JuicyInput(
-                            label = if (isAgeError) "EDAD (EXCEDE LÍMITE)" else "EDAD DEL CLIENTE",
+                            label = if (isAgeError) stringResource(R.string.age_exceeds_limit) else stringResource(R.string.client_age),
                             value = state.insAge,
                             onValChange = { viewModel.updateInsAge(it) },
                             type = KeyboardType.Number,
                             leadingIcon = if (isAgeError) Icons.Rounded.Close else Icons.Rounded.Person,
                             isCurrency = false,
                             isError = isAgeError,
-                            imeAction = if (!state.insIsNewClient) ImeAction.Next else ImeAction.Done
+                            imeAction = ImeAction.Next
                         )
-                        
-                        Spacer(Modifier.height(16.dp))
 
-                        // Checkbox Es Cliente Nuevo
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .toggleable(
-                                    value = state.insIsNewClient,
-                                    onValueChange = { 
-                                        viewModel.toggleInsNewClient(it)
-                                        soundManager.play("pop")
-                                    }
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = state.insIsNewClient,
-                                onCheckedChange = null,
-                                colors = CheckboxDefaults.colors(checkedColor = JuicyBlue)
-                            )
-                            Text(
-                                "Es Cliente Nuevo",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                        }
 
-                        // Input Antigüedad (Condicional)
-                        AnimatedVisibility(visible = !state.insIsNewClient) {
-                            Column {
-                                Spacer(Modifier.height(16.dp))
-                                JuicyInput(
-                                    label = "ANTIGÜEDAD (MESES)",
-                                    value = state.insAntiquity,
-                                    onValChange = { viewModel.updateInsAntiquity(it) },
-                                    type = KeyboardType.Number,
-                                    leadingIcon = Icons.Rounded.DateRange,
-                                    isCurrency = false,
-                                    imeAction = ImeAction.Done
-                                )
-                            }
-                        }
-                        
-                        // Texto de ayuda para advertencia
+
+
                         if (isAgeWarning && !isAgeError) {
                             Spacer(Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     Icons.Rounded.Star,
                                     contentDescription = null,
-                                    tint = JuicyOrange,
+                                    tint = ConsuWarning,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(Modifier.width(4.dp))
                                 Text(
                                     "⚠️ Precaución: Edades avanzadas pueden requerir pago total o rechazo",
-                                    color = JuicyOrange,
+                                    color = ConsuWarning,
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
@@ -284,61 +251,56 @@ fun InsuranceScreen(
                 }
             }
         }
-        
+
         item {
             AnimatedResultItem(index = 3) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                     Box(Modifier.weight(1f)) {
                         JuicyButton(
-                            text = "CALCULAR",
+                            text = stringResource(R.string.action_calculate),
                             icon = Icons.Outlined.Savings,
-                            color = if (isDark) Color.White else ConsuNavy,
-                            shadowColor = if (isDark) ConsuNavyLight else ConsuDividerLight,
-                            textColor = if (isDark) Color.Black else Color.White,
+                            color = MaterialTheme.colorScheme.primary,
+                            shadowColor = Color.Transparent,
+                            textColor = MaterialTheme.colorScheme.onPrimary,
                             height = 56.dp,
                             isLoading = state.isLoading,
-                            soundManager = soundManager,
                             onClick = {
-                                soundManager.play("cash")
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                soundManager?.play("pop")
                                 viewModel.calculateInsurance()
                             }
                         )
                     }
                     JuicyIconButton(
                         icon = Icons.Rounded.DeleteSweep,
+                        contentDescription = "Limpiar datos del seguro",
                         color = MaterialTheme.colorScheme.surfaceVariant,
-                        shadowColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                        shadowColor = Color.Transparent,
                         iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        size = 56.dp,
-                        soundManager = soundManager
+                        size = 56.dp
                     ) {
-                        soundManager.play("pop")
+                        soundManager?.play("pop")
                         viewModel.clearInsuranceData()
                     }
                 }
             }
         }
-        
-        // Result Card - Diseño Simplificado y Claro
+
         if (state.insResultStatus.isNotEmpty()) {
             item {
                 AnimatedResultItem(index = 0) {
                     val isRejected = state.insResultStatus.contains("RECHAZADO")
                     val isFree = state.insResultStatus.contains("NO APLICA")
                     val hasCost = state.insCost1Year > BD_ZERO || state.insCostTotal > BD_ZERO
-                    
+
                     JuicyCard(
                         color = MaterialTheme.colorScheme.surface,
                         shadowColor = state.insResultColor
                     ) {
-                        Column(Modifier.padding(24.dp)) {
-                            // ========== DICTAMEN PRINCIPAL ==========
+                        Column(Modifier.padding(ConsuSpacing.xxl)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                // Icono de estado
                                 Box(
                                     modifier = Modifier
                                         .size(56.dp)
@@ -360,24 +322,22 @@ fun InsuranceScreen(
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
-                                
+
                                 Spacer(Modifier.width(16.dp))
-                                
-                                // Texto del dictamen
+
                                 Column(Modifier.weight(1f)) {
                                     Text(
-                                        text = "RESULTADO",
-                                        style = MaterialTheme.typography.labelSmall,
+                                        text = stringResource(R.string.results_label),
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                        fontSize = 10.sp,
+                                        style = MaterialTheme.typography.bodySmall,
                                         letterSpacing = 1.sp
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
                                         text = when {
-                                            isRejected -> "RECHAZADO"
-                                            isFree -> "SIN COSTO"
-                                            hasCost -> "CON COSTO"
+                                            isRejected -> stringResource(R.string.status_rejected)
+                                            isFree -> stringResource(R.string.status_free)
+                                            hasCost -> stringResource(R.string.status_with_cost)
                                             else -> "PROCESADO"
                                         },
                                         style = MaterialTheme.typography.titleLarge,
@@ -388,116 +348,83 @@ fun InsuranceScreen(
                                 }
                             }
 
-                            
-                            // ========== COSTO (SI APLICA) ==========
                             if (hasCost) {
                                 Spacer(Modifier.height(24.dp))
-                                
-                                // Tarjeta de costo destacada
+
                                 Surface(
-                                    color = state.insResultColor,
-                                    shape = RoundedCornerShape(16.dp),
-                                    shadowElevation = 4.dp
+                                    color = ConsuNavy,
+                                    shape = RoundedCornerShape(ConsuRadius.lg),
+                                    border = BorderStroke(1.dp, state.insResultColor.copy(alpha = 0.7f)),
+                                    shadowElevation = 1.dp
                                 ) {
                                     Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(20.dp),
+                                            .padding(ConsuSpacing.xl),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(
-                                            text = "COSTO DEL SEGURO",
+                                            text = "MONTO DE DOMICILIACIÓN",
                                             color = Color.White.copy(alpha = 0.9f),
                                             style = MaterialTheme.typography.labelMedium,
-                                            fontSize = 11.sp,
-                                            letterSpacing = 1.2.sp
+                                            letterSpacing = 1.2.sp,
+                                            textAlign = TextAlign.Center
                                         )
-                                        
+
                                         Spacer(Modifier.height(8.dp))
-                                        
-                                        val finalCost = if (state.insCostTotal > BD_ZERO) 
-                                            state.insCostTotal 
-                                        else 
+
+                                        val finalCost = if (state.insCostTotal > BD_ZERO)
+                                            state.insCostTotal
+                                        else
                                             state.insCost1Year
-                                        
+
                                         Text(
                                             text = "$${finalCost.toCurrency()}",
                                             style = MaterialTheme.typography.headlineLarge,
                                             fontWeight = FontWeight.Black,
                                             color = Color.White,
                                             fontSize = 36.sp,
-                                            letterSpacing = (-1).sp
+                                            letterSpacing = (-1).sp,
+                                            textAlign = TextAlign.Center
                                         )
-                                        
-                                        // Indicador de tipo de pago
-                                        if (state.insCostTotal > BD_ZERO) {
-                                            Spacer(Modifier.height(4.dp))
-                                            Surface(
-                                                color = Color.White.copy(alpha = 0.2f),
-                                                shape = RoundedCornerShape(50)
-                                            ) {
-                                                Text(
-                                                    text = "PAGO TOTAL PLAZO",
-                                                    color = Color.White,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 10.sp,
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                                                )
-                                            }
-                                        } else {
-                                            Spacer(Modifier.height(4.dp))
+
+                                        Spacer(Modifier.height(6.dp))
+                                        Surface(
+                                            color = Color.White.copy(alpha = 0.2f),
+                                            shape = RoundedCornerShape(50)
+                                        ) {
+                                            val badgeText = if (state.insCostTotal > BD_ZERO)
+                                                "PLAZO COMPLETO - PAGO ÚNICO"
+                                            else
+                                                "PRIMER AÑO - PAGO ÚNICO"
                                             Text(
-                                                text = "Costo 1er Año",
-                                                color = Color.White.copy(alpha = 0.8f),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                fontSize = 12.sp
+                                                text = badgeText,
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                                             )
-                                        }
-                                        
-                                        // PAGO MENSUAL ESTIMADO
-                                        if (state.insMonthlyPayment > BD_ZERO) {
-                                            Spacer(Modifier.height(16.dp))
-                                            HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
-                                            Spacer(Modifier.height(12.dp))
-                                            
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text(
-                                                    "MENSUALIDAD APROXIMADA",
-                                                    color = Color.White.copy(alpha = 0.7f),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    "$${state.insMonthlyPayment.toCurrency()}",
-                                                    color = Color.White,
-                                                    fontSize = 20.sp,
-                                                    fontWeight = FontWeight.ExtraBold
-                                                )
-                                            }
                                         }
                                     }
                                 }
                             }
-                            
-                            // ========== DETALLES EXPANDIBLES ==========
+
                             var showDetails by remember { mutableStateOf(false) }
-                            
+
                             Spacer(Modifier.height(20.dp))
-                            
-                            // Botón para mostrar/ocultar detalles
+
                             Surface(
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(ConsuRadius.md),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { 
+                                    .clickable {
                                         showDetails = !showDetails
-                                        soundManager.play("pop")
+                                        soundManager?.play("pop")
                                     }
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(16.dp),
+                                    modifier = Modifier.padding(ConsuSpacing.lg),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
@@ -510,17 +437,17 @@ fun InsuranceScreen(
                                         )
                                         Spacer(Modifier.width(8.dp))
                                         Text(
-                                            text = if (showDetails) "Ocultar análisis" else "Ver análisis detallado",
+                                            text = if (showDetails) stringResource(R.string.hide_analysis) else stringResource(R.string.view_detailed_analysis),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
-                                    
+
                                     Icon(
-                                        imageVector = if (showDetails) 
-                                            Icons.Rounded.Close 
-                                        else 
+                                        imageVector = if (showDetails)
+                                            Icons.Rounded.Close
+                                        else
                                             Icons.Rounded.AddCircleOutline,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -528,8 +455,7 @@ fun InsuranceScreen(
                                     )
                                 }
                             }
-                            
-                            // Contenido expandible
+
                             AnimatedVisibility(
                                 visible = showDetails,
                                 enter = fadeIn() + slideInVertically(),
@@ -542,15 +468,14 @@ fun InsuranceScreen(
                                 ) {
                                     Surface(
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(ConsuRadius.md)
                                     ) {
-                                        Column(Modifier.padding(16.dp)) {
+                                        Column(Modifier.padding(ConsuSpacing.lg)) {
                                             Text(
-                                                text = "Análisis del Dictamen",
+                                                text = stringResource(R.string.analysis_of_ruling),
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                                fontSize = 11.sp,
                                                 letterSpacing = 1.sp
                                             )
                                             Spacer(Modifier.height(8.dp))
@@ -560,6 +485,25 @@ fun InsuranceScreen(
                                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                                                 lineHeight = 20.sp
                                             )
+
+                                            if (state.insDictamenJson.isNotEmpty()) {
+                                                Spacer(Modifier.height(16.dp))
+                                                val context = androidx.compose.ui.platform.LocalContext.current
+                                                val soundManager = LocalSoundManager.current
+
+                                                JuicyButton(
+                                                    text = "Copiar Dictamen JSON",
+                                                    icon = Icons.Rounded.ContentCopy,
+                                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                                    shadowColor = Color.Transparent,
+                                                    textColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    height = 40.dp,
+                                                    onClick = {
+                                                        viewModel.copyDictamenToClipboard(context)
+                                                        soundManager?.play("copy_confirm")
+                                                    }
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -569,7 +513,6 @@ fun InsuranceScreen(
                 }
             }
         }
-        
-        item { Spacer(Modifier.height(120.dp)) }
+
     }
 }

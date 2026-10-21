@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Consucalcu" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Consucalcu" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/consu_navy</item>
+        <item name="android:navigationBarColor">@color/consu_navy</item>
+    </style>
+
+    <style name="Theme.Consucalcu.Starting" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/consu_navy</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/consucalcu_logo_mark</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_background</item>
+        <item name="windowSplashScreenAnimationDuration">200</item>
+        <item name="postSplashScreenTheme">@style/Theme.Consucalcu</item>
+    </style>
 </resources>

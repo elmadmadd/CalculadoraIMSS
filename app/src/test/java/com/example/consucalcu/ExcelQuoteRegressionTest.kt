@@ -1,0 +1,89 @@
+package com.example.consucalcu
+
+import com.example.consucalcu.data.FinancialConfig
+import com.example.consucalcu.features.FinancialEngine
+import org.junit.Assert.*
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import java.math.BigDecimal
+import java.math.RoundingMode
+
+@RunWith(Parameterized::class)
+class ExcelQuoteRegressionTest(
+    private val product: String,
+    private val amountText: String,
+    private val paymentText: String,
+    private val totalText: String
+) {
+    // Fuente: ConsuCalcu_Banco_Comparaciones_2026-09-08 (2).xlsx,
+    // columnas A-F y K, 32 casos únicos por entidad + CAT + monto + plazo.
+    @Test
+    fun factorMatchesExcelAndEnginePreservesEligibility() {
+        val config = FinancialConfig.PRODUCTS.getValue(product)
+        val amount = BigDecimal(amountText)
+        val expected = BigDecimal(paymentText)
+        val computed = amount.multiply(config.factorsTrad.getValue(60))
+            .divide(BigDecimal("1000")).setScale(2, RoundingMode.HALF_UP)
+        assertEquals(expected, computed)
+        assertEquals(BigDecimal(totalText), computed.multiply(BigDecimal("60")))
+
+        // El Excel incluye CSB VIP por $100,000: sirve para calibrar, pero
+        // no autoriza reducir el mínimo vigente de $150,000 en la app.
+        for (retention in listOf(false, true)) {
+            val result = FinancialEngine.calculate(product, amount, 60, true, retention, BigDecimal("500"))
+            if (amount < (config.minTermMap[60] ?: config.minGlobal)) {
+                assertNull(result)
+            } else {
+                assertNotNull(result)
+                assertEquals(expected, result!!.first.payment)
+                val inverse = FinancialEngine.calculate(product, expected, 60, false, retention, BigDecimal("500"))
+                if (inverse != null) {
+                    assertTrue(inverse.first.payment <= expected)
+                    assertEquals(0, inverse.first.amount.remainder(BigDecimal("500")).compareTo(BigDecimal.ZERO))
+                    val forward = FinancialEngine.calculate(product, inverse.first.amount, 60, true, retention, BigDecimal("500"))!!
+                    assertEquals(inverse.first.payment, forward.first.payment)
+                }
+            }
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "{0}: monto {1}, cuota {2}")
+        fun cases(): Collection<Array<String>> = listOf(
+            arrayOf("CSB VIP", "100000", "3095.42", "185725.20"),
+            arrayOf("CSB VIP", "350000", "10833.96", "650037.60"),
+            arrayOf("CSB VIP", "300000", "9286.26", "557175.60"),
+            arrayOf("CSB VIP", "176900", "5475.80", "328548.00"),
+            arrayOf("CSB VIP", "245600", "7602.35", "456141.00"),
+            arrayOf("CSB VIP", "235000", "7274.23", "436453.80"),
+            arrayOf("CSB VIP", "150000", "4643.13", "278587.80"),
+            arrayOf("OPC ESP", "100000", "3222.28", "193336.80"),
+            arrayOf("OPC ESP", "350000", "11277.99", "676679.40"),
+            arrayOf("OPC ESP", "300000", "9666.85", "580011.00"),
+            arrayOf("OPC ESP", "176900", "5700.22", "342013.20"),
+            arrayOf("OPC ESP", "245600", "7913.93", "474835.80"),
+            arrayOf("OPC ESP", "235000", "7572.37", "454342.20"),
+            arrayOf("OPC ESP", "150000", "4833.43", "290005.80"),
+            arrayOf("CSB", "254600", "8778.06", "526683.60"),
+            arrayOf("CSB", "30000", "1034.34", "62060.40"),
+            arrayOf("CSB", "40000", "1379.11", "82746.60"),
+            arrayOf("CSB", "205000", "7067.96", "424077.60"),
+            arrayOf("OPC", "254600", "9248.55", "554913.00"),
+            arrayOf("OPC", "30000", "1089.77", "65386.20"),
+            arrayOf("OPC", "40000", "1453.03", "87181.80"),
+            arrayOf("OPC", "205000", "7446.79", "446807.40"),
+            arrayOf("CSB ESP", "205000", "6483.80", "389028.00"),
+            arrayOf("CSB ESP", "123456", "3904.70", "234282.00"),
+            arrayOf("CSB ESP", "370217.51", "11709.34", "702560.40"),
+            arrayOf("CSB ESP", "153400", "4851.78", "291106.80"),
+            arrayOf("CSB ESP", "100000", "3162.83", "189769.80"),
+            arrayOf("OPC MAX", "205000", "6817.74", "409064.40"),
+            arrayOf("OPC MAX", "123456", "4105.81", "246348.60"),
+            arrayOf("OPC MAX", "352083.79", "11709.34", "702560.40"),
+            arrayOf("OPC MAX", "153400", "5101.66", "306099.60"),
+            arrayOf("OPC MAX", "100000", "3325.73", "199543.80")
+        )
+    }
+}

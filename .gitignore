@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Artefactos locales
+/tmp
+/output
+.kotlin
+*.apk

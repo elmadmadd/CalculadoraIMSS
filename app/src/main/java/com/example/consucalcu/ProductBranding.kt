@@ -17,12 +17,12 @@ object ProductBranding {
         val primaryDark = Color(0xFF2B4234)
         val accent = Color(0xFF5B7F68)
         val shadow = Color(0xFF2B4234).copy(alpha = 0.2f)
-        
+
         val gradient: Brush
             get() = Brush.horizontalGradient(
                 colors = listOf(primary, primaryDark, Color(0xFF1E3025))
             )
-        
+
         val gradientVertical: Brush
             get() = Brush.verticalGradient(
                 colors = listOf(accent, primary, primaryDark)
@@ -35,12 +35,12 @@ object ProductBranding {
         val primaryDark = Color(0xFF8C4736)
         val accent = Color(0xFFCC8472)
         val shadow = Color(0xFF8C4736).copy(alpha = 0.2f)
-        
+
         val gradient: Brush
             get() = Brush.horizontalGradient(
                 colors = listOf(primary, primaryDark, Color(0xFF5C2D22))
             )
-        
+
         val gradientVertical: Brush
             get() = Brush.verticalGradient(
                 colors = listOf(accent, primary, primaryDark)
@@ -53,12 +53,12 @@ object ProductBranding {
         val primaryDark = Color(0xFF7A6348)
         val accent = Color(0xFFC0A482)
         val shadow = Color(0xFF7A6348).copy(alpha = 0.2f)
-        
+
         val gradient: Brush
             get() = Brush.horizontalGradient(
                 colors = listOf(primary, primaryDark, Color(0xFF54422F))
             )
-        
+
         val gradientVertical: Brush
             get() = Brush.verticalGradient(
                 colors = listOf(accent, primary, primaryDark)
@@ -71,12 +71,12 @@ object ProductBranding {
         val primaryDark = Color(0xFF6B2A2A)
         val accent = Color(0xFFAB5E5E)
         val shadow = Color(0xFF6B2A2A).copy(alpha = 0.2f)
-        
+
         val gradient: Brush
             get() = Brush.horizontalGradient(
                 colors = listOf(primary, primaryDark, Color(0xFF4F2020))
             )
-        
+
         val gradientVertical: Brush
             get() = Brush.verticalGradient(
                 colors = listOf(accent, primary, primaryDark)
@@ -90,12 +90,12 @@ object ProductBranding {
         val accent = Color(0xFF827092)
         val gold = Color(0xFF8E8A7F)         // Acento champagne
         val shadow = Color(0xFF453850).copy(alpha = 0.2f)
-        
+
         val gradient: Brush
             get() = Brush.horizontalGradient(
                 colors = listOf(Color(0xFF705F7E), primary, primaryDark)
             )
-        
+
         val gradientPremium: Brush
             get() = Brush.linearGradient(
                 colors = listOf(
@@ -137,7 +137,7 @@ object ProductBranding {
                 )
             } else {
                 when (productKey.uppercase()) {
-                    "CONSUBANCO" -> ProductColors(
+                    "CSB", "CONSUBANCO" -> ProductColors(
                         primary = Consubanco.primary,
                         primaryDark = Consubanco.primaryDark,
                         accent = Consubanco.accent,
@@ -153,7 +153,7 @@ object ProductBranding {
                         gradient = Consupago.gradient,
                         gradientVertical = Consupago.gradientVertical
                     )
-                    "OPCIPRES" -> ProductColors(
+                    "OPC", "OPCIPRES" -> ProductColors(
                         primary = Opcipres.primary,
                         primaryDark = Opcipres.primaryDark,
                         accent = Opcipres.accent,
@@ -186,9 +186,9 @@ object ProductBranding {
      */
     fun getProductEmoji(productKey: String): String {
         return when (productKey.uppercase()) {
-            "CONSUBANCO" -> "🏦"
+            "CSB", "CONSUBANCO" -> "🏦"
             "CONSUPAGO" -> "💳"
-            "OPCIPRES" -> "🎯"
+            "OPC", "OPCIPRES" -> "🎯"
             "MASNOMINA" -> "💼"
             else -> "📊"
         }

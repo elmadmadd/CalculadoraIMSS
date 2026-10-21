@@ -1,4 +1,6 @@
 package com.example.consucalcu.academy
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -11,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,13 +57,13 @@ fun QuizScreen(
     var showFeedback by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf(false) }
     var quizCompleted by remember { mutableStateOf(false) }
-    
+
     val currentQuestion = if (currentQuestionIndex < lesson.questions.size) {
         lesson.questions[currentQuestionIndex]
     } else null
-    
+
     val progress = (currentQuestionIndex + 1).toFloat() / lesson.questions.size.toFloat()
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -69,12 +72,11 @@ fun QuizScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 140.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Top bar
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -86,46 +88,43 @@ fun QuizScreen(
                             contentDescription = "Salir"
                         )
                     }
-                    
+
                     Text(
                         text = "${currentQuestionIndex + 1} / ${lesson.questions.size}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
+
                 // Barra de progreso
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
+                        .clip(RoundedCornerShape(ConsuRadius.xs)),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
-            
+
             // Haptic
             val haptic = LocalHapticFeedback.current
-            
+
             // Contenido
             if (!quizCompleted && currentQuestion != null) {
                 val scrollState = rememberScrollState()
-                
-                // Auto-scroll al final cuando aparece el feedback
-                LaunchedEffect(showFeedback) {
-                    if (showFeedback) {
-                        delay(300) // Esperar a que termine la animación de expandVertically
-                        scrollState.animateScrollTo(scrollState.maxValue)
-                    }
+
+                LaunchedEffect(currentQuestionIndex) {
+                    scrollState.scrollTo(0)
                 }
-                
+
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(scrollState),
-                    verticalArrangement = if (showFeedback) Arrangement.Top else Arrangement.Center
+                        .verticalScroll(scrollState)
+                        .padding(top = 20.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.Top
                 ) {
                     QuizQuestionCard(
                         question = currentQuestion,
@@ -154,32 +153,38 @@ fun QuizScreen(
                     )
                 }
             }
-            
+
             // Resultado final
             if (quizCompleted) {
                 val stars = StarRating.calculateStars(correctAnswers, lesson.questions.size)
                 val passed = stars > 0
-                
-                QuizResult(
-                    correctAnswers = correctAnswers,
-                    totalQuestions = lesson.questions.size,
-                    xpEarned = lesson.xpReward,
-                    stars = stars,
-                    onContinue = {
-                        onComplete(correctAnswers, lesson.questions.size)
-                    },
-                    onRetry = if (!passed) {
-                        {
-                            // Reiniciar el quiz completamente
-                            currentQuestionIndex = 0
-                            correctAnswers = 0
-                            selectedAnswer = null
-                            showFeedback = false
-                            isCorrect = false
-                            quizCompleted = false
-                        }
-                    } else null
-                )
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = 20.dp, bottom = 16.dp)
+                ) {
+                    QuizResult(
+                        correctAnswers = correctAnswers,
+                        totalQuestions = lesson.questions.size,
+                        xpEarned = lesson.xpReward,
+                        stars = stars,
+                        onContinue = {
+                            onComplete(correctAnswers, lesson.questions.size)
+                        },
+                        onRetry = if (!passed) {
+                            {
+                                currentQuestionIndex = 0
+                                correctAnswers = 0
+                                selectedAnswer = null
+                                showFeedback = false
+                                isCorrect = false
+                                quizCompleted = false
+                            }
+                        } else null
+                    )
+                }
             }
         }
     }
@@ -199,21 +204,21 @@ private fun QuizQuestionCard(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.xl)
     ) {
         // Tipo de pregunta badge
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(ConsuRadius.xl))
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = when (question.type) {
                     QuestionType.MULTIPLE_CHOICE -> Icons.Rounded.CheckCircle
-                    QuestionType.TRUE_FALSE -> Icons.Rounded.HelpOutline
+                    QuestionType.TRUE_FALSE -> Icons.AutoMirrored.Rounded.HelpOutline
                     QuestionType.FILL_BLANK -> Icons.Rounded.Edit
                     QuestionType.MATCH_PAIRS -> Icons.Rounded.Link
                 },
@@ -233,7 +238,7 @@ private fun QuizQuestionCard(
                 fontWeight = FontWeight.Bold
             )
         }
-        
+
         // Pregunta
         Text(
             text = question.question,
@@ -241,19 +246,19 @@ private fun QuizQuestionCard(
             fontWeight = FontWeight.Bold,
             lineHeight = 32.sp
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Opciones con animación de entrada escalonada
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
             question.options.forEachIndexed { index, option ->
                 var isVisible by remember { mutableStateOf(false) }
-                
+
                 LaunchedEffect(question.question) {
                     delay(index * 100L)
                     isVisible = true
                 }
-                
+
                 val alpha by animateFloatAsState(
                     targetValue = if (isVisible) 1f else 0f,
                     animationSpec = spring(
@@ -262,7 +267,7 @@ private fun QuizQuestionCard(
                     ),
                     label = "optionAlpha"
                 )
-                
+
                 val translationX by animateFloatAsState(
                     targetValue = if (isVisible) 0f else 50f,
                     animationSpec = spring(
@@ -271,7 +276,7 @@ private fun QuizQuestionCard(
                     ),
                     label = "optionTranslationX"
                 )
-                
+
                 Box(
                     modifier = Modifier.graphicsLayer {
                         this.alpha = alpha
@@ -289,7 +294,7 @@ private fun QuizQuestionCard(
                 }
             }
         }
-        
+
         // Feedback y botón continuar
         AnimatedVisibility(
             visible = showFeedback,
@@ -298,7 +303,7 @@ private fun QuizQuestionCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.lg))
                     .background(
                         if (isCorrect) JuicyGreen.copy(alpha = 0.1f)
                         else JuicyRed.copy(alpha = 0.1f)
@@ -306,14 +311,14 @@ private fun QuizQuestionCard(
                     .border(
                         width = 2.dp,
                         color = if (isCorrect) JuicyGreen else JuicyRed,
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(ConsuRadius.lg)
                     )
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(ConsuSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)
                 ) {
                     Icon(
                         imageVector = if (isCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Cancel,
@@ -328,7 +333,7 @@ private fun QuizQuestionCard(
                         color = if (isCorrect) JuicyGreen else JuicyRed
                     )
                 }
-                
+
                 if (question.explanation.isNotEmpty()) {
                     Text(
                         text = question.explanation,
@@ -336,14 +341,14 @@ private fun QuizQuestionCard(
                         lineHeight = 20.sp
                     )
                 }
-                
+
                 Button(
                     onClick = onContinue,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isCorrect) JuicyGreen else MaterialTheme.colorScheme.primary
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(ConsuRadius.md)
                 ) {
                     Text(
                         text = "Continuar",
@@ -375,32 +380,32 @@ private fun QuizAnswerOption(
         isSelected -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surface
     }
-    
+
     val borderColor = when {
         isCorrect -> JuicyGreen
         isWrong -> JuicyRed
         isSelected -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.outline
     }
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isSelected && !isCorrect && !isWrong) 1.02f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(ConsuRadius.lg))
             .background(backgroundColor)
             .border(
                 width = 2.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(ConsuRadius.lg)
             )
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(20.dp)
+            .padding(ConsuSpacing.xl)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -413,7 +418,7 @@ private fun QuizAnswerOption(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 modifier = Modifier.weight(1f)
             )
-            
+
             if (isCorrect || isWrong) {
                 Icon(
                     imageVector = if (isCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Cancel,
@@ -458,9 +463,9 @@ private fun QuizResult(
 ) {
     val percentage = (correctAnswers.toFloat() / totalQuestions.toFloat() * 100).toInt()
     val passed = stars > 0
-    
+
     var showAnimation by remember { mutableStateOf(false) }
-    
+
     // Transición infinita para el efecto holográfico (Foil)
     val infiniteTransition = rememberInfiniteTransition(label = "foil")
     val foilOffset by infiniteTransition.animateFloat(
@@ -472,10 +477,10 @@ private fun QuizResult(
         ),
         label = "foilOffset"
     )
-    
+
     // Haptic al terminar
     val haptic = LocalHapticFeedback.current
-    
+
     LaunchedEffect(Unit) {
         delay(300)
         showAnimation = true
@@ -487,14 +492,14 @@ private fun QuizResult(
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
-    
+
     // Si tienes 3 estrellas, es una carta premium
     val isPremiumFoil = passed && stars == 3
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(ConsuRadius.xxl))
             .background(
                 if (passed) Brush.linearGradient(
                     colors = listOf(
@@ -525,9 +530,9 @@ private fun QuizResult(
                     }
                 } else Modifier
             )
-            .padding(32.dp),
+            .padding(ConsuSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.xl)
     ) {
         // Emoji animado
         AnimatedVisibility(
@@ -541,23 +546,23 @@ private fun QuizResult(
         ) {
             Text(
                 text = if (passed) "🎉" else "😔",
-                fontSize = 72.sp
+                fontSize = 56.sp
             )
         }
-        
+
         // Título
         Text(
             text = if (passed) "¡Lección Completada!" else "Necesitas practicar más",
-            fontSize = 28.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Black,
             color = Color.White,
             textAlign = TextAlign.Center
         )
-        
+
         if (passed) {
             // Estrellas
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 repeat(3) { index ->
@@ -579,21 +584,21 @@ private fun QuizResult(
                             imageVector = if (index < stars) Icons.Rounded.Star else Icons.Rounded.StarOutline,
                             contentDescription = "Estrella",
                             tint = if (index < stars) JuicyYellow else Color.White.copy(alpha = 0.3f),
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(40.dp)
                         )
                     }
                 }
             }
         }
-        
+
         // Estadísticas
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(ConsuRadius.lg))
                 .background(Color.White.copy(alpha = 0.2f))
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(ConsuSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
         ) {
             StatRow(
                 label = "Respuestas correctas",
@@ -611,7 +616,7 @@ private fun QuizResult(
                 )
             }
         }
-        
+
         // Botones de acción
         if (passed) {
             // Botón continuar (aprobado)
@@ -622,7 +627,7 @@ private fun QuizResult(
                     containerColor = Color.White,
                     contentColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(ConsuRadius.md)
             ) {
                 Text(
                     text = "Continuar",
@@ -641,7 +646,7 @@ private fun QuizResult(
                         containerColor = Color.White,
                         contentColor = JuicyOrange
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(ConsuRadius.md)
                 ) {
                     Icon(
                         Icons.Rounded.Loop,
@@ -657,7 +662,7 @@ private fun QuizResult(
                     )
                 }
             }
-            
+
             // Botón salir (siempre visible al reprobar)
             TextButton(
                 onClick = onContinue,

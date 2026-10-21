@@ -1,4 +1,6 @@
 package com.example.consucalcu
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
@@ -62,7 +64,7 @@ fun shimmerBrush(
             highlightColor,
             targetColor
         )
-        
+
         val transition = rememberInfiniteTransition(label = "shimmer")
         val translateAnim = transition.animateFloat(
             initialValue = 0f,
@@ -73,7 +75,7 @@ fun shimmerBrush(
             ),
             label = "shimmerTranslate"
         )
-        
+
         Brush.linearGradient(
             colors = shimmerColors,
             start = Offset(translateAnim.value - 300f, translateAnim.value - 300f),
@@ -96,7 +98,7 @@ fun ResultCardSkeleton(
     modifier: Modifier = Modifier
 ) {
     val brush = shimmerBrush()
-    
+
     // ========== HEARTBEAT ANIMATION ==========
     val infiniteTransition = rememberInfiniteTransition(label = "heartbeat")
     val heartbeatScale by infiniteTransition.animateFloat(
@@ -108,7 +110,7 @@ fun ResultCardSkeleton(
         ),
         label = "heartbeatScale"
     )
-    
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -116,12 +118,12 @@ fun ResultCardSkeleton(
                 scaleX = heartbeatScale
                 scaleY = heartbeatScale
             },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(ConsuRadius.xxl),
         color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 4.dp
+        shadowElevation = 1.dp
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(ConsuSpacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header skeleton
@@ -134,7 +136,7 @@ fun ResultCardSkeleton(
                         modifier = Modifier
                             .width(100.dp)
                             .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(ConsuRadius.xs))
                             .background(brush)
                     )
                     Spacer(Modifier.height(4.dp))
@@ -142,7 +144,7 @@ fun ResultCardSkeleton(
                         modifier = Modifier
                             .width(70.dp)
                             .height(12.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(ConsuRadius.xs))
                             .background(brush)
                     )
                 }
@@ -150,19 +152,19 @@ fun ResultCardSkeleton(
                     modifier = Modifier
                         .width(80.dp)
                         .height(24.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(ConsuRadius.xs))
                         .background(brush)
                 )
             }
-            
+
             Spacer(Modifier.height(20.dp))
-            
+
             // Monto skeleton (Hero element)
             Box(
                 modifier = Modifier
                     .width(60.dp)
                     .height(12.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.xs))
                     .background(brush)
             )
             Spacer(Modifier.height(8.dp))
@@ -170,23 +172,23 @@ fun ResultCardSkeleton(
                 modifier = Modifier
                     .width(200.dp)
                     .height(42.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.sm))
                     .background(brush)
             )
-            
+
             Spacer(Modifier.height(12.dp))
-            
+
             // Pill skeleton
             Box(
                 modifier = Modifier
                     .width(140.dp)
                     .height(24.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.md))
                     .background(brush)
             )
-            
+
             Spacer(Modifier.height(20.dp))
-            
+
             // Divider skeleton
             Box(
                 modifier = Modifier
@@ -194,9 +196,9 @@ fun ResultCardSkeleton(
                     .height(1.dp)
                     .background(brush)
             )
-            
+
             Spacer(Modifier.height(16.dp))
-            
+
             // Footer skeleton
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -207,7 +209,7 @@ fun ResultCardSkeleton(
                         modifier = Modifier
                             .width(80.dp)
                             .height(10.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(ConsuRadius.xs))
                             .background(brush)
                     )
                     Spacer(Modifier.height(4.dp))
@@ -215,7 +217,7 @@ fun ResultCardSkeleton(
                         modifier = Modifier
                             .width(100.dp)
                             .height(20.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(ConsuRadius.xs))
                             .background(brush)
                     )
                 }
@@ -224,7 +226,7 @@ fun ResultCardSkeleton(
                         modifier = Modifier
                             .width(50.dp)
                             .height(10.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(ConsuRadius.xs))
                             .background(brush)
                     )
                     Spacer(Modifier.height(4.dp))
@@ -232,7 +234,7 @@ fun ResultCardSkeleton(
                         modifier = Modifier
                             .width(80.dp)
                             .height(20.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(ConsuRadius.xs))
                             .background(brush)
                     )
                 }
@@ -251,7 +253,7 @@ fun ResultCardSkeletonList(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         repeat(count) { index ->
             // Animación de entrada escalonada
@@ -268,7 +270,7 @@ fun ResultCardSkeletonList(
                     )
                 )
             }
-            
+
             Box(
                 modifier = Modifier
                     .graphicsLayer {
@@ -301,13 +303,13 @@ fun CatBadge(
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
-    
+
     val textColor = if (isPreferencial) {
         ConsuSuccess
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
-    
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(6.dp),
@@ -319,14 +321,14 @@ fun CatBadge(
         ) {
             Text(
                 text = "CAT",
-                fontSize = 9.sp,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = textColor.copy(alpha = 0.7f)
             )
             Spacer(Modifier.width(4.dp))
             Text(
                 text = cat,
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Black,
                 color = textColor
             )
@@ -370,7 +372,7 @@ fun SavingsIndicator(
     modifier: Modifier = Modifier
 ) {
     val savingsPercent = ((traditionalRate - preferentialRate) / traditionalRate * 100).toInt()
-    
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -379,7 +381,7 @@ fun SavingsIndicator(
         ) {
             Text(
                 text = "Ahorro vs Tradicional",
-                fontSize = 10.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = Color.White.copy(alpha = 0.7f)
             )
             Text(
@@ -389,22 +391,22 @@ fun SavingsIndicator(
                 color = ConsuSuccess // Verde éxito
             )
         }
-        
+
         Spacer(Modifier.height(6.dp))
-        
+
         // Barra de comparación
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
+                .clip(RoundedCornerShape(ConsuRadius.track))
                 .background(Color.White.copy(alpha = 0.2f))
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(preferentialRate / traditionalRate)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(3.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.track))
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
@@ -431,7 +433,7 @@ fun AnimatedCurrency(
     fontSize: Int = 42
 ) {
     var displayValue by remember { mutableStateOf(0.0) }
-    
+
     LaunchedEffect(targetValue) {
         animate(
             initialValue = displayValue.toFloat(),
@@ -444,9 +446,9 @@ fun AnimatedCurrency(
             displayValue = value.toDouble()
         }
     }
-    
+
     Text(
-        text = "$${String.format("%,.2f", displayValue)}",
+        text = "$${String.format(java.util.Locale.getDefault(), "%,.2f", displayValue)}",
         modifier = modifier,
         fontSize = fontSize.sp,
         fontWeight = FontWeight.Black,
@@ -485,7 +487,7 @@ fun PulsatingDot(
         ),
         label = "pulseAlpha"
     )
-    
+
     Box(
         modifier = modifier
             .size(size)
@@ -518,48 +520,35 @@ fun EmptyStateIllustration(
         emoji.contains("🚦") || emoji.contains("light", true) -> Icons.Default.Warning
         else -> Icons.Default.Info
     }
-    
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .padding(horizontal = ConsuSpacing.xxl, vertical = ConsuSpacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Subtle float animation
-        val infiniteTransition = rememberInfiniteTransition(label = "emptyFloat")
-        val floatY = infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = -6f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2000, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "floatAnim"
-        )
-        
         // Icon in a circle
         Box(
             modifier = Modifier
-                .graphicsLayer { translationY = floatY.value }
-                .size(96.dp),
+                .size(72.dp),
             contentAlignment = Alignment.Center
         ) {
             // Circle Background with Search Icon
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(64.dp)
                     .clip(CircleShape)
-                    .background(if (isSystemInDarkTheme()) ConsuDividerDark else ConsuChipBg),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp),
-                    tint = if (isSystemInDarkTheme()) Color.White else ConsuNavy
+                    modifier = Modifier.size(30.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             // Orange rays/sparks on the top right
             // Spark 1
             Box(
@@ -569,7 +558,7 @@ fun EmptyStateIllustration(
                     .width(4.dp)
                     .height(10.dp)
                     .graphicsLayer { rotationZ = 45f }
-                    .clip(RoundedCornerShape(2.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.hairline))
                     .background(ConsuOrange)
             )
             // Spark 2
@@ -579,7 +568,7 @@ fun EmptyStateIllustration(
                     .offset(x = 2.dp, y = 20.dp)
                     .width(10.dp)
                     .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.hairline))
                     .background(ConsuOrange)
             )
             // Spark 3
@@ -589,13 +578,13 @@ fun EmptyStateIllustration(
                     .offset(x = (-2).dp, y = (-2).dp)
                     .width(4.dp)
                     .height(10.dp)
-                    .clip(RoundedCornerShape(2.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.hairline))
                     .background(ConsuOrange)
             )
         }
-        
-        Spacer(Modifier.height(20.dp))
-        
+
+        Spacer(Modifier.height(12.dp))
+
         Text(
             text = title,
             fontSize = 16.sp,
@@ -603,9 +592,9 @@ fun EmptyStateIllustration(
             color = MaterialTheme.colorScheme.onSurface,
             letterSpacing = 0.2.sp
         )
-        
+
         Spacer(Modifier.height(6.dp))
-        
+
         Text(
             text = message,
             fontSize = 13.sp,

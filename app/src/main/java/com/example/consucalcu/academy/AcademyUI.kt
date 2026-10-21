@@ -1,8 +1,11 @@
 package com.example.consucalcu.academy
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,10 +14,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,7 +41,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-import com.example.consucalcu.ui.components.JuicyGradientCard
 import com.example.consucalcu.ui.components.JuicyCard
 import com.example.consucalcu.*
 import com.example.consucalcu.manager.SoundManager
@@ -47,20 +54,37 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AcademyScreen(
-    soundManager: SoundManager? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onImmersiveModeChange: (Boolean) -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val viewModel: AcademyViewModel = remember { AcademyViewModel(context) }
-    
+    val soundManager = LocalSoundManager.current
+    val viewModel: AcademyViewModel = viewModel()
+
     val progress by viewModel.progress.collectAsState()
     val modules by viewModel.modules.collectAsState()
     val currentBattle by viewModel.currentBattle.collectAsState()
-    
-    var selectedLesson by remember { mutableStateOf<Lesson?>(null) }
-    var showResourceDialog by remember { mutableStateOf(false) }
-    var selectedResource by remember { mutableStateOf<Lesson?>(null) }
-    
+
+    var selectedLessonId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedResourceId by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedLesson = selectedLessonId?.let(AcademyContent::getLessonById)
+    val selectedResource = selectedResourceId?.let(AcademyContent::getLessonById)
+
+    // Si Android recrea el proceso durante una batalla, reconstruir un estado
+    // jugable a partir del identificador guardado por Compose.
+    LaunchedEffect(selectedLessonId) {
+        if (selectedLesson?.type == LessonType.BATTLE && currentBattle == null) {
+            viewModel.startBattle(selectedLesson.id)
+        }
+    }
+
+    LaunchedEffect(selectedLesson, currentBattle) {
+        onImmersiveModeChange(selectedLesson != null || currentBattle != null)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onImmersiveModeChange(false) }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         // Pantalla principal con camino de aprendizaje
         if (currentBattle == null && selectedLesson == null) {
@@ -69,85 +93,88 @@ fun AcademyScreen(
                 modules = modules,
                 onLessonClick = { lesson ->
                     when (lesson.type) {
-                        LessonType.QUIZ -> selectedLesson = lesson
+                        LessonType.QUIZ -> selectedLessonId = lesson.id
                         LessonType.BATTLE -> {
                             viewModel.startBattle(lesson.id)
-                            selectedLesson = lesson
+                            selectedLessonId = lesson.id
                         }
                         LessonType.RESOURCE -> {
-                            selectedResource = lesson
-                            showResourceDialog = true
+                            selectedResourceId = lesson.id
                         }
-                        LessonType.PRACTICE -> selectedLesson = lesson
+                        LessonType.PRACTICE -> selectedLessonId = lesson.id
                     }
                     soundManager?.play("pop")
-                },
-                soundManager = soundManager
+                }
             )
         }
-        
+
         // Pantalla de batalla RPG
-        if (currentBattle != null && selectedLesson != null) {
+        val activeBattle = currentBattle
+        val battleLesson = selectedLesson
+        if (activeBattle != null && battleLesson != null) {
             BattleScreen(
-                lesson = selectedLesson!!,
-                battleState = currentBattle!!,
+                lesson = battleLesson,
+                battleState = activeBattle,
                 onAnswer = { isCorrect ->
-                    viewModel.answerBattleQuestion(selectedLesson!!.id, isCorrect)
-                    soundManager?.play(if (isCorrect) "success" else "error")
+                    viewModel.answerBattleQuestion(battleLesson.id, isCorrect)
+                    soundManager?.play(if (isCorrect) "ui_success" else "ui_error")
                 },
                 onExit = {
                     viewModel.endBattle()
-                    selectedLesson = null
+                    selectedLessonId = null
                     soundManager?.play("pop")
                 }
             )
         }
-        
+
         // Pantalla de cuestionario normal
-        if (currentBattle == null && selectedLesson != null && selectedLesson!!.type != LessonType.RESOURCE) {
+        if (currentBattle == null && selectedLesson?.type == LessonType.QUIZ) {
+            val activeLesson = selectedLesson
             QuizScreen(
-                lesson = selectedLesson!!,
+                lesson = activeLesson,
                 onComplete = { correctAnswers, totalQuestions ->
-                    viewModel.completeLesson(selectedLesson!!.id, correctAnswers, totalQuestions)
-                    selectedLesson = null
-                    soundManager?.play("success")
+                    viewModel.completeLesson(activeLesson.id, correctAnswers, totalQuestions)
+                    selectedLessonId = null
+                    soundManager?.play("academy_complete")
                 },
                 onExit = {
-                    selectedLesson = null
+                    selectedLessonId = null
                     soundManager?.play("pop")
                 }
             )
         }
-        
+
         // Diálogo de recursos
-        if (showResourceDialog && selectedResource != null) {
-            // Marcar como completado automáticamente al abrir (si no estaba completado)
-            LaunchedEffect(selectedResource!!.id) {
-                if (!selectedResource!!.isCompleted) {
-                    viewModel.completeLesson(selectedResource!!.id, 1, 1) // 100% completado
-                }
-            }
-            
+        selectedResource?.let { activeResource ->
             ResourceDialog(
-                resource = selectedResource!!,
+                resource = activeResource,
+                isCompleted = activeResource.id in progress.completedLessons,
+                onMarkComplete = {
+                    viewModel.completeLesson(activeResource.id, 1, 1)
+                    selectedResourceId = null
+                    soundManager?.play("academy_complete")
+                },
                 onDismiss = {
-                    showResourceDialog = false
-                    selectedResource = null
+                    selectedResourceId = null
                     soundManager?.play("pop")
                 }
             )
         }
-        
+
         // Pantalla de Práctica (Credit Match Game)
-        if (currentBattle == null && selectedLesson != null && selectedLesson!!.type == LessonType.PRACTICE) {
+        if (currentBattle == null && selectedLesson?.type == LessonType.PRACTICE) {
+            val activeLesson = selectedLesson
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                 CreditMatchGame(
                     onCaseSolved = { /* Feedback visual local en el componente */ },
+                    onComplete = { correctAnswers, totalCases ->
+                        viewModel.completeLesson(activeLesson.id, correctAnswers, totalCases)
+                        selectedLessonId = null
+                        soundManager?.play("academy_complete")
+                    },
                     onClose = {
-                        // Marcar como completada al terminar
-                        viewModel.completeLesson(selectedLesson!!.id, 3, 3)
-                        selectedLesson = null
-                        soundManager?.play("success")
+                        selectedLessonId = null
+                        soundManager?.play("pop")
                     }
                 )
             }
@@ -162,34 +189,28 @@ fun AcademyScreen(
 private fun AcademyMainScreen(
     progress: AcademyProgress,
     modules: List<Module>,
-    onLessonClick: (Lesson) -> Unit,
-    soundManager: SoundManager?
+    onLessonClick: (Lesson) -> Unit
 ) {
+    val soundManager = LocalSoundManager.current
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
-            .navigationBarsPadding(),
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         // Header con stats del usuario
         item {
             AcademyHeader(progress = progress)
         }
-        
+
         // Módulos con camino de lecciones
         items(modules) { module ->
             ModuleSection(
                 module = module,
-                onLessonClick = onLessonClick,
-                soundManager = soundManager
+                onLessonClick = onLessonClick
             )
         }
-        
-        // Spacer final
-        item {
-            Spacer(modifier = Modifier.height(120.dp))
-        }
+
     }
 }
 
@@ -198,66 +219,32 @@ private fun AcademyMainScreen(
  */
 @Composable
 private fun AcademyHeader(progress: AcademyProgress) {
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
-    
-    JuicyGradientCard(
-        brush = if (isDark) {
-            Brush.horizontalGradient(listOf(ConsuNavy, ConsuSurfaceDark))
-        } else {
-            Brush.horizontalGradient(listOf(ConsuNavy, ConsuNavyLight))
-        },
-        shadowColor = ConsuNavyDark
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.School,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Column {
-                        Text(
-                            text = "ACADEMIA",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Black
-                        )
-                        Text(
-                            text = "Capacitación profesional",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-                
-                // Módulos completados badge
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = GoldAccent.copy(alpha = 0.15f)
-                ) {
-                    Text(
-                        text = "${progress.completedLessons.size} lecciones",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = GoldAccent
-                    )
-                }
-            }
+        Column {
+            Text(
+                text = "Tu aprendizaje",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "Continúa donde te quedaste",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.64f)
+            )
         }
+        Text(
+            text = "${progress.completedLessons.size} completadas",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
@@ -267,63 +254,46 @@ private fun AcademyHeader(progress: AcademyProgress) {
 @Composable
 private fun ModuleSection(
     module: Module,
-    onLessonClick: (Lesson) -> Unit,
-    soundManager: SoundManager?
+    onLessonClick: (Lesson) -> Unit
 ) {
     // Progreso animado del módulo
     val moduleProgress = if (module.totalLessons > 0) {
         module.completedLessons.toFloat() / module.totalLessons.toFloat()
     } else 0f
-    
+
     val animatedProgress by animateFloatAsState(
         targetValue = moduleProgress,
         animationSpec = tween(800, easing = FastOutSlowInEasing),
         label = "moduleProgress"
     )
-    
+
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
     ) {
         // Header del módulo
         JuicyCard(
             color = MaterialTheme.colorScheme.surface,
             shadowColor = if (module.isUnlocked) module.color.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outline
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.padding(ConsuSpacing.lg)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = module.icon,
-                            fontSize = 32.sp,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(module.color.copy(alpha = 0.2f))
-                                .padding(8.dp)
+                            text = module.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (module.isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
-
-                        Column {
-                            Text(
-                                text = module.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (module.isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
-                            Text(
-                                text = "${module.completedLessons}/${module.totalLessons} lecciones",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
-                        }
+                        Text(
+                            text = "${module.completedLessons}/${module.totalLessons} lecciones",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
 
                     if (!module.isUnlocked) {
@@ -350,7 +320,7 @@ private fun ModuleSection(
                         }
                     }
                 }
-                
+
                 // Barra de progreso del módulo
                 if (module.isUnlocked) {
                     Spacer(Modifier.height(12.dp))
@@ -359,21 +329,20 @@ private fun ModuleSection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .clip(RoundedCornerShape(ConsuRadius.track)),
                         color = module.color,
                         trackColor = module.color.copy(alpha = 0.15f)
                     )
                 }
             }
         }
-        
+
         // Camino de lecciones (tipo Duolingo)
         if (module.isUnlocked) {
             LearningPath(
                 lessons = module.lessons,
                 moduleColor = module.color,
-                onLessonClick = onLessonClick,
-                soundManager = soundManager
+                onLessonClick = onLessonClick
             )
         }
     }
@@ -386,71 +355,97 @@ private fun ModuleSection(
 private fun LearningPath(
     lessons: List<Lesson>,
     moduleColor: Color,
-    onLessonClick: (Lesson) -> Unit,
-    soundManager: SoundManager?
+    onLessonClick: (Lesson) -> Unit
 ) {
+    val soundManager = LocalSoundManager.current
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
     ) {
         lessons.forEachIndexed { index, lesson ->
-            // Animación de entrada escalonada
-            var isVisible by remember { mutableStateOf(false) }
-            
-            LaunchedEffect(Unit) {
-                delay(index * 80L) // Delay escalonado
-                isVisible = true
-            }
-            
-            val alpha by animateFloatAsState(
-                targetValue = if (isVisible) 1f else 0f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
+            val available = !lesson.isLocked
+            Surface(
+                onClick = {
+                    if (available) {
+                        soundManager?.play("pop")
+                        onLessonClick(lesson)
+                    } else {
+                        soundManager?.play("ui_error")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(ConsuRadius.lg),
+                color = if (available) MaterialTheme.colorScheme.surface
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                border = BorderStroke(
+                    1.dp,
+                    if (available) moduleColor.copy(alpha = 0.28f)
+                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
                 ),
-                label = "alpha"
-            )
-            
-            val translationY by animateFloatAsState(
-                targetValue = if (isVisible) 0f else 40f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                ),
-                label = "translationY"
-            )
-            
-            Box(
-                modifier = Modifier.graphicsLayer {
-                    this.alpha = alpha
-                    this.translationY = translationY
-                }
+                tonalElevation = if (available) 1.dp else 0.dp
             ) {
-                Column {
-                    // Línea conectora (excepto para la primera lección)
-                    if (index > 0) {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(24.dp)
-                                .background(
-                                    if (lesson.isCompleted || !lesson.isLocked) moduleColor.copy(alpha = 0.5f)
-                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
-                                .align(if (index % 2 == 0) Alignment.Start else Alignment.End)
+                Row(
+                    modifier = Modifier.padding(ConsuSpacing.lg),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    lesson.isCompleted -> moduleColor
+                                    available -> moduleColor.copy(alpha = 0.14f)
+                                    else -> MaterialTheme.colorScheme.surfaceVariant
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when {
+                                lesson.isLocked -> Icons.Rounded.Lock
+                                lesson.isCompleted -> Icons.Rounded.Check
+                                lesson.type == LessonType.QUIZ -> Icons.Rounded.Quiz
+                                lesson.type == LessonType.BATTLE -> Icons.Rounded.EmojiEvents
+                                lesson.type == LessonType.RESOURCE -> Icons.Rounded.Description
+                                else -> Icons.Rounded.PlayArrow
+                            },
+                            contentDescription = null,
+                            tint = when {
+                                lesson.isCompleted -> Color.White
+                                available -> moduleColor
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                    
-                    // Nodo de lección
-                    LessonNode(
-                        lesson = lesson,
-                        moduleColor = moduleColor,
-                        onClick = { onLessonClick(lesson) },
-                        soundManager = soundManager,
-                        alignment = if (index % 2 == 0) Alignment.Start else Alignment.End
-                    )
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = lesson.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = when {
+                                lesson.isCompleted -> "Completada"
+                                lesson.isLocked -> "Nivel ${lesson.requiredLevel} requerido"
+                                else -> "Comenzar lección"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (available) moduleColor else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (available) {
+                        Icon(
+                            imageVector = Icons.Rounded.ChevronRight,
+                            contentDescription = "Abrir lección",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -465,19 +460,19 @@ private fun LessonNode(
     lesson: Lesson,
     moduleColor: Color,
     onClick: () -> Unit,
-    soundManager: SoundManager?,
     alignment: Alignment.Horizontal
 ) {
+    val soundManager = LocalSoundManager.current
     // Estado para tooltip de nodo bloqueado
     var showLockedTooltip by remember { mutableStateOf(false) }
-    
+
     // Animación de escala
     val scale by animateFloatAsState(
         targetValue = if (lesson.isLocked) 0.9f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
-    
+
     // Animación de flotación más sutil (4dp en vez de 8dp)
     val infiniteTransition = rememberInfiniteTransition(label = "float")
     val floatOffset by infiniteTransition.animateFloat(
@@ -489,7 +484,7 @@ private fun LessonNode(
         ),
         label = "floatOffset"
     )
-    
+
     // Animación de pulso para lecciones disponibles
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -519,7 +514,7 @@ private fun LessonNode(
             showLockedTooltip = false
         }
     }
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (alignment == Alignment.Start) Arrangement.Start else Arrangement.End
@@ -566,12 +561,12 @@ private fun LessonNode(
                     .clickable(enabled = true) {
                         if (lesson.isLocked) {
                             showLockedTooltip = true
-                            soundManager?.play("wrong")
+                            soundManager?.play("ui_error")
                         } else {
                             onClick()
                         }
                     }
-                    .padding(12.dp),
+                    .padding(ConsuSpacing.md),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -588,9 +583,9 @@ private fun LessonNode(
                     } else {
                         Icon(
                             imageVector = when (lesson.type) {
-                                LessonType.QUIZ -> Icons.Rounded.HelpOutline
+                                LessonType.QUIZ -> Icons.AutoMirrored.Rounded.HelpOutline
                                 LessonType.BATTLE -> Icons.Rounded.EmojiEvents
-                                LessonType.RESOURCE -> Icons.Rounded.ReceiptLong
+                                LessonType.RESOURCE -> Icons.AutoMirrored.Rounded.ReceiptLong
                                 LessonType.PRACTICE -> Icons.Rounded.Loop
                             },
                             contentDescription = lesson.type.name,
@@ -598,7 +593,7 @@ private fun LessonNode(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    
+
                     if (lesson.isCompleted && lesson.stars > 0) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
@@ -614,7 +609,7 @@ private fun LessonNode(
                     }
                 }
             }
-            
+
             // Título de la lección (NUEVO)
             Spacer(Modifier.height(6.dp))
             Text(
@@ -628,7 +623,7 @@ private fun LessonNode(
                 maxLines = 2,
                 lineHeight = 14.sp
             )
-            
+
             // Tooltip de bloqueo (NUEVO)
             AnimatedVisibility(
                 visible = showLockedTooltip,
@@ -638,7 +633,7 @@ private fun LessonNode(
                 Box(
                     modifier = Modifier
                         .padding(top = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(ConsuRadius.sm))
                         .background(MaterialTheme.colorScheme.inverseSurface)
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
@@ -660,11 +655,12 @@ private fun LessonNode(
 @Composable
 private fun ResourceDialog(
     resource: Lesson,
+    isCompleted: Boolean,
+    onMarkComplete: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
     val context = LocalContext.current
-    
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -680,11 +676,13 @@ private fun ResourceDialog(
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .fillMaxHeight(0.8f)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.xxl))
                     .background(MaterialTheme.colorScheme.surface)
-                    .clickable(enabled = false) { /* Prevent dismiss on content click */ }
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { /* Consumir el toque dentro del contenido */ })
+                    }
+                    .padding(ConsuSpacing.xxl),
+                verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
             ) {
                 // Header
                 Row(
@@ -704,13 +702,13 @@ private fun ResourceDialog(
                         )
                     }
                 }
-                
+
                 HorizontalDivider()
-                
+
                 // Contenido del recurso
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)
                 ) {
                     item {
                         Text(
@@ -720,17 +718,16 @@ private fun ResourceDialog(
                         )
                     }
                 }
-                
-                // Botón copiar
-                Button(
+
+                OutlinedButton(
                     onClick = {
-                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resource.resourceContent))
+                        val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+                        clipboard.setPrimaryClip(
+                            android.content.ClipData.newPlainText("Recurso de Academia", resource.resourceContent)
+                        )
                         android.widget.Toast.makeText(context, "Copiado al portapapeles", android.widget.Toast.LENGTH_SHORT).show()
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.ContentCopy,
@@ -739,6 +736,23 @@ private fun ResourceDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Copiar al Portapapeles")
+                }
+
+                Button(
+                    onClick = onMarkComplete,
+                    enabled = !isCompleted,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isCompleted) "Recurso completado" else "Marcar como revisado")
                 }
             }
         }

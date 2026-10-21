@@ -1,10 +1,8 @@
 package com.example.consucalcu.ui.components
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import com.example.consucalcu.R
-import com.example.consucalcu.ConsuNavy
-import com.example.consucalcu.ConsuOrange
-import com.example.consucalcu.ConsuChipBg
-import android.content.Context
 import androidx.compose.foundation.shape.CircleShape
 import android.os.Build
 import android.os.VibrationEffect
@@ -13,12 +11,9 @@ import android.os.VibratorManager
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,7 +38,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -52,9 +46,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.automirrored.rounded.TrendingDown
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,11 +62,12 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.consucalcu.*
 import com.example.consucalcu.model.*
 import com.example.consucalcu.manager.HapticManager
-import com.example.consucalcu.manager.SoundManager
+import com.example.consucalcu.data.FinancialConfig
 import com.example.consucalcu.data.PreferenceRepository
 import com.example.consucalcu.utils.*
 import java.math.BigDecimal
 import java.math.RoundingMode
+import android.content.Context
 
 // =================================================================================================
 // 3. UI UTILS & MODIFIERS
@@ -127,14 +125,15 @@ class CurrencyVisualTransformation : VisualTransformation {
     }
 }
 
-fun Modifier.bouncyClick(soundManager: SoundManager? = null, onClick: () -> Unit) = composed {
-    var isPressed by remember { mutableStateOf(false) }
-    val haptic = LocalHapticFeedback.current
-    
+fun Modifier.bouncyClick(onClick: () -> Unit) = composed {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val hapticManager = LocalHapticManager.current
+
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f, // Un poco más profundo el presionado
+        targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = spring(
-            dampingRatio = 0.5f, // Más elástico al soltar
+            dampingRatio = 0.5f,
             stiffness = Spring.StiffnessMediumLow
         ),
         label = "scale"
@@ -145,32 +144,50 @@ fun Modifier.bouncyClick(soundManager: SoundManager? = null, onClick: () -> Unit
             scaleX = scale
             scaleY = scale
         }
-        .pointerInput(Unit) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
-                isPressed = true
-                
-                // Feedback táctil inmediato al bajar
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                
-                val up = waitForUpOrCancellation()
-                isPressed = false
-                
-                if (up != null) {
-                    soundManager?.play("pop")
-                    // Feedback táctil al confirmar
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClick()
-                }
-            }
+        .clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            role = Role.Button,
+        ) {
+            hapticManager?.medium()
+            onClick()
         }
+}
+
+/**
+ * Shimmer Effect for world-class skeleton loading
+ */
+fun Modifier.shimmerEffect(): Modifier = composed {
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerAnim"
+    )
+
+    val shimmerColors = listOf(
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset.Zero,
+        end = Offset(x = translateAnim, y = translateAnim)
+    )
+
+    this.background(brush)
 }
 
 // =================================================================================================
 // 4. HAPTICS SYSTEM
 // =================================================================================================
 fun triggerHapticTexture(context: Context, pattern: LongArray, useComposition: Boolean = true) {
-    // Check global preference before anything else
     val repository = PreferenceRepository(context)
     if (!repository.getIsHapticEnabled()) return
 
@@ -183,11 +200,10 @@ fun triggerHapticTexture(context: Context, pattern: LongArray, useComposition: B
     }
     vibrator?.let {
         if (!it.hasVibrator()) return
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && useComposition) {
             try {
                 val composition = VibrationEffect.startComposition()
-                // Usar diferentes primitivas según el patrón para que se "sienta" la diferencia
                 if (pattern.contentEquals(HapticPatterns.SUCCESS)) {
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, 1.0f, 0)
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, 0.8f, 100)
@@ -195,15 +211,12 @@ fun triggerHapticTexture(context: Context, pattern: LongArray, useComposition: B
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_SLOW_RISE, 0.8f, 0)
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_QUICK_FALL, 1.0f, 150)
                 } else {
-                    // Click genérico
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, 0.8f, 0)
                 }
                 it.vibrate(composition.compose())
             } catch (e: Exception) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val effect = VibrationEffect.createWaveform(pattern, -1)
-                    it.vibrate(effect)
-                }
+                val effect = VibrationEffect.createWaveform(pattern, -1)
+                it.vibrate(effect)
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val effect = VibrationEffect.createWaveform(pattern, -1)
@@ -220,40 +233,6 @@ object HapticPatterns {
 // =================================================================================================
 // 14. REUSABLE COMPONENTS
 // =================================================================================================
-@Composable
-fun SummaryItem(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    color: Color = Color.White,
-    alignment: Alignment.Horizontal = Alignment.Start
-) {
-    Column(horizontalAlignment = alignment) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (alignment == Alignment.Start) {
-                Icon(icon, null, tint = color.copy(alpha = 0.7f), modifier = Modifier.size(12.dp))
-                Spacer(Modifier.width(6.dp))
-            }
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = color.copy(alpha = 0.7f),
-                fontWeight = FontWeight.Bold
-            )
-            if (alignment == Alignment.End) {
-                Spacer(Modifier.width(6.dp))
-                Icon(icon, null, tint = color.copy(alpha = 0.7f), modifier = Modifier.size(12.dp))
-            }
-        }
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.ExtraBold,
-            color = color
-        )
-    }
-}
-
 @Composable
 fun FormSectionCard(
     title: String,
@@ -285,8 +264,8 @@ fun FormSectionCard(
             shadowColor = MaterialTheme.colorScheme.outline.copy(alpha=0.04f)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(ConsuSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
             ) {
                 content()
             }
@@ -305,7 +284,8 @@ fun JuicyInput(
     isError: Boolean = false,
     imeAction: ImeAction = ImeAction.Next,
     placeholder: String? = null,
-    maxLength: Int? = null
+    maxLength: Int? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val smartPlaceholder = placeholder ?: when {
         isCurrency -> "10,000"
@@ -319,33 +299,32 @@ fun JuicyInput(
         type == KeyboardType.Number || type == KeyboardType.Decimal -> "0"
         else -> "Ingresa $label"
     }
-    
-    val focusManager = LocalFocusManager.current
+
     val hapticManager = LocalHapticManager.current
     var isFocused by remember { mutableStateOf(false) }
 
     val animatedScale by animateFloatAsState(
-        targetValue = if (isFocused) 1.01f else 1f,
+        targetValue = 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow),
         label = "inputScale"
     )
 
     val borderColor by animateColorAsState(
         targetValue = when {
-            isError -> ErrorRed
-            isFocused -> ConsuOrange
-            else -> if (isSystemInDarkTheme()) BorderDark else ConsuNavy.copy(alpha = 0.8f)
+            isError -> MaterialTheme.colorScheme.error
+            isFocused -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
         },
         animationSpec = tween(300),
         label = "borderColor"
     )
 
     val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) 1.5.dp else 1.dp,
+        targetValue = 1.dp,
         label = "borderWidth"
     )
-    
-    Column(modifier = Modifier.graphicsLayer { 
+
+    Column(modifier = Modifier.graphicsLayer {
         scaleX = animatedScale
         scaleY = animatedScale
     }) {
@@ -357,39 +336,39 @@ fun JuicyInput(
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isError) ErrorRed else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
-            
+
             if (maxLength != null && isFocused) {
                 val remaining = maxLength - value.length
                 Text(
                     text = "$remaining",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (remaining < 5) WarningOrange else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    color = if (remaining < 5) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     fontWeight = if (remaining < 5) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier.padding(end = 4.dp, bottom = 4.dp)
                 )
             }
         }
-        
+
         Box(
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .heightIn(min = 56.dp)
                     .background(
                         color = MaterialTheme.colorScheme.surface,
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(ConsuRadius.lg)
                     )
                     .border(
                         width = borderWidth,
                         color = borderColor,
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(ConsuRadius.lg)
                     )
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(ConsuRadius.lg))
                     .onFocusChanged { focusState ->
                         if (focusState.isFocused != isFocused) {
                             isFocused = focusState.isFocused
@@ -405,13 +384,13 @@ fun JuicyInput(
                         .padding(start = 10.dp, end = 8.dp)
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(if (isSystemInDarkTheme()) ConsuDividerDark else ConsuChipBg),
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         leadingIcon,
                         null,
-                        tint = if (isError) ErrorRed else if (isFocused) ConsuOrange else ConsuNavy,
+                        tint = if (isError) MaterialTheme.colorScheme.error else if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -423,7 +402,7 @@ fun JuicyInput(
                             hapticManager?.tick()
                         }
                         if (maxLength != null && input.length > maxLength) return@BasicTextField
-                        
+
                         val isValidChar = input.all { it.isDigit() || it == '.' || it == '-' }
                         val singleDot = input.count { it == '.' } <= 1
                         val validMinus = if (input.contains('-')) input.indexOf('-') == 0 && input.count { it == '-' } == 1 else true
@@ -443,14 +422,14 @@ fun JuicyInput(
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = FontFamily.SansSerif,
-                        color = MaterialTheme.colorScheme.onSurface 
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = if (isCurrency) KeyboardType.Decimal else type,
                         imeAction = imeAction
                     ),
                     singleLine = true,
-                    visualTransformation = if (isCurrency) CurrencyVisualTransformation() else VisualTransformation.None,
+                    visualTransformation = if (isCurrency) CurrencyVisualTransformation() else visualTransformation,
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.CenterStart) {
                             if (value.isEmpty()) {
@@ -467,8 +446,35 @@ fun JuicyInput(
                         }
                     }
                 )
-                
-                if (isCurrency) {
+
+                val isValidField = remember(value, label) {
+                    when {
+                        label.contains("CURP", true) -> GeneralUtils.isValidCURP(value)
+                        label.contains("RFC", true) -> GeneralUtils.isValidRFC(value)
+                        label.contains("CLABE", true) -> GeneralUtils.isValidCLABE(value)
+                        label.contains("Correo", true) -> GeneralUtils.isValidEmail(value)
+                        label.contains("NSS", true) -> value.isValidNSS()
+                        else -> value.isNotBlank()
+                    }
+                }
+
+                if (isValidField && value.isNotEmpty() && !isCurrency) {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 12.dp)
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(ConsuSuccess.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            null,
+                            tint = ConsuSuccess,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                } else if (isCurrency) {
                     Text(
                         text = "MXN",
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
@@ -480,7 +486,7 @@ fun JuicyInput(
                      Icon(
                         Icons.Rounded.Error,
                         null,
-                        tint = ErrorRed,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(horizontal = 12.dp).size(20.dp)
                      )
                 }
@@ -489,107 +495,21 @@ fun JuicyInput(
     }
 }
 
-@Composable
-fun JuicySliderInput(
-    label: String,
-    value: String,
-    range: ClosedFloatingPointRange<Float>,
-    steps: Int,
-    onValueChange: (String) -> Unit,
-    isError: Boolean = false
-) {
-    val floatValue = value.replace(",", "").replace("$", "").toFloatOrNull() ?: range.start
-    val hapticManager = LocalHapticManager.current
-    
-    // Total steps for discrete haptic feedback
-    val totalSteps = if (steps > 0) steps + 1 else 20
-    val initialFraction = ((floatValue - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-    val initialStepIndex = (initialFraction * totalSteps).toInt()
-    
-    var lastStepIndex by remember { mutableStateOf(initialStepIndex) }
-
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        JuicyInput(
-            label = label,
-            value = value,
-            onValChange = onValueChange,
-            type = KeyboardType.Number,
-            leadingIcon = Icons.Rounded.AttachMoney,
-            isCurrency = true,
-            isError = isError,
-            imeAction = ImeAction.Done
-        )
-
-        Spacer(Modifier.height(4.dp))
-
-        Slider(
-            value = floatValue,
-            onValueChange = { newVal ->
-                val snappedValue = newVal.toInt()
-                val progressFraction = ((newVal - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-                val currentStepIndex = (progressFraction * totalSteps).toInt()
-                
-                if (currentStepIndex != lastStepIndex) {
-                    hapticManager?.tick()
-                    lastStepIndex = currentStepIndex
-                }
-                onValueChange(snappedValue.toString())
-            },
-            valueRange = range,
-            steps = steps,
-            colors = SliderDefaults.colors(
-                thumbColor = ConsuNavy,
-                activeTrackColor = ConsuNavy,
-                inactiveTrackColor = ConsuNavy.copy(alpha = 0.2f)
-            )
-        )
-    }
-}
-
-@Composable
-fun JuicyLottieLoader(modifier: Modifier = Modifier) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_empty_search))
-    LottieAnimation(
-        composition = composition,
-        iterations = LottieConstants.IterateForever,
-        modifier = modifier
-    )
-}
-
-@Composable
-fun JuicyLottieSuccess(modifier: Modifier = Modifier) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_levelup))
-    LottieAnimation(
-        composition = composition,
-        iterations = 1,
-        modifier = modifier
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JuicyProviderDropdown(
     selectedValue: String,
     onSelectionChange: (String) -> Unit
 ) {
-    val brands = listOf("CONSUBANCO", "CONSUPAGO", "OPCIPRES", "MASNOMINA")
-    val variantMap = mapOf(
-        "CONSUBANCO" to listOf("TRADICIONAL", "ESPECIAL", "VIP"),
-        "CONSUPAGO"  to listOf("TRADICIONAL", "ESPECIAL"),
-        "OPCIPRES"   to listOf("TRADICIONAL", "ESPECIAL"),
-        "MASNOMINA"  to emptyList()
-    )
-
-    val selectedBrand   = brands.firstOrNull { selectedValue.startsWith(it) } ?: "CONSUBANCO"
-    val selectedVariant = if (selectedValue.contains(" ")) selectedValue.removePrefix("$selectedBrand ") else ""
+    val products = FinancialConfig.IMSS_PRODUCT_KEYS.toList()
+    val selectedProduct = selectedValue.takeIf { it in products } ?: "CSB"
 
     var expanded by remember { mutableStateOf(false) }
 
+    val csbBrandColor = MaterialTheme.colorScheme.onSurface
     fun getBrandColor(name: String): Color = when (name) {
-        "CONSUBANCO" -> Color(0xFF1E3A8A) // Blue
-        "CONSUPAGO"  -> Color(0xFFD97706) // Orange/Amber
-        "OPCIPRES"   -> Color(0xFF059669) // Green/Emerald
-        "MASNOMINA"  -> Color(0xFFDC2626) // Red
+        "CSB" -> csbBrandColor
+        "OPC" -> ConsuSuccess
         else         -> Color.Gray
     }
 
@@ -600,8 +520,8 @@ fun JuicyProviderDropdown(
         ) {
             Surface(
                 onClick = { expanded = true },
-                modifier = Modifier.fillMaxWidth().menuAnchor(),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                shape = RoundedCornerShape(ConsuRadius.md),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             ) {
@@ -615,11 +535,11 @@ fun JuicyProviderDropdown(
                             modifier = Modifier
                                 .size(10.dp)
                                 .clip(CircleShape)
-                                .background(getBrandColor(selectedBrand))
+                                .background(getBrandColor(selectedProduct.substringBefore(" ")))
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            text = if (selectedVariant.isNotEmpty()) "$selectedBrand ($selectedVariant)" else selectedBrand,
+                            text = selectedProduct,
                             style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -633,40 +553,20 @@ fun JuicyProviderDropdown(
                 onDismissRequest = { expanded = false },
                 modifier = Modifier.background(MaterialTheme.colorScheme.surface)
             ) {
-                brands.forEach { brand ->
-                    val variants = variantMap[brand] ?: emptyList()
-                    if (variants.isEmpty()) {
-                        DropdownMenuItem(
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(getBrandColor(brand)))
-                                    Spacer(Modifier.width(10.dp))
-                                    Text(brand, fontWeight = FontWeight.Bold)
-                                }
-                            },
-                            onClick = {
-                                onSelectionChange(brand)
-                                expanded = false
+                products.forEach { product ->
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(getBrandColor(product.substringBefore(" "))))
+                                Spacer(Modifier.width(10.dp))
+                                Text(product, fontWeight = FontWeight.Bold)
                             }
-                        )
-                    } else {
-                        variants.forEach { variant ->
-                            val fullName = "$brand $variant"
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(getBrandColor(brand)))
-                                        Spacer(Modifier.width(10.dp))
-                                        Text("$brand ($variant)", fontWeight = FontWeight.Medium)
-                                    }
-                                },
-                                onClick = {
-                                    onSelectionChange(fullName)
-                                    expanded = false
-                                }
-                            )
+                        },
+                        onClick = {
+                            onSelectionChange(product)
+                            expanded = false
                         }
-                    }
+                    )
                 }
             }
         }
@@ -675,8 +575,8 @@ fun JuicyProviderDropdown(
 
 @Composable
 fun JuicyCard(
-    color: Color, 
-    shadowColor: Color, 
+    color: Color,
+    shadowColor: Color = Color.Transparent,
     modifier: Modifier = Modifier,
     cornerRadius: androidx.compose.ui.unit.Dp = 20.dp,
     content: @Composable () -> Unit
@@ -685,8 +585,8 @@ fun JuicyCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(cornerRadius),
         color = color,
-        border = BorderStroke(1.dp, shadowColor.copy(alpha = 0.12f)),
-        shadowElevation = 2.dp
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)),
+        shadowElevation = 0.dp
     ) {
         content()
     }
@@ -702,41 +602,10 @@ fun JuicyGradientCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(brush, RoundedCornerShape(16.dp))
-            .border(1.dp, shadowColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+            .background(brush, RoundedCornerShape(ConsuRadius.lg))
+            .border(1.dp, shadowColor.copy(alpha = 0.2f), RoundedCornerShape(ConsuRadius.lg))
     ) {
         content()
-    }
-}
-
-@Composable
-fun JuicyChip(selected: Boolean, text: String, onClick: () -> Unit) {
-    val isDark = isSystemInDarkTheme()
-    val bgColor = if (selected) {
-        if (isDark) Color.White else ConsuNavy
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-    val contentColor = if (selected) {
-        if (isDark) Color.Black else Color.White
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-    }
-
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.padding(end = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = bgColor,
-        border = BorderStroke(1.dp, if (selected) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-    ) {
-        Text(
-            text = text,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = contentColor,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-        )
     }
 }
 
@@ -777,10 +646,10 @@ fun BeforeAfterChart(
                 label = "ACTUAL",
                 value = currentPayment,
                 maxValue = totalMax,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 isNew = false
             )
-            
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -789,7 +658,7 @@ fun BeforeAfterChart(
                 Icon(
                     Icons.AutoMirrored.Rounded.CompareArrows,
                     contentDescription = null,
-                    tint = JuicyBlue.copy(alpha = 0.5f),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                     modifier = Modifier.size(24.dp)
                 )
                 if (ahorro > BigDecimal.ZERO) {
@@ -797,7 +666,7 @@ fun BeforeAfterChart(
                         "-${porcentajeAhorro.toInt()}%",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Black,
-                        color = SuccessGreen
+                        color = ConsuSuccess
                     )
                 }
             }
@@ -806,27 +675,27 @@ fun BeforeAfterChart(
                 label = "NUEVO",
                 value = newPayment,
                 maxValue = totalMax,
-                color = if (newPayment < currentPayment) SuccessGreen else WarningOrange,
+                color = if (newPayment < currentPayment) ConsuSuccess else ConsuWarning,
                 isNew = true
             )
         }
-        
+
         if (ahorro > BigDecimal.ZERO) {
             Spacer(Modifier.height(20.dp))
             Surface(
-                color = SuccessGreen.copy(alpha = 0.12f),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.3f)),
+                color = ConsuSuccess.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(ConsuRadius.md),
+                border = BorderStroke(1.dp, ConsuSuccess.copy(alpha = 0.3f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    Modifier.padding(12.dp),
+                    Modifier.padding(ConsuSpacing.md),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Rounded.Savings, 
-                        null, 
-                        tint = SuccessGreen, 
+                        Icons.Rounded.Savings,
+                        null,
+                        tint = ConsuSuccess,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(12.dp))
@@ -834,7 +703,7 @@ fun BeforeAfterChart(
                         "¡Libera $${ahorro.toCurrency()} al mes!",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = SuccessGreen
+                        color = ConsuSuccess
                     )
                 }
             }
@@ -852,7 +721,7 @@ private fun ChartBar(
 ) {
     var barHeight by remember { mutableFloatStateOf(0f) }
     val targetHeight = (value.toFloat() / maxValue).coerceIn(0.1f, 1f)
-    
+
     LaunchedEffect(value) {
         animate(
             0f, targetHeight,
@@ -876,16 +745,8 @@ private fun ChartBar(
             modifier = Modifier
                 .width(50.dp)
                 .fillMaxHeight(barHeight)
-                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(color, color.copy(alpha = 0.7f))
-                    )
-                )
-                .then(
-                    if (isNew) Modifier.border(2.dp, color.copy(alpha = 0.3f), RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                    else Modifier
-                )
+                .clip(RoundedCornerShape(topStart = ConsuRadius.badge, topEnd = ConsuRadius.badge))
+                .background(color)
         )
         Spacer(Modifier.height(8.dp))
         Text(
@@ -899,37 +760,26 @@ private fun ChartBar(
 
 @Composable
 fun ResultCardSkeletonList(count: Int = 3) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)) {
         repeat(count) {
             JuicyCard(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                color = MaterialTheme.colorScheme.surface,
                 shadowColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f)
             ) {
-                val infiniteTransition = rememberInfiniteTransition(label = "skeleton")
-                val alpha by infiniteTransition.animateFloat(
-                    initialValue = 0.3f,
-                    targetValue = 0.6f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(1000, easing = LinearEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "skeletonAlpha"
-                )
-                
-                Column(Modifier.padding(20.dp).graphicsLayer { this.alpha = alpha }) {
+                Column(Modifier.padding(ConsuSpacing.xl)) {
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Box(Modifier.width(100.dp).height(20.dp).clip(RoundedCornerShape(4.dp)).background(Color.Gray.copy(alpha = 0.2f)))
-                        Box(Modifier.width(60.dp).height(20.dp).clip(RoundedCornerShape(4.dp)).background(Color.Gray.copy(alpha = 0.2f)))
+                        Box(Modifier.width(100.dp).height(20.dp).clip(RoundedCornerShape(ConsuRadius.xs)).shimmerEffect())
+                        Box(Modifier.width(60.dp).height(20.dp).clip(RoundedCornerShape(ConsuRadius.xs)).shimmerEffect())
                     }
                     Spacer(Modifier.height(20.dp))
-                    Box(Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(8.dp)).background(Color.Gray.copy(alpha = 0.2f)))
+                    Box(Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(ConsuRadius.sm)).shimmerEffect())
                     Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(8.dp)).background(Color.Gray.copy(alpha = 0.2f)))
-                        Box(Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(8.dp)).background(Color.Gray.copy(alpha = 0.2f)))
+                    Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.md)) {
+                        Box(Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(ConsuRadius.sm)).shimmerEffect())
+                        Box(Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(ConsuRadius.sm)).shimmerEffect())
                     }
                 }
             }
@@ -941,30 +791,29 @@ fun ResultCardSkeletonList(count: Int = 3) {
 fun JuicyButton(
     text: String,
     color: Color,
-    shadowColor: Color,
+    shadowColor: Color = Color.Transparent,
     textColor: Color,
     height: androidx.compose.ui.unit.Dp = 56.dp,
     icon: ImageVector? = null,
     iconColor: Color? = null,
-    soundManager: SoundManager? = null,
     isLoading: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
-            .height(height)
+            .heightIn(min = height)
             .fillMaxWidth()
-            .bouncyClick(soundManager = soundManager) {
+            .bouncyClick {
                 if (!isLoading) {
                     onClick()
                 }
             }
-            .background(color, RoundedCornerShape(10.dp))
+            .background(color, RoundedCornerShape(ConsuRadius.badge))
             .border(
                 width = 1.dp,
-                color = if (color == Color.Transparent) shadowColor else Color.White.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(10.dp)
+                color = if (color == Color.Transparent) MaterialTheme.colorScheme.outline.copy(alpha=0.3f) else Color.White.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(ConsuRadius.badge)
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -973,7 +822,7 @@ fun JuicyButton(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             if (isLoading) {
-                androidx.compose.material3.CircularProgressIndicator(
+                CircularProgressIndicator(
                     color = textColor,
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp
@@ -993,7 +842,10 @@ fun JuicyButton(
                 color = textColor,
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
-                letterSpacing = 0.5.sp
+                letterSpacing = 0.5.sp,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -1002,24 +854,24 @@ fun JuicyButton(
 @Composable
 fun JuicyIconButton(
     icon: ImageVector,
+    contentDescription: String?,
     color: Color,
     shadowColor: Color? = null,
     iconColor: Color,
     size: androidx.compose.ui.unit.Dp = 56.dp,
-    soundManager: SoundManager? = null,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .size(size)
-            .bouncyClick(soundManager = soundManager, onClick = onClick)
-            .background(color, RoundedCornerShape(10.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+            .bouncyClick(onClick = onClick)
+            .background(color, RoundedCornerShape(ConsuRadius.badge))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(ConsuRadius.badge)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = iconColor,
             modifier = Modifier.size(size * 0.5f)
         )
@@ -1033,7 +885,7 @@ fun NSSValidationIndicator(nss: String) {
         Icon(
             imageVector = if (isValid) Icons.Rounded.CheckCircle else Icons.Rounded.Cancel,
             contentDescription = if (isValid) "NSS Válido" else "NSS Inválido",
-            tint = if (isValid) SuccessGreen else ErrorRed,
+            tint = if (isValid) ConsuSuccess else MaterialTheme.colorScheme.error,
             modifier = Modifier.size(24.dp)
         )
     }
@@ -1051,7 +903,7 @@ fun CompactInput(
     Column(modifier) {
         Text(
             label,
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
@@ -1066,7 +918,7 @@ fun CompactInput(
                     onChange(input)
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(50.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
             textStyle = TextStyle(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
@@ -1078,16 +930,14 @@ fun CompactInput(
             ),
             singleLine = true,
             visualTransformation = if (isCurrency) CurrencyVisualTransformation() else VisualTransformation.None,
-            prefix = if (isCurrency) {
-                { Text("$", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold)) }
-            } else null,
+            prefix = null,
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                focusedBorderColor = JuicyBlue,
-                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                focusedContainerColor = MaterialTheme.colorScheme.background
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(ConsuRadius.md)
         )
     }
 }
@@ -1102,11 +952,10 @@ enum class SortMode {
     MAYOR_PLAZO
 }
 
-// La clave de ordenamiento para una oferta dada un SortMode
 fun LoanOffer.sortKey(mode: SortMode): Comparable<*> = when (mode) {
     SortMode.MEJOR_VALOR    -> amount.divide(monthlyPayment.max(BigDecimal.ONE), 4, java.math.RoundingMode.HALF_UP)
     SortMode.MAYOR_MONTO    -> amount
-    SortMode.MENOR_DESCUENTO -> monthlyPayment.negate()   // negate: menor pago = mejor → mayor negate
+    SortMode.MENOR_DESCUENTO -> monthlyPayment.negate()
     SortMode.MAYOR_PLAZO    -> BigDecimal(term)
 }
 
@@ -1142,32 +991,32 @@ fun GroupedResultsSection(
     onShowAmortization: (LoanOffer) -> Unit,
     emptyContent: @Composable () -> Unit
 ) {
-    val allBrands = listOf("CONSUBANCO", "CONSUPAGO", "OPCIPRES", "MASNOMINA")
+    val allBrands = buildList {
+        addAll(FinancialConfig.IMSS_PRODUCTS_BY_BRAND.keys)
+        if (offers.any { it.agreementId == FinancialConfig.AGREEMENT_IMSS_BIENESTAR }) add("CONSUBANCO")
+    }
     var sortMode by remember { mutableStateOf(SortMode.MEJOR_VALOR) }
 
+    @Composable
     fun brandColor(brand: String): Color = when (brand) {
-        "CONSUBANCO" -> JuicyBlue
-        "CONSUPAGO"  -> JuicyOrange
-        "OPCIPRES"   -> JuicyGreen
-        "MASNOMINA"  -> JuicyRed
-        else         -> Color.Gray
+        "CSB" -> MaterialTheme.colorScheme.onSurface
+        "OPC" -> ConsuSuccess
+        "CONSUBANCO" -> MaterialTheme.colorScheme.onSurface
+        else         -> MaterialTheme.colorScheme.primary
     }
 
-    fun isVariantPremium(name: String) = name.endsWith("ESPECIAL") || name.endsWith("VIP")
+    fun isVariantPremium(name: String) = FinancialConfig.isPremiumProduct(name)
 
     @Suppress("UNCHECKED_CAST")
     fun sortList(list: List<LoanOffer>): List<LoanOffer> =
         list.sortedByDescending { it.sortKey(sortMode) as Comparable<Any> }
 
-    // Filtrar según toggle premium
     val visibleOffers = if (showPremium) offers else offers.filter { !isVariantPremium(it.product) }
 
-    // Agrupar por marca
     val rawGrouped = allBrands.associateWith { brand ->
         visibleOffers.filter { it.product.startsWith(brand) }
     }.filter { it.value.isNotEmpty() }
 
-    // ordenar las marcas según su mejor oferta bajo el sortMode actual
     @Suppress("UNCHECKED_CAST")
     val sortedBrands = rawGrouped.entries.sortedByDescending { (_, brandOffers) ->
         val best = sortList(brandOffers).firstOrNull()
@@ -1178,7 +1027,6 @@ fun GroupedResultsSection(
 
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
 
-        // ── Etiqueta + Toggle Premium ──
         if (offers.isNotEmpty()) {
             Row(
                 modifier = Modifier
@@ -1189,7 +1037,7 @@ fun GroupedResultsSection(
             ) {
                 Text(
                     text = "RESULTADOS",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -1198,25 +1046,36 @@ fun GroupedResultsSection(
                     FilterChip(
                         selected = showPremium,
                         onClick = onTogglePremium,
-                        label = { Text(if (showPremium) "ESP + VIP visibles" else "Solo Tradicional", fontSize = 11.sp) },
+                        label = {
+                            Text(
+                                if (showPremium) "MAX/ESP/VIP" else "Base",
+                                fontSize = 12.sp,
+                                fontWeight = if (showPremium) FontWeight.ExtraBold else FontWeight.Medium
+                            )
+                        },
                         leadingIcon = {
                             Icon(
-                                if (showPremium) Icons.Rounded.AutoAwesome else Icons.Rounded.Business,
+                                if (showPremium) Icons.Rounded.Business else Icons.Rounded.Business,
                                 null,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor  = GoldAccent.copy(alpha = 0.12f),
-                            selectedLabelColor      = GoldAccentDark,
-                            selectedLeadingIconColor = GoldAccentDark
+                            selectedContainerColor  = ConsuOrange,
+                            selectedLabelColor      = Color.White,
+                            selectedLeadingIconColor = Color.White,
+                            containerColor          = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            labelColor              = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            iconColor               = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         ),
                         border = FilterChipDefaults.filterChipBorder(
                             enabled             = true,
                             selected            = showPremium,
-                            selectedBorderColor = GoldAccent.copy(alpha = 0.4f),
-                            selectedBorderWidth = 1.dp
-                        )
+                            borderColor         = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            selectedBorderColor = ConsuOrangeDark,
+                            selectedBorderWidth = 1.5.dp
+                        ),
+                        shape = RoundedCornerShape(50)
                     )
                 }
             }
@@ -1225,7 +1084,6 @@ fun GroupedResultsSection(
         if (rawGrouped.isEmpty()) {
             emptyContent()
         } else {
-            // ── Chips de Orden ──
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
@@ -1233,7 +1091,7 @@ fun GroupedResultsSection(
                     .padding(bottom = 14.dp)
                     .horizontalScroll(rememberScrollState())
             ) {
-                SortMode.values().forEach { mode ->
+                SortMode.entries.forEach { mode ->
                     val isSelected = mode == sortMode
                     val label = when (mode) {
                         SortMode.MEJOR_VALOR     -> "Mejor Valor"
@@ -1254,18 +1112,11 @@ fun GroupedResultsSection(
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                             selectedLabelColor     = MaterialTheme.colorScheme.primary
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled             = true,
-                            selected            = isSelected,
-                            selectedBorderWidth = 1.dp,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                         )
                     )
                 }
             }
 
-            // ── Grupos de marcas ──
             sortedBrands.forEachIndexed { brandIdx, brand ->
                 val brandOffers = rawGrouped[brand] ?: return@forEachIndexed
                 val color       = brandColor(brand)
@@ -1276,7 +1127,6 @@ fun GroupedResultsSection(
                         .fillMaxWidth()
                         .padding(bottom = 20.dp)
                 ) {
-                    // Encabezado de Marca
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(bottom = 10.dp)
@@ -1310,11 +1160,10 @@ fun GroupedResultsSection(
                         )
                     }
 
-                    // Renderizar Ofertas Unificadas
                     sortedOffers.forEachIndexed { i, offer ->
                         val isPremiumElement = isVariantPremium(offer.product)
                         val isGlobalBest = i == 0 && brandIdx == 0
-                        
+
                         AnimatedResultItem(index = i) {
                             ResultCard(
                                 offer              = offer.copy(isBest = isGlobalBest),
@@ -1342,17 +1191,33 @@ fun ResultCard(
     accentColor: Color = MaterialTheme.colorScheme.primary,
     isPremium: Boolean = false
 ) {
+    // IMSS Bienestar uses a compact information hierarchy because its offers
+    // contain both months and quincenas. Keep the existing card unchanged for
+    // every other agreement to avoid changing established workflows.
+    if (offer.agreementId == FinancialConfig.AGREEMENT_IMSS_BIENESTAR) {
+        ImssBienestarResultCard(
+            offer = offer,
+            onClick = onClick,
+            onShowAmortization = onShowAmortization,
+            rankIndex = rankIndex,
+            accentColor = accentColor,
+            isPremium = isPremium
+        )
+        return
+    }
+
     val isBest = rankIndex == 0 || offer.isBest
 
     val variant = when {
         offer.product.endsWith("VIP")      -> "VIP"
-        offer.product.endsWith("ESPECIAL") -> "ESPECIAL"
+        offer.product.endsWith("MAX")      -> "MAX"
+        offer.product.endsWith("ESP")      -> "ESP"
         else                               -> null
     }
 
     val variantColor = when (variant) {
-        "VIP"      -> GoldAccent
-        "ESPECIAL" -> accentColor
+        "VIP"      -> ConsuOrange
+        "MAX", "ESP" -> accentColor
         else       -> null
     }
 
@@ -1360,31 +1225,31 @@ fun ResultCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(ConsuRadius.xl),
         border = BorderStroke(
-            width = if (isBest || isPremium) 2.dp else 1.dp,
+            width = if (isBest || isPremium) 1.dp else 0.5.dp,
             color = when {
-                isPremium && variant == "VIP" -> GoldAccent.copy(alpha = 0.7f)
-                isPremium -> accentColor.copy(alpha = 0.5f)
-                isBest    -> GoldAccent.copy(alpha = 0.8f)
-                else      -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                isPremium && variant == "VIP" -> ConsuOrange.copy(alpha = 0.4f)
+                isPremium -> accentColor.copy(alpha = 0.3f)
+                isBest    -> ConsuOrange.copy(alpha = 0.5f)
+                else      -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
             }
         ),
-        shadowElevation = if (isBest || isPremium) 8.dp else 2.dp
+        shadowElevation = if (isBest || isPremium) 4.dp else 0.dp
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = offer.product.take(4).uppercase(),
                 fontSize = 110.sp,
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.015f),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .offset(x = 24.dp, y = 30.dp)
             )
 
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.padding(ConsuSpacing.xxl)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1395,6 +1260,8 @@ fun ResultCard(
                         val baseName = offer.product
                             .replace(" TRADICIONAL", "")
                             .replace(" ESPECIAL", "")
+                            .replace(" MAX", "")
+                            .replace(" ESP", "")
                             .replace(" VIP", "")
                         Text(
                             text = baseName,
@@ -1407,15 +1274,23 @@ fun ResultCard(
                             Text(
                                 text = "TASA PREFERENCIAL",
                                 fontWeight = FontWeight.Bold,
-                                color = GoldAccent,
-                                fontSize = 10.sp
+                                color = ConsuOrange,
+                                fontSize = 12.sp
                             )
                         } else {
-                            Text(
-                                text = offer.tipoTasa,
+                        Text(
+                            text = offer.tipoTasa,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                fontSize = 10.sp
+                                fontSize = 12.sp
+                            )
+                        }
+                        if (offer.agreementLabel.isNotBlank()) {
+                            Text(
+                                text = offer.agreementLabel,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f),
+                                fontSize = 11.sp
                             )
                         }
                     }
@@ -1424,7 +1299,7 @@ fun ResultCard(
                         if (variant != null && variantColor != null) {
                             Surface(
                                 color = variantColor.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(ConsuRadius.sm),
                                 border = BorderStroke(1.dp, variantColor.copy(alpha = 0.4f))
                             ) {
                                 Row(
@@ -1440,7 +1315,7 @@ fun ResultCard(
                                     Spacer(Modifier.width(4.dp))
                                     Text(
                                         text = variant,
-                                        fontSize = 10.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = variantColor,
                                         letterSpacing = 0.3.sp
@@ -1450,9 +1325,9 @@ fun ResultCard(
                         }
                         if (isBest && variant == null) {
                             Surface(
-                                color = GoldAccent.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.3f))
+                                color = ConsuOrange.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(ConsuRadius.sm),
+                                border = BorderStroke(1.dp, ConsuOrange.copy(alpha = 0.3f))
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1461,15 +1336,15 @@ fun ResultCard(
                                     Icon(
                                         Icons.Rounded.Star,
                                         contentDescription = null,
-                                        tint = GoldAccent,
+                                        tint = ConsuOrange,
                                         modifier = Modifier.size(12.dp)
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(
                                         text = "MEJOR OPCIÓN",
-                                        fontSize = 10.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = GoldAccent,
+                                        color = ConsuOrange,
                                         letterSpacing = 0.5.sp
                                     )
                                 }
@@ -1482,7 +1357,7 @@ fun ResultCard(
                     Spacer(Modifier.height(16.dp))
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(ConsuRadius.sm),
                         color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
                     ) {
@@ -1499,7 +1374,7 @@ fun ResultCard(
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 text = offer.rejectionReason,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.error,
                                 lineHeight = 14.sp
@@ -1542,34 +1417,34 @@ fun ResultCard(
                 ) {
                     Column {
                         Text(
-                            "DESCUENTO", 
-                            fontSize = 10.sp, 
-                            fontWeight = FontWeight.Bold, 
+                            offer.shortPaymentLabel,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             letterSpacing = 0.5.sp
                         )
                         Text(
-                            "$${offer.monthlyPayment.toCurrency()}", 
-                            fontWeight = FontWeight.Bold, 
-                            color = MaterialTheme.colorScheme.primary, 
+                            "$${offer.monthlyPayment.toCurrency()}",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 20.sp
                         )
                     }
-                    
+
                     Box(Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)))
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            "PLAZO", 
-                            fontSize = 10.sp, 
-                            fontWeight = FontWeight.Bold, 
+                            "PLAZO",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             letterSpacing = 0.5.sp
                         )
                         Text(
-                            "${offer.term} Meses", 
-                            fontWeight = FontWeight.Bold, 
-                            color = MaterialTheme.colorScheme.onSurface, 
+                            offer.termDisplay,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 20.sp
                         )
                     }
@@ -1580,7 +1455,7 @@ fun ResultCard(
                     Surface(
                         onClick = { onShowAmortization() },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(ConsuRadius.md),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
                     ) {
                         Row(
@@ -1609,23 +1484,261 @@ fun ResultCard(
     }
 }
 
+/**
+ * Shorter result card for the IMSS Bienestar agreement.
+ *
+ * The agreement is biweekly, so displaying the two time units in one line
+ * made the generic card wrap and compete with the payment amount. This layout
+ * keeps one concept per metric and makes the card readable on narrow phones.
+ */
+@Composable
+private fun ImssBienestarResultCard(
+    offer: LoanOffer,
+    onClick: () -> Unit,
+    onShowAmortization: (() -> Unit)?,
+    rankIndex: Int,
+    accentColor: Color,
+    isPremium: Boolean
+) {
+    val isBest = rankIndex == 0 || offer.isBest
+    val borderColor = when {
+        isBest -> ConsuOrange.copy(alpha = 0.55f)
+        isPremium -> accentColor.copy(alpha = 0.35f)
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+    }
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(ConsuRadius.xl),
+        border = BorderStroke(if (isBest || isPremium) 1.dp else 0.5.dp, borderColor),
+        shadowElevation = if (isBest || isPremium) 3.dp else 0.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(ConsuSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(ConsuSpacing.md)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(ConsuSpacing.xs)
+                ) {
+                    Text(
+                        text = "CONSUBANCO",
+                        color = accentColor,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.4.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Surface(
+                        color = ConsuOrange.copy(alpha = 0.11f),
+                        shape = RoundedCornerShape(ConsuRadius.sm)
+                    ) {
+                        Text(
+                            text = "IMSS BIENESTAR",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = ConsuOrangeDark,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.45.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                if (isBest) {
+                    Surface(
+                        color = ConsuOrange.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(ConsuRadius.sm),
+                        border = BorderStroke(1.dp, ConsuOrange.copy(alpha = 0.28f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Star,
+                                contentDescription = null,
+                                tint = ConsuOrange,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "MEJOR OPCIÓN",
+                                color = ConsuOrange,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = if (offer.amount > offer.mainValue) "REMANENTE" else "MONTO A RECIBIR",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    letterSpacing = 0.8.sp,
+                    maxLines = 1
+                )
+                RollingCurrency(
+                    value = offer.mainValue,
+                    style = TextStyle(
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 36.sp,
+                        letterSpacing = (-0.7).sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)
+            ) {
+                BienestarMetric(
+                    label = "PAGO QUINCENAL",
+                    value = "$${offer.monthlyPayment.toCurrency()}",
+                    modifier = Modifier.weight(1f)
+                )
+                BienestarMetric(
+                    label = "PLAZO",
+                    value = "${offer.term} meses",
+                    supporting = "${offer.periodCount} quincenas",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)
+            ) {
+                BienestarMetric(
+                    label = "CAT",
+                    value = offer.cat,
+                    modifier = Modifier.weight(1f)
+                )
+                BienestarMetric(
+                    label = "TASA",
+                    value = offer.tipoTasa,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (onShowAmortization != null) {
+                Surface(
+                    onClick = onShowAmortization,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(ConsuRadius.md),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 11.dp, horizontal = 14.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.TableChart,
+                            contentDescription = "Ver amortización",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f),
+                            modifier = Modifier.size(17.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Ver amortización",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BienestarMetric(
+    label: String,
+    value: String,
+    supporting: String? = null,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
+        shape = RoundedCornerShape(ConsuRadius.md)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.53f),
+                letterSpacing = 0.35.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = value,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (supporting != null) {
+                Text(
+                    text = supporting,
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.54f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JuicyTermDropdown(
     selectedValue: Int,
+    options: List<Int> = listOf(12, 18, 24, 36, 48, 54, 60),
     onSelectionChange: (Int) -> Unit
 ) {
-    val options = listOf(12, 18, 24, 36, 48, 54, 60)
     var expanded by remember { mutableStateOf(false) }
 
     Column {
         Text(
             "PLAZO",
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
-        
+
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -1645,12 +1758,12 @@ fun JuicyTermDropdown(
                     fontFamily = FontFamily.SansSerif
                 ),
                 leadingIcon = {
-                    Icon(Icons.Rounded.CalendarMonth, null, tint = JuicyPurple)
+                    Icon(Icons.Rounded.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary)
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(ConsuRadius.md),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JuicyPurple,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                 )
             )
@@ -1662,7 +1775,7 @@ fun JuicyTermDropdown(
             ) {
                 options.forEach { term ->
                     DropdownMenuItem(
-                        text = { 
+                        text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("$term Meses", fontWeight = FontWeight.SemiBold)
                                 Spacer(Modifier.weight(1f))
@@ -1671,7 +1784,7 @@ fun JuicyTermDropdown(
                                     modifier = Modifier
                                         .height(4.dp)
                                         .width(40.dp * widthFraction)
-                                        .background(JuicyPurple.copy(alpha = 0.6f), RoundedCornerShape(2.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), RoundedCornerShape(ConsuRadius.hairline))
                                 )
                             }
                         },
@@ -1685,6 +1798,3 @@ fun JuicyTermDropdown(
         }
     }
 }
-
-
-

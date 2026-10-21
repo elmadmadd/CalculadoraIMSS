@@ -11,156 +11,265 @@ object FinancialConfig {
         val meta: ProductMeta,
         val minGlobal: BigDecimal,
         val minInc: BigDecimal,
-        val minTermMap: Map<Int, BigDecimal> = emptyMap()
+        val minTermMap: Map<Int, BigDecimal> = emptyMap(),
+        val catTradByTerm: Map<Int, String> = emptyMap(),
+        val tasaRefByTerm: Map<Int, Double> = emptyMap()
+    ) {
+        fun catTradForTerm(term: Int): String = catTradByTerm[term] ?: meta.catTrad
+        fun tasaRefForTerm(term: Int): Double = tasaRefByTerm[term] ?: meta.tasaRef
+    }
+
+    data class AgreementConfig(
+        val id: String,
+        val label: String,
+        val description: String,
+        val paymentFrequency: String,
+        val terms: List<Int>,
+        val minAmount: BigDecimal,
+        val maxAmount: BigDecimal,
+        val amountStep: BigDecimal,
+        val productKeys: Set<String>,
+        val supportsConsolidation: Boolean = true,
+        val enabled: Boolean = true
+    ) {
+        val isBiweekly: Boolean
+            get() = paymentFrequency == PAYMENT_FREQUENCY_BIWEEKLY
+
+        /** Monto solicitado dentro del rango y en múltiplos del incremento del convenio. */
+        fun acceptsRequestedAmount(amount: BigDecimal): Boolean =
+            amount >= minAmount && amount <= maxAmount &&
+                amount.remainder(amountStep).signum() == 0
+    }
+
+    const val AGREEMENT_IMSS = "imss"
+    const val AGREEMENT_IMSS_BIENESTAR = "imss_bienestar"
+    const val PAYMENT_FREQUENCY_MONTHLY = "MENSUAL"
+    const val PAYMENT_FREQUENCY_BIWEEKLY = "QUINCENAL"
+    // Las variantes comparten marca; los consumidores usan este catálogo único.
+    val IMSS_PRODUCTS_BY_BRAND = linkedMapOf(
+        "OPC" to listOf("OPC", "OPC MAX", "OPC ESP"),
+        "CSB" to listOf("CSB", "CSB ESP", "CSB VIP")
     )
+    val IMSS_PRODUCT_KEYS = IMSS_PRODUCTS_BY_BRAND.values.flatten().toCollection(linkedSetOf())
+
+    fun isPremiumProduct(productKey: String): Boolean =
+        productKey.endsWith(" MAX") || productKey.endsWith(" ESP") || productKey.endsWith(" VIP")
 
     val PRODUCTS = mapOf(
-        "CONSUBANCO TRADICIONAL" to ProductData(
-            mapOf(
-                60 to BigDecimal("34.47786"),
-                54 to BigDecimal("36.01578"),
-                48 to BigDecimal("38.34620"),
-                36 to BigDecimal("45.12133")
-            ),
-            RetentionRule(
-                mapOf(60 to BigDecimal("30.95418")),
-                BigDecimal("100000.0")
-            ),
-            ProductMeta(2.50, "39.03%", "31.50%"),
-            BigDecimal("50000"),
-            BigDecimal("1000"),
-            mapOf(
-                60 to BigDecimal("50000"),
-                54 to BigDecimal("75000"),
-                48 to BigDecimal("100000"),
-                36 to BigDecimal("100000")
-            )
-        ),
-        "CONSUBANCO ESPECIAL" to ProductData(
-            mapOf(60 to BigDecimal("31.62827")),
-            RetentionRule(emptyMap(), BigDecimal("9999999")),
-            ProductMeta(2.50, "32.94%", "31.50%"),
-            BigDecimal("100000"),
-            BigDecimal("1000"),
-            mapOf(60 to BigDecimal("100000"))
-        ),
-        "CONSUBANCO VIP" to ProductData(
-            mapOf(60 to BigDecimal("30.95419")),
-            RetentionRule(emptyMap(), BigDecimal("9999999")),
-            ProductMeta(2.50, "39.03%", "31.50%"),
-            BigDecimal("150000"),
-            BigDecimal("1000"),
-            mapOf(60 to BigDecimal("150000"))
-        ),
-        "CONSUPAGO TRADICIONAL" to ProductData(
+        // Nueva oferta IMSS. Los factores base usan la tasa nominal anual de la
+        // tabla oficial, IVA de 16 % sobre intereses y amortización fija,
+        // excepto OPC/CSB a 60 meses: calibrados con las 4 cuotas por producto
+        // de qwdqdssdas.pdf (2026-09-08), redondeo HALF_UP al centavo.
+        // Son factores compatibles con esas referencias, no tasas contractuales
+        // inferidas del CAT. Véase docs/calibracion-opc-csb-2026-09-08.md.
+        "OPC" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("36.61922"),
-                54 to BigDecimal("38.09840"),
-                48 to BigDecimal("40.07602"),
-                36 to BigDecimal("46.26983"),
-                24 to BigDecimal("59.51904"),
-                12 to BigDecimal("100.90633")
+                60 to BigDecimal("36.32581"),
+                54 to BigDecimal("37.89928"),
+                48 to BigDecimal("39.92836"),
+                36 to BigDecimal("46.21135"),
+                24 to BigDecimal("59.50058"),
+                12 to BigDecimal("100.95868")
             ),
-            retention = RetentionRule(
-                 mapOf(60 to BigDecimal("33.25726")),
-                 BigDecimal("50000.0")
-            ),
-            meta = ProductMeta(2.73, "43.62%", "36.42%"),
+            meta = ProductMeta(2.61, "42.99%", "42.99%"),
             minGlobal = BigDecimal("5000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(
-                60 to BigDecimal("5000"), 54 to BigDecimal("5000"),
-                48 to BigDecimal("10000"), 36 to BigDecimal("10000"),
-                24 to BigDecimal("25000"), 12 to BigDecimal("25000")
+                60 to BigDecimal("5000"),
+                54 to BigDecimal("5000"),
+                48 to BigDecimal("10000"),
+                36 to BigDecimal("10000"),
+                24 to BigDecimal("10000"),
+                12 to BigDecimal("25000")
+            ),
+            catTradByTerm = mapOf(
+                60 to "42.99%", 54 to "43.19%", 48 to "43.38%",
+                36 to "43.57%", 24 to "43.77%", 12 to "43.96%"
+            ),
+            tasaRefByTerm = mapOf(
+                60 to 2.61, 54 to 2.62, 48 to 2.63,
+                36 to 2.64, 24 to 2.65, 12 to 2.66
             )
         ),
-        "CONSUPAGO ESPECIAL" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("33.25726")),
-            retention = RetentionRule(emptyMap(), BigDecimal("9999999")),
-            meta = ProductMeta(2.73, "43.62%", "36.42%"),
+        // Hereda las condiciones financieras de CSP Especial.
+        // Calibración 2026-10-21: 33.257255 está dentro de [33.25725, 33.25726)
+        // y reproduce $250,000 -> $8,314.31 sin excepciones por monto.
+        "OPC MAX" to ProductData(
+            factorsTrad = mapOf(60 to BigDecimal("33.257255")),
+            meta = ProductMeta(2.26, "36.42%", "36.42%"),
             minGlobal = BigDecimal("50000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(60 to BigDecimal("50000"))
         ),
-        "OPCIPRES TRADICIONAL" to ProductData(
-            mapOf(
-                60 to BigDecimal("35.98563"),
-                54 to BigDecimal("37.65908"),
-                48 to BigDecimal("39.86519"),
-                36 to BigDecimal("46.31088")
+        // Hereda las condiciones financieras de OPC Especial.
+        "OPC ESP" to ProductData(
+            factorsTrad = mapOf(60 to BigDecimal("32.22284")),
+            meta = ProductMeta(2.14, "34.21%", "34.21%"),
+            minGlobal = BigDecimal("75000"),
+            minInc = BigDecimal("500"),
+            minTermMap = mapOf(60 to BigDecimal("75000"))
+        ),
+        "CSB" to ProductData(
+            factorsTrad = mapOf(
+                60 to BigDecimal("34.47785"),
+                54 to BigDecimal("36.27268"),
+                48 to BigDecimal("38.26465"),
+                36 to BigDecimal("45.12292"),
+                24 to BigDecimal("58.78059"),
+                12 to BigDecimal("100.34938")
             ),
-            RetentionRule(
-                mapOf(60 to BigDecimal("32.22283")),
-                BigDecimal("75000.0")
-            ),
-            ProductMeta(2.67, "42.26%", "34.21%"),
-            BigDecimal("30000"),
-            BigDecimal("750"),
-            mapOf(
+            meta = ProductMeta(2.40, "39.03%", "39.03%"),
+            minGlobal = BigDecimal("30000"),
+            minInc = BigDecimal("500"),
+            minTermMap = mapOf(
                 60 to BigDecimal("30000"),
-                54 to BigDecimal("45000"),
-                48 to BigDecimal("50000"),
-                36 to BigDecimal("70000")
+                54 to BigDecimal("35000"),
+                48 to BigDecimal("35000"),
+                36 to BigDecimal("40000"),
+                24 to BigDecimal("40000"),
+                12 to BigDecimal("45000")
+            ),
+            catTradByTerm = mapOf(
+                60 to "39.03%", 54 to "39.60%", 48 to "39.60%",
+                36 to "40.92%", 24 to "41.88%", 12 to "42.26%"
+            ),
+            tasaRefByTerm = mapOf(
+                60 to 2.40, 54 to 2.43, 48 to 2.43,
+                36 to 2.50, 24 to 2.55, 12 to 2.57
             )
         ),
-        "OPCIPRES ESPECIAL" to ProductData(
-            mapOf(60 to BigDecimal("32.22283")),
-            RetentionRule(emptyMap(), BigDecimal("9999999")),
-            ProductMeta(2.67, "42.26%", "34.21%"),
-            BigDecimal("75000"),
-            BigDecimal("750"),
-            mapOf(60 to BigDecimal("75000"))
+        "CSB ESP" to ProductData(
+            factorsTrad = mapOf(60 to BigDecimal("31.62828")),
+            meta = ProductMeta(2.07, "32.94%", "32.94%"),
+            minGlobal = BigDecimal("100000"),
+            minInc = BigDecimal("500"),
+            minTermMap = mapOf(60 to BigDecimal("100000"))
         ),
-        "MASNOMINA" to ProductData(
+        "CSB VIP" to ProductData(
+            // Calibración Excel 2026-09-08: conservar siete decimales para
+            // reproducir las siete cuotas VIP, incluida $350,000 -> $10,833.96.
+            factorsTrad = mapOf(60 to BigDecimal("30.9541845")),
+            meta = ProductMeta(1.99, "31.50%", "31.50%"),
+            minGlobal = BigDecimal("150000"),
+            minInc = BigDecimal("500"),
+            minTermMap = mapOf(60 to BigDecimal("150000"))
+        ),
+        // Convenio 4789: CSB IMSS Bienestar / CSB_IMSSBIENESTAR_EFEC_EPAG_QN_V001.
+        // Los factores son pago quincenal por cada $1,000 financiados y fueron
+        // calculados directamente de la tabla oficial del cotizador.
+        "CONSUBANCO IMSS BIENESTAR" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("36.77748"),
-                54 to BigDecimal("36.01578"),
-                48 to BigDecimal("40.18578"),
-                36 to BigDecimal("46.37244"),
-                24 to BigDecimal("59.57626")
+                48 to BigDecimal("24.90667"),
+                42 to BigDecimal("26.01917"),
+                36 to BigDecimal("27.83246"),
+                30 to BigDecimal("30.20626"),
+                24 to BigDecimal("34.16667"),
+                18 to BigDecimal("40.71585"),
+                12 to BigDecimal("54.27686")
             ),
-            retention = RetentionRule(emptyMap(), BigDecimal("999999999.0")),
-            meta = ProductMeta(2.73, "43.96%", "46.50%"),
-            minGlobal = BigDecimal("10000"),
-            minInc = BigDecimal("0"),
+            retention = RetentionRule(emptyMap(), BigDecimal("9999999")),
+            meta = ProductMeta(45.00, "56.2%", "56.2%"),
+            minGlobal = BigDecimal("5000"),
+            minInc = BigDecimal("500"),
             minTermMap = mapOf(
-                60 to BigDecimal("10000"),
-                54 to BigDecimal("75000"),
-                48 to BigDecimal("15000"),
-                36 to BigDecimal("15000"),
-                24 to BigDecimal("20000")
+                48 to BigDecimal("5000"),
+                42 to BigDecimal("5000"),
+                36 to BigDecimal("5000"),
+                30 to BigDecimal("5000"),
+                24 to BigDecimal("5000"),
+                18 to BigDecimal("5000"),
+                12 to BigDecimal("5000")
+            ),
+            catTradByTerm = mapOf(
+                48 to "56.2%",
+                42 to "56.2%",
+                36 to "57.1%",
+                30 to "57.1%",
+                24 to "58.0%",
+                18 to "58.0%",
+                12 to "58.0%"
+            ),
+            tasaRefByTerm = mapOf(
+                48 to 45.00,
+                42 to 45.00,
+                36 to 45.60,
+                30 to 45.60,
+                24 to 46.20,
+                18 to 46.20,
+                12 to 46.20
             )
         )
     )
     val STANDARD_TERMS = listOf("12", "18", "24", "36", "48", "54", "60")
-    
+
+    val AGREEMENTS: Map<String, AgreementConfig> = mapOf(
+        AGREEMENT_IMSS to AgreementConfig(
+            id = AGREEMENT_IMSS,
+            label = "IMSS",
+            description = "Convenios actuales",
+            paymentFrequency = PAYMENT_FREQUENCY_MONTHLY,
+            terms = STANDARD_TERMS.map(String::toInt),
+            minAmount = BigDecimal("5000"),
+            maxAmount = BigDecimal("1000000"),
+            amountStep = BigDecimal("100"),
+            productKeys = IMSS_PRODUCT_KEYS
+        ),
+        AGREEMENT_IMSS_BIENESTAR to AgreementConfig(
+            id = AGREEMENT_IMSS_BIENESTAR,
+            label = "IMSS Bienestar",
+            description = "Pago quincenal · Convenio 4789",
+            paymentFrequency = PAYMENT_FREQUENCY_BIWEEKLY,
+            terms = listOf(12, 18, 24, 30, 36, 42, 48),
+            minAmount = BigDecimal("5000"),
+            maxAmount = BigDecimal("1000000"),
+            amountStep = BigDecimal("500"),
+            productKeys = setOf("CONSUBANCO IMSS BIENESTAR"),
+            supportsConsolidation = false,
+            enabled = false
+        )
+    )
+
+    val ACTIVE_AGREEMENTS: List<AgreementConfig>
+        get() = AGREEMENTS.values.filter { it.enabled }
+
+    fun agreementFor(id: String, includeDisabled: Boolean = false): AgreementConfig {
+        val agreement = AGREEMENTS[id]
+        return if (agreement != null && (agreement.enabled || includeDisabled)) {
+            agreement
+        } else {
+            AGREEMENTS.getValue(AGREEMENT_IMSS)
+        }
+    }
+
     val INSURANCE_FACTORS = mapOf(
-        "CONSUBANCO" to mapOf(
-            36 to Pair(BigDecimal("0.020390"), BigDecimal("0.040555")),
-            48 to Pair(BigDecimal("0.021213"), BigDecimal("0.055907")),
-            54 to Pair(BigDecimal("0.021461"), BigDecimal("0.063849")),
-            60 to Pair(BigDecimal("0.021671"), BigDecimal("0.072217"))
+        "CSB" to mapOf(
+            12 to Pair(BigDecimal("0.01242424"), BigDecimal("0.01242424")),
+            24 to Pair(BigDecimal("0.01791518"), BigDecimal("0.02524355")),
+            36 to Pair(BigDecimal("0.01957399"), BigDecimal("0.03893088")),
+            48 to Pair(BigDecimal("0.02036369"), BigDecimal("0.05366801")),
+            54 to Pair(BigDecimal("0.02060137"), BigDecimal("0.06129260")),
+            60 to Pair(BigDecimal("0.02080281"), BigDecimal("0.06932477"))
         ),
-        "CONSUPAGO" to mapOf(
-            12 to Pair(BigDecimal("0.012956"), BigDecimal("0.012956")),
-            24 to Pair(BigDecimal("0.018685"), BigDecimal("0.026342")),
-            36 to Pair(BigDecimal("0.020507"), BigDecimal("0.041028")),
-            48 to Pair(BigDecimal("0.021362"), BigDecimal("0.056948")),
-            54 to Pair(BigDecimal("0.021623"), BigDecimal("0.065283")),
-            60 to Pair(BigDecimal("0.021827"), BigDecimal("0.073927"))
+        "CSB_VIP" to mapOf(
+            60 to Pair(BigDecimal("0.02056227"), BigDecimal("0.06676468"))
         ),
-        "OPCIPRES" to mapOf(
-            36 to Pair(BigDecimal("0.020501"), BigDecimal("0.041001")),
-            48 to Pair(BigDecimal("0.021325"), BigDecimal("0.056689")),
-            54 to Pair(BigDecimal("0.021576"), BigDecimal("0.064861")),
-            60 to Pair(BigDecimal("0.021770"), BigDecimal("0.073298")),
-            999 to Pair(BigDecimal("0.023390"), BigDecimal("0.076685"))
+        "CSB_ESP" to mapOf(
+            60 to Pair(BigDecimal("0.02334237"), BigDecimal("0.07618676"))
         ),
-        "MASNOMINA" to mapOf(
-            24 to Pair(BigDecimal("0.018687"), BigDecimal("0.026347")),
-            36 to Pair(BigDecimal("0.020513"), BigDecimal("0.041051")),
-            48 to Pair(BigDecimal("0.021367"), BigDecimal("0.056986")),
-            60 to Pair(BigDecimal("0.021837"), BigDecimal("0.074045"))
+        // OPC base conserva el esquema de seguro de CSP, que cubre los seis plazos.
+        "OPC" to mapOf(
+            12 to Pair(BigDecimal("0.01242424"), BigDecimal("0.01242424")),
+            24 to Pair(BigDecimal("0.01791518"), BigDecimal("0.02524355")),
+            36 to Pair(BigDecimal("0.01966443"), BigDecimal("0.03929658")),
+            48 to Pair(BigDecimal("0.02048595"), BigDecimal("0.05452240")),
+            54 to Pair(BigDecimal("0.02074001"), BigDecimal("0.06251714")),
+            60 to Pair(BigDecimal("0.02093617"), BigDecimal("0.07078555"))
+        ),
+        "OPC_MAX" to mapOf(
+            60 to Pair(BigDecimal("0.02346923"), BigDecimal("0.07753356"))
+        ),
+        "OPC_ESP" to mapOf(
+            60 to Pair(BigDecimal("0.02338957"), BigDecimal("0.07668513"))
         )
     )
 }

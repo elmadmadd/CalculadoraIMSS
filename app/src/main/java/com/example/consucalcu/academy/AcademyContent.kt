@@ -16,9 +16,9 @@ import com.example.consucalcu.JuicyYellow
  */
 
 object AcademyContent {
-    
+
     // ========== MÓDULO 1: ACTUALIZACIÓN DE CORREO ==========
-    
+
     private val emailUpdateQuestions = listOf(
         Question(
             id = "email_q1",
@@ -56,7 +56,7 @@ object AcademyContent {
             xpReward = 25
         )
     )
-    
+
     private val moduleEmailUpdate = Module(
         id = "module_email",
         title = "Actualización de Correo",
@@ -102,15 +102,15 @@ object AcademyContent {
                 order = 3,
                 resourceContent = """
                     📧 PLANTILLA OFICIAL - ACTUALIZACIÓN DE CORREO
-                    
+
                     Hoy (DD/MM/AAAA) POR MEDIO DEL PRESENTE YO (NOMBRE COMPLETO DE CLIENTE) OTORGO MI CONSENTIMIENTO EXPLÍCITO A (RAZÓN SOCIAL CORRESPONDIENTE) PARA ACTUALIZAR MIS DATOS PERSONALES. SOLICITO LA ACTUALIZACIÓN DE MI CORREO ELECTRÓNICO (CORREO)
-                    
+
                     ✅ REQUISITOS OBLIGATORIOS:
                     • Biométrico exitoso
                     • INE de cliente
                     • Formato de actualización
                     • Video de cliente
-                    
+
                     ⚠️ IMPORTANTE: Capturar el nombre completo del cliente en el formato
                 """.trimIndent(),
                 xpReward = 10,
@@ -119,9 +119,9 @@ object AcademyContent {
             )
         )
     )
-    
+
     // ========== MÓDULO 2: SUJETOS A CRÉDITO IMSS ==========
-    
+
     private val creditSubjectsQuestions = listOf(
         Question(
             id = "credit_q1",
@@ -184,7 +184,7 @@ object AcademyContent {
             xpReward = 50
         )
     )
-    
+
     private val moduleCreditSubjects = Module(
         id = "module_credit_subjects",
         title = "Sujetos a Crédito IMSS",
@@ -222,9 +222,9 @@ object AcademyContent {
             )
         )
     )
-    
+
     // ========== MÓDULO 3: POLÍTICAS DE CRÉDITO ==========
-    
+
     private val creditPolicyQuestions = listOf(
         Question(
             id = "policy_q1",
@@ -262,7 +262,7 @@ object AcademyContent {
             xpReward = 10
         )
     )
-    
+
     private val moduleCreditPolicy = Module(
         id = "module_credit_policy",
         title = "Políticas de Crédito",
@@ -295,23 +295,23 @@ object AcademyContent {
                 order = 2,
                 resourceContent = """
                     💳 POLÍTICAS DE CRÉDITO Y REQUISITOS
-                    
+
                     📊 REQUISITOS PRINCIPALES:
-                    
+
                     01️⃣ EDAD MÁXIMA
                     • Hasta 80 años incluyendo plazo del crédito
                     • Hasta 85 años si firma formato de domiciliación por 1 año
-                    
+
                     02️⃣ PLAZOS DISPONIBLES
                     • 12 meses
                     • 24 meses
                     • 36 meses
                     • 48 meses
                     • 60 meses
-                    
+
                     03️⃣ MONTO MÍNIMO
                     • $8,000.00 MXN
-                    
+
                     ⚠️ IMPORTANTE: Verificar siempre la edad del cliente sumando el plazo del crédito
                 """.trimIndent(),
                 xpReward = 10,
@@ -320,9 +320,9 @@ object AcademyContent {
             )
         )
     )
-    
+
     // ========== MÓDULO 4: ADDENDUM IMSS PENSIONADOS ==========
-    
+
     private val addendumQuestions = listOf(
         Question(
             id = "addendum_q1",
@@ -355,7 +355,7 @@ object AcademyContent {
             xpReward = 100
         )
     )
-    
+
     private val moduleAddendum = Module(
         id = "module_addendum",
         title = "Addendum IMSS Pensionados",
@@ -401,22 +401,22 @@ object AcademyContent {
                 order = 3,
                 resourceContent = """
                     📋 ADDENDUM IMSS PENSIONADOS
-                    
+
                     ⚠️ PARA QUIÉN APLICA:
-                    
+
                     👨 CLIENTES HOMBRES CON TIPO DE PENSIÓN:
-                    
+
                     🔹 INVALIDEZ
                     • Con edad entre 51 y 70 años
                     • Edad máxima: 75 años incluyendo plazo de crédito
-                    
+
                     🔹 VEJEZ
                     • Con edad entre 51 y 70 años
                     • Edad máxima: 75 años incluyendo plazo de crédito
-                    
+
                     👥 TODO TIPO DE PENSIÓN
                     • Que con el plazo del crédito exceda los 80 años
-                    
+
                     ✅ IMPORTANTE: Verificar siempre el tipo de pensión y la edad del cliente antes de procesar el crédito
                 """.trimIndent(),
                 xpReward = 25,
@@ -425,9 +425,9 @@ object AcademyContent {
             )
         )
     )
-    
+
     // ========== MÓDULO 5: RESTRICCIONES DE INVALIDEZ ==========
-    
+
     private val invalidezQuestions = listOf(
         Question(
             id = "invalidez_q1",
@@ -465,7 +465,7 @@ object AcademyContent {
             xpReward = 100
         )
     )
-    
+
     private val moduleInvalidez = Module(
         id = "module_invalidez",
         title = "Restricciones de Invalidez",
@@ -511,29 +511,29 @@ object AcademyContent {
                 order = 3,
                 resourceContent = """
                     🛡️ RESTRICCIONES DE INVALIDEZ - DIAGRAMA DE FLUJO
-                    
+
                     ❓ ¿El cliente tiene pensión por INVALIDEZ?
-                    
+
                     ✅ SÍ → Continuar evaluación
-                    
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     📊 CASO 1: DENTRO DE RESTRICCIÓN (51-70 años)
-                    
+
                     ❓ ¿Cliente NUEVO o antigüedad ≤24 meses?
                     ✅ SÍ → ⚠️ APLICA PAGO DEL SEGURO POR 1 AÑO
                     ❌ NO → ✅ NO APLICA PAGO DEL SEGURO
-                    
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     📊 CASO 2: FUERA DE RESTRICCIÓN (edad <51 o >70)
-                    
+
                     ❓ ¿Excede los 80 años con plazo del crédito?
                     ✅ SÍ → ⚠️ DEBE PAGAR 1 AÑO DE PLAZO DEL CRÉDITO
                     ❌ NO → ✅ NO APLICA PAGO DEL SEGURO
-                    
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     💡 TIPS CLAVE:
                     • Siempre verificar la edad del cliente
                     • Revisar antigüedad en el sistema
@@ -546,23 +546,23 @@ object AcademyContent {
             )
         )
     )
-    
+
     // ========== MÓDULO 6: REFINANCIAMIENTOS (CNCA vs LCOM) ==========
-    
+
     private val refinanceQuestions = listOf(
         // NIVEL 1: Conceptos Básicos (CNCA vs LCOM)
         Question(
             id = "refi_q1",
             type = QuestionType.MULTIPLE_CHOICE,
-            question = "¿Cuál es la antigüedad mínima de pagos para comprar una deuda interna (CNCA) de Consupago?",
+            question = "¿Qué cotizador nuevo no tiene restricciones de CNCA por ser el producto con la tasa más alta?",
             options = listOf(
-                "12 pagos",
-                "24 pagos",
-                "16 pagos",
-                "6 pagos"
+                "OPC",
+                "OPC MAX",
+                "CSB",
+                "CSB VIP"
             ),
-            correctAnswer = "16 pagos",
-            explanation = "La normativa de CNCA Interno establece '16 o más pagos acumulados' para CSP, OPC y CSB.",
+            correctAnswer = "OPC",
+            explanation = "OPC se autoriza sin restricciones de tasa en CNCA porque es el producto con la tasa más alta.",
             difficulty = LessonDifficulty.BEGINNER,
             xpReward = 10
         ),
@@ -600,30 +600,30 @@ object AcademyContent {
         Question(
             id = "refi_q4",
             type = QuestionType.MULTIPLE_CHOICE,
-            question = "Para autorizar una compra por 'Incremento de Tasa' en Consupago (CSP), la tasa de la deuda vieja debe ser:",
+            question = "¿Cuánto puede bajar la tasa de CSB sin exigir aumento de plazo ni de descuento?",
             options = listOf(
-                "Menor o igual a 2.67%",
-                "Mayor a 2.67%",
-                "Menor o igual a 2.69%",
-                "Mayor a 2.69%"
+                "Hasta 10 pb",
+                "Hasta 25 pb",
+                "Hasta 50 pb",
+                "No puede bajar"
             ),
-            correctAnswer = "Menor o igual a 2.67%",
-            explanation = "La tabla de validaciones CNCA Interno fija el límite en 2.67% mensual para CSP.",
+            correctAnswer = "Hasta 25 pb",
+            explanation = "La nueva regla acepta subir o mantener la tasa, y también bajarla hasta 25 puntos base sin condición adicional.",
             difficulty = LessonDifficulty.INTERMEDIATE,
             xpReward = 25
         ),
         Question(
             id = "refi_q5",
             type = QuestionType.MULTIPLE_CHOICE,
-            question = "¿Cuánto dinero 'extra' (liquidez) debe llevarse un cliente de Consubanco (CSB) para justificar la operación por liquidez?",
+            question = "Si la tasa baja entre 26 y 50 pb, ¿cuánto debe aumentar como mínimo el descuento mensual para cumplir esa alternativa?",
             options = listOf(
                 "$500 pesos",
                 "$750 pesos",
                 "$1,000 pesos",
                 "$1,500 pesos"
             ),
-            correctAnswer = "$1,000 pesos",
-            explanation = "La compuerta de 'Incremento Descuento Mensual' exige $1,000 pesos de incremento para CSB.",
+            correctAnswer = "$500 pesos",
+            explanation = "La nueva compuerta permite bajar hasta 50 pb cuando el descuento aumenta $500 o más.",
             difficulty = LessonDifficulty.INTERMEDIATE,
             xpReward = 25
         ),
@@ -661,30 +661,30 @@ object AcademyContent {
         Question(
             id = "refi_q8",
             type = QuestionType.MULTIPLE_CHOICE,
-            question = "¿Qué compuerta lógica permite reestructurar una deuda que le quedan 12 meses para pagar?",
+            question = "Si se liquidan varios créditos, ¿cuál se usa para validar la regla de tasa y plazo?",
             options = listOf(
-                "Compuerta de Tasa",
-                "Compuerta de Plazo",
-                "Compuerta de Antigüedad",
-                "Compuerta de Liquidez"
+                "El de mayor saldo",
+                "El de menor saldo",
+                "El de mayor tasa",
+                "Todos deben cumplir por separado"
             ),
-            correctAnswer = "Compuerta de Plazo",
-            explanation = "La tabla 'Aumento de Plazo de Crédito' permite renovar deudas con plazo actual de 12 meses pasándolas a 36 meses o mayor.",
+            correctAnswer = "El de mayor saldo",
+            explanation = "Cuando se liquidan varios créditos, la regla se valida contra el crédito de mayor monto.",
             difficulty = LessonDifficulty.ADVANCED,
             xpReward = 50
         ),
         Question(
             id = "refi_q9",
             type = QuestionType.MULTIPLE_CHOICE,
-            question = "A partir del 22 de Diciembre de 2025, ¿cuál es el monto mínimo para Tasa Preferencial (Retención) en Consupago Crédito Nuevo?",
+            question = "Con varios créditos, ¿contra qué importe se valida el aumento de descuento de $500?",
             options = listOf(
-                "$100,000",
-                "$50,000",
-                "$20,000",
-                "$75,000"
+                "Contra el descuento del crédito mayor",
+                "Contra la suma de todos los descuentos",
+                "Contra el descuento del crédito menor",
+                "Contra el remanente"
             ),
-            correctAnswer = "$50,000",
-            explanation = "El Comunicado Normativo D695-AC2212 redujo el mínimo de $100k a $50k para CSP.",
+            correctAnswer = "Contra la suma de todos los descuentos",
+            explanation = "La mensualidad nueva debe superar por $500 o más la suma de los descuentos de todos los créditos a liquidar.",
             difficulty = LessonDifficulty.EXPERT,
             xpReward = 100
         ),
@@ -704,7 +704,7 @@ object AcademyContent {
             xpReward = 100
         )
     )
-    
+
     private val moduleRefinance = Module(
         id = "module_refinance",
         title = "Refinanciamientos",
@@ -776,102 +776,103 @@ object AcademyContent {
                 order = 5,
                 resourceContent = """
                     🔄 GUÍA COMPLETA: CNCA vs LCOM
-                    
+
                     📘 LAS DOS DIMENSIONES DEL REFINANCIAMIENTO
-                    
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
-                    1️⃣ CNCA INTERNO (Retención / Negocio de Grupo)
-                    
+
+                    1️⃣ CNCA INTERNO (Negocio de Grupo)
+
                     🎯 OBJETIVO:
-                    Mantener al cliente en casa (Consubanco, Consupago, Opcipres)
-                    
+                    Mantener al cliente con los nuevos cotizadores OPC y CSB
+
                     📊 LÓGICA:
-                    A veces compramos carteras con tasas bajas para ofrecer liquidez inmediata
-                    
-                    ✅ REGLA DE ORO:
-                    Se permite si la tasa de origen ≤ nuestra referencia
-                    Ejemplo: CSP 2.67%
-                    
-                    ⏱️ ANTIGÜEDAD MÍNIMA:
-                    16 pagos quincenales/mensuales
-                    
-                    💰 COMPUERTA DE LIQUIDEZ (CSB):
-                    Mínimo $1,000 pesos de incremento
-                    
+                    Comparar la tasa nueva contra la deuda de mayor saldo
+
+                    ✅ REGLAS NUEVAS:
+                    • OPC base: sin restricciones
+                    • Subir o mantener tasa: permitido
+                    • Bajar hasta 25 pb: permitido
+                    • Bajar hasta 50 pb: aumentar plazo 6 meses o más
+                    • Alternativa: bajar hasta 50 pb aumentando descuento $500 o más
+
+                    📚 SI HAY VARIOS CRÉDITOS:
+                    • Tasa y plazo: validar el crédito de mayor saldo
+                    • Aumento de descuento: comparar contra la suma de descuentos
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     2️⃣ LCOM (Compra de Competencia / Conquista)
-                    
+
                     🎯 OBJETIVO:
                     Traer clientes de afuera (Profuturo, Dimex, Exitus, etc.)
-                    
+
                     📊 LÓGICA:
                     SÍ buscamos mejorar la tasa
-                    
+
                     ✅ REGLA DE ORO:
                     Nuestra tasa debe ser MENOR a la del competidor
-                    
+
                     ⏱️ ANTIGÜEDAD MÍNIMA:
                     24 pagos aplicados (más estricta)
-                    
+
                     💰 LIQUIDEZ REAL:
                     Monto Nuevo - Saldo Capital = Dinero que recibe
-                    
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     📋 COMPUERTAS LÓGICAS GENERALES:
-                    
+
                     🔹 EDAD MÁXIMA:
                     • Hasta 80 años (plazo incluido)
                     • Hasta 85 años con domiciliación por 1 año
-                    
+
                     🔹 INVALIDEZ (51-70 años):
                     • Cliente Nuevo o antigüedad ≤24 meses
                     • Aplica seguro por 1 año
-                    
+
                     🔹 ADDENDUM:
                     • Hombre + Invalidez/Vejez + 51-70 años
                     • Edad máx 75 años
-                    
-                    🔹 COMPUERTA DE PLAZO:
-                    • Permite reestructurar deudas con 12 meses restantes
-                    • Pasarlas a 36 meses o mayor
-                    
+
+                    🔹 COMPUERTA DE PLAZO CNCA:
+                    • Para una baja de 26 a 50 pb
+                    • El plazo nuevo aumenta al menos 6 meses
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     💡 EJEMPLO LCOM (Libranza):
-                    
+
                     Monto Solicitado: $64,000
                     Saldo Capital: $44,000
                     ═══════════════
                     Importe a Recibir: $19,000 ✅
-                    
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
-                    📅 ACTUALIZACIÓN TEMPORAL (22-31 Dic 2025):
-                    
-                    Comunicado D695-AC2212
-                    Montos mínimos para Tasa Preferencial (Crédito Nuevo):
-                    
-                    • CONSUPAGO: $50,000 (antes $100,000)
-                    • OPCIPRES: $75,000 (antes $125,000)
-                    • CONSUBANCO: $100,000 (antes $200,000)
-                    
+
+                    📅 NUEVOS COTIZADORES:
+
+                    • OPC: 12, 24, 36, 48, 54 y 60 meses
+                    • OPC MAX: 60 meses, mínimo $50,000
+                    • OPC ESP: 60 meses, mínimo $75,000
+                    • CSB: 12, 24, 36, 48, 54 y 60 meses
+                    • CSB ESP: 60 meses, mínimo $100,000
+                    • CSB VIP: 60 meses, mínimo $150,000
+
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    
+
                     ⚠️ ERRORES COMUNES:
-                    
+
                     ❌ Confundir CNCA con LCOM
-                    ✅ CNCA = Interno (16 pagos)
+                    ✅ CNCA = reglas de tasa, plazo y descuento
                     ✅ LCOM = Competencia (24 pagos)
-                    
-                    ❌ Ignorar la antigüedad mínima
-                    ✅ Verificar pagos antes de procesar
-                    
+
+                    ❌ Validar todos los créditos contra la regla de tasa
+                    ✅ Usar el de mayor saldo
+
                     ❌ No calcular la liquidez real
                     ✅ Siempre restar el saldo capital
-                    
+
                     ❌ Ofrecer refinanciamiento sin liquidez
                     ✅ Asegurar beneficio real para el cliente
                 """.trimIndent(),
@@ -881,9 +882,9 @@ object AcademyContent {
             )
         )
     )
-    
+
     // ========== LISTA COMPLETA DE MÓDULOS ==========
-    
+
     val ALL_MODULES = listOf(
         moduleEmailUpdate,
         moduleCreditSubjects,
@@ -892,14 +893,14 @@ object AcademyContent {
         moduleInvalidez,
         moduleRefinance
     )
-    
+
     /**
      * Obtiene un módulo por su ID
      */
     fun getModuleById(id: String): Module? {
         return ALL_MODULES.find { it.id == id }
     }
-    
+
     /**
      * Obtiene una lección por su ID
      */
@@ -908,7 +909,7 @@ object AcademyContent {
             .flatMap { it.lessons }
             .find { it.id == lessonId }
     }
-    
+
     /**
      * Obtiene todas las lecciones de un módulo
      */

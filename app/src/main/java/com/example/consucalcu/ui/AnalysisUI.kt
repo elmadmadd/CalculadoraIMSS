@@ -1,4 +1,6 @@
 package com.example.consucalcu.ui
+import com.example.consucalcu.ui.theme.ConsuRadius
+import com.example.consucalcu.ui.theme.ConsuSpacing
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -35,11 +37,11 @@ fun BeforeAfterChart(
 ) {
     val saving = currentPayment.subtract(newPayment).max(BigDecimal.ZERO)
     val maxVal = currentPayment.max(newPayment).toFloat().coerceAtLeast(1f)
-    
+
     // Animación de las barras
     var triggerAnim by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { triggerAnim = true }
-    
+
     val bar1Fill by animateFloatAsState(
         targetValue = if (triggerAnim) (currentPayment.toFloat() / maxVal) else 0f,
         animationSpec = tween(1000)
@@ -51,10 +53,10 @@ fun BeforeAfterChart(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f)),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(ConsuRadius.lg),
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(ConsuSpacing.lg)) {
             Text(
                 "IMPACTO EN TU BOLSILLO",
                 style = MaterialTheme.typography.labelMedium,
@@ -62,7 +64,7 @@ fun BeforeAfterChart(
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(16.dp))
-            
+
             Row(
                 Modifier.fillMaxWidth().height(140.dp),
                 verticalAlignment = Alignment.Bottom,
@@ -75,7 +77,7 @@ fun BeforeAfterChart(
                     fillHeight = bar1Fill,
                     color = JuicyRed.copy(alpha = 0.8f)
                 )
-                
+
                 // Barra Nueva (Después)
                 BarColumn(
                     label = "AHORA",
@@ -84,17 +86,17 @@ fun BeforeAfterChart(
                     color = JuicyGreen
                 )
             }
-            
+
             Spacer(Modifier.height(16.dp))
-            
+
             // Resumen de Ahorro
             Surface(
                 color = JuicyGreen.copy(alpha=0.15f),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(ConsuRadius.md),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    Modifier.padding(12.dp),
+                    Modifier.padding(ConsuSpacing.md),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -129,7 +131,7 @@ private fun BarColumn(label: String, amount: BigDecimal, fillHeight: Float, colo
             modifier = Modifier
                 .width(40.dp)
                 .fillMaxHeight(0.8f) // Espacio reservado para las barras dentro del Row
-                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                .clip(RoundedCornerShape(topStart = ConsuRadius.sm, topEnd = ConsuRadius.sm))
                 .background(MaterialTheme.colorScheme.surface) // Fondo de la "pista"
                 ,
             contentAlignment = Alignment.BottomCenter
@@ -161,11 +163,11 @@ fun ViabilityTrafficLight(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(ConsuRadius.lg),
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(ConsuSpacing.lg)) {
             Text(
                 "DIAGNÓSTICO DE VIABILIDAD",
                 style = MaterialTheme.typography.titleSmall,
@@ -173,7 +175,7 @@ fun ViabilityTrafficLight(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.height(12.dp))
-            
+
             checks.forEach { (label, itemsOk) ->
                 CheckRow(label, itemsOk)
                 if (label != checks.last().first) {
@@ -196,7 +198,7 @@ private fun CheckRow(label: String, isOk: Boolean) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.8f)
         )
-        
+
         Surface(
             color = if (isOk) JuicyGreen.copy(alpha=0.2f) else JuicyRed.copy(alpha=0.2f),
             shape = RoundedCornerShape(50),
@@ -214,7 +216,7 @@ private fun CheckRow(label: String, isOk: Boolean) {
                 Spacer(Modifier.width(6.dp))
                 Text(
                     if (isOk) "APROBADO" else "REVISAR",
-                    fontSize = 10.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = if (isOk) JuicyGreen else JuicyRed
                 )
