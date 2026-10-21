@@ -340,7 +340,7 @@ fun JuicyInput(
                 label,
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
             if (maxLength != null && isFocused) {
@@ -1037,7 +1037,7 @@ fun GroupedResultsSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = ConsuSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1070,7 +1070,10 @@ fun GroupedResultsSection(
                 }
                 if (onCompare != null && visibleOffers.size > 1) {
                     // Acción secundaria: no compite con COTIZAR.
-                    TextButton(onClick = onCompare) {
+                    TextButton(
+                        onClick = onCompare,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Rounded.CompareArrows,
                             contentDescription = null,
@@ -1092,7 +1095,7 @@ fun GroupedResultsSection(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 14.dp)
+                    .padding(bottom = ConsuSpacing.lg)
                     .horizontalScroll(rememberScrollState())
             ) {
                 if (hasPremiumOffers) {
@@ -1113,10 +1116,11 @@ fun GroupedResultsSection(
                                 modifier = Modifier.size(16.dp)
                             )
                         },
+                        // El naranja queda reservado para la mejor oferta y la navegación.
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor  = ConsuOrange,
-                            selectedLabelColor      = Color.White,
-                            selectedLeadingIconColor = Color.White,
+                            selectedContainerColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                            selectedLabelColor      = MaterialTheme.colorScheme.onSurface,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onSurface,
                             containerColor          = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             labelColor              = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             iconColor               = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -1125,8 +1129,8 @@ fun GroupedResultsSection(
                             enabled             = true,
                             selected            = showPremium,
                             borderColor         = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                            selectedBorderColor = ConsuOrangeDark,
-                            selectedBorderWidth = 1.5.dp
+                            selectedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            selectedBorderWidth = 1.dp
                         ),
                         shape = RoundedCornerShape(50)
                     )
@@ -1156,8 +1160,8 @@ fun GroupedResultsSection(
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            selectedLabelColor     = MaterialTheme.colorScheme.primary
+                            selectedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                            selectedLabelColor     = MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
@@ -1171,11 +1175,11 @@ fun GroupedResultsSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 20.dp)
+                        .padding(bottom = ConsuSpacing.xxl)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 10.dp)
+                        modifier = Modifier.padding(bottom = ConsuSpacing.md)
                     ) {
                         Box(
                             Modifier
@@ -1221,7 +1225,7 @@ fun GroupedResultsSection(
                                 showRates          = showRates
                             )
                         }
-                        if (i < sortedOffers.lastIndex) Spacer(Modifier.height(10.dp))
+                        if (i < sortedOffers.lastIndex) Spacer(Modifier.height(ConsuSpacing.md))
                     }
                 }
             }
@@ -1263,11 +1267,7 @@ fun ResultCard(
         else                               -> null
     }
 
-    val variantColor = when (variant) {
-        "VIP"      -> ConsuOrange
-        "MAX", "ESP" -> accentColor
-        else       -> null
-    }
+    val variantColor = if (variant != null) accentColor else null
 
     // El monto es la cifra principal; la mensualidad queda como dato secundario.
     val isRemnant = offer.amount > offer.mainValue
@@ -1282,9 +1282,8 @@ fun ResultCard(
         border = BorderStroke(
             width = if (isBest || isPremium) 1.dp else 0.5.dp,
             color = when {
-                isPremium && variant == "VIP" -> ConsuOrange.copy(alpha = 0.4f)
-                isPremium -> accentColor.copy(alpha = 0.3f)
                 isBest    -> ConsuOrange.copy(alpha = 0.5f)
+                isPremium -> accentColor.copy(alpha = 0.3f)
                 else      -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
             }
         ),
@@ -1328,9 +1327,12 @@ fun ResultCard(
                     }
                 }
 
-                val badgeText = variant ?: if (isBest) "MEJOR OPCIÓN" else null
-                val badgeColor = variantColor ?: ConsuOrange
-                if (badgeText != null) {
+                // Variante en el color de la marca; el naranja solo para la mejor oferta.
+                val badges = buildList {
+                    if (variant != null && variantColor != null) add(Triple(variant, variantColor, if (variant == "VIP") Icons.Rounded.AutoAwesome else Icons.Rounded.Star))
+                    if (isBest) add(Triple("MEJOR OPCIÓN", ConsuOrange, Icons.Rounded.Star))
+                }
+                badges.forEach { (badgeText, badgeColor, badgeIcon) ->
                     Spacer(Modifier.width(ConsuSpacing.sm))
                     Surface(
                         color = badgeColor.copy(alpha = 0.12f),
@@ -1342,7 +1344,7 @@ fun ResultCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                if (variant == "VIP") Icons.Rounded.AutoAwesome else Icons.Rounded.Star,
+                                badgeIcon,
                                 contentDescription = null,
                                 tint = badgeColor,
                                 modifier = Modifier.size(11.dp)
@@ -1448,7 +1450,7 @@ fun ResultCard(
                         withStyle(SpanStyle(color = mutedText)) {
                             append("${offer.shortPaymentLabel.lowercase().replaceFirstChar { it.uppercase() }} ")
                         }
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)) {
                             append("$${offer.monthlyPayment.toCurrency()}")
                         }
                     },

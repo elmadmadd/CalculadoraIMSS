@@ -56,7 +56,9 @@ fun NewCreditScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).imePadding(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        // Un solo borde izquierdo para todo: 16 dp. Bloques separados por 16 dp;
+        // dentro de cada bloque se usa 8, 12 o 16 dp.
+        contentPadding = PaddingValues(horizontal = ConsuSpacing.lg, vertical = ConsuSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(ConsuSpacing.lg)
     ) {
         // ========== HEADER TEMÁTICO NAVY/ORANGE ==========
@@ -65,7 +67,7 @@ fun NewCreditScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 8.dp)
+                        .padding(top = ConsuSpacing.sm)
                 ) {
                     Text(
                         text = stringResource(R.string.new_credit_title),
@@ -86,9 +88,7 @@ fun NewCreditScreen(
         if (agreementOptions.size > 1) {
             item {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "CONVENIO DE CÁLCULO",
@@ -137,8 +137,7 @@ fun NewCreditScreen(
                             (if (agreement.isBiweekly) " · 12-48 meses · mínimo $5,000" else "") +
                             (if (!agreement.supportsConsolidation) " · sin consolidación" else ""),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.58f),
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.58f)
                     )
                 }
             }
@@ -151,14 +150,15 @@ fun NewCreditScreen(
                     color = MaterialTheme.colorScheme.surface,
                     shadowColor = MaterialTheme.colorScheme.outline
                 ) {
-                    Column(Modifier.padding(ConsuSpacing.xl).animateContentSize()) {
+                    // Mismo margen interior que las tarjetas de ofertas.
+                    Column(Modifier.padding(ConsuSpacing.lg).animateContentSize()) {
                         Text(
                             stringResource(R.string.quotation_data),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(ConsuSpacing.md))
 
                         // Toggle: Por capacidad / Por monto
                         Row(
@@ -212,7 +212,7 @@ fun NewCreditScreen(
                             }
                         }
 
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(ConsuSpacing.lg))
 
                         if (state.isByAmount) {
                             JuicyInput(
@@ -269,7 +269,7 @@ fun NewCreditScreen(
                             )
                         } else {
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = ConsuSpacing.lg),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
