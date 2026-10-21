@@ -161,7 +161,7 @@ enum class NavigationTab(val route: String, val labelRes: Int, val icon: android
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ConsuCalcuApp(
     viewModel: CalculatorViewModel,
@@ -235,6 +235,9 @@ fun ConsuCalcuApp(
         }
     }
 
+    // Con el teclado abierto la barra inferior solo estorba: se oculta.
+    val imeVisible = WindowInsets.isImeVisible
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -251,7 +254,7 @@ fun ConsuCalcuApp(
                 )
             },
             bottomBar = {
-                if (!academyImmersiveMode) Box(
+                if (!academyImmersiveMode && !imeVisible) Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -308,6 +311,9 @@ fun ConsuCalcuApp(
                     modifier = Modifier
                         .fillMaxHeight()
                         .padding(padding)
+                        // Así el imePadding() de cada pantalla descuenta el
+                        // espacio ya reservado y no deja un hueco sobre el teclado.
+                        .consumeWindowInsets(padding)
                         .widthIn(max = 640.dp)
                         .fillMaxWidth()
                 ) {
