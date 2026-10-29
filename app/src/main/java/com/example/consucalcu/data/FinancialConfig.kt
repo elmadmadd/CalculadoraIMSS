@@ -95,10 +95,11 @@ object FinancialConfig {
             )
         ),
         // Hereda las condiciones financieras de CSP Especial.
-        // Calibración 2026-10-21: 33.257255 está dentro de [33.25725, 33.25726)
-        // y reproduce $250,000 -> $8,314.31 sin excepciones por monto.
+        // Calibración 2026-10-29: factor derivado del CAT con IVA 36.42 %
+        // (i = 1.3642^(1/12) - 1, anualidad a 60 meses). Reproduce las
+        // simulaciones oficiales, incluida $233,333 -> $7,760.01.
         "OPC MAX" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("33.257255")),
+            factorsTrad = mapOf(60 to BigDecimal("33.2572543")),
             meta = ProductMeta(2.26, "36.42%", "36.42%"),
             minGlobal = BigDecimal("50000"),
             minInc = BigDecimal("500"),
@@ -141,8 +142,11 @@ object FinancialConfig {
                 36 to 2.50, 24 to 2.55, 12 to 2.57
             )
         ),
+        // Calibración 2026-10-29: factor derivado del CAT con IVA 32.94 %
+        // (i = 1.3294^(1/12) - 1, anualidad a 60 meses). Reproduce las
+        // simulaciones oficiales, incluida $136,000 -> $4,301.44.
         "CSB ESP" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("31.62828")),
+            factorsTrad = mapOf(60 to BigDecimal("31.628272")),
             meta = ProductMeta(2.07, "32.94%", "32.94%"),
             minGlobal = BigDecimal("100000"),
             minInc = BigDecimal("500"),

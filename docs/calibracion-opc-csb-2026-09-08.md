@@ -90,3 +90,26 @@ El primer renglón de la tabla de amortización de $157,154.85 es: interés
 $3,127.12, IVA $500.34, abono a capital $1,237.14. Por capacidad, la app
 redondea el monto hacia abajo a múltiplos de $500: $6,000 da $193,500,
 no los $193,834.86 del ejemplo de la guía.
+
+## Actualización CSB ESP y OPC MAX — 2026-10-29
+
+Catorce simulaciones oficiales a 60 meses (siete por producto) mostraron
+dos diferencias de un centavo con los factores anteriores: CSB ESP por
+$136,000 (31.62828 daba $4,301.45; oficial $4,301.44) y OPC MAX por
+$233,333 (33.257255 daba $7,760.02; oficial $7,760.01).
+
+Igual que CSB VIP, el factor se obtiene del CAT con IVA tratado como tasa
+efectiva anual: `i = (1 + CAT)^(1/12) - 1` y `1000 × i / (1 - (1 + i)^-60)`.
+
+| Producto | CAT | Factor anterior | Factor nuevo | Intervalo compatible |
+| --- | ---: | ---: | ---: | --- |
+| CSB ESP | 32.94 % | 31.62828 | **31.628272** | [31.6282683, 31.6282721) |
+| OPC MAX | 36.42 % | 33.257255 | **33.2572543** | [33.2572500, 33.2572547) |
+
+Los intervalos incluyen los casos del Excel 2026-09-08, el portal y
+$250,000 → $8,314.31 de OPC MAX. Por capacidad no cambia nada: $11,709.34
+sigue dando $370,000 (CSB ESP) y $352,000 (OPC MAX).
+
+CSB ESP por $99,999 y $89,995 sirven para calibrar, pero quedan bajo el
+mínimo vigente de $100,000 de la app, que no se modifica. El total de
+OPC MAX por $190,000 venía como $379,132; corresponde a $379,132.80.

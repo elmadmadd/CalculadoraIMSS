@@ -1,10 +1,12 @@
 package com.example.consucalcu
 
+import com.example.consucalcu.data.FinancialConfig
 import com.example.consucalcu.features.FinancialEngine
 import com.example.consucalcu.utils.calculateAmortizationTable
 import org.junit.Assert.*
 import org.junit.Test
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 class PortalComparisonRegressionTest {
     @Test
@@ -148,6 +150,53 @@ class PortalComparisonRegressionTest {
             assertEquals("IVA $amount", BigDecimal(row[3]), firstRow.iva)
             assertEquals("Capital $amount", BigDecimal(row[4]), firstRow.principal)
             assertEquals("Saldo $amount", BigDecimal(row[5]), firstRow.balance)
+        }
+    }
+
+    @Test
+    fun premiumSixtyMonthMatchesOfficialSimulations2026_10_29() {
+        // Simulaciones oficiales: monto, descuento mensual y total a 60 meses.
+        // CSB ESP con CAT 32.94 % y OPC MAX (Opcipres) con CAT 36.42 %.
+        val cases = mapOf(
+            "CSB ESP" to listOf(
+                Triple("199999", "6325.62", "379537.20"),
+                Triple("99999", "3162.80", "189768.00"),
+                Triple("89995", "2846.39", "170783.40"),
+                Triple("256666", "8117.90", "487074.00"),
+                Triple("190000", "6009.37", "360562.20"),
+                Triple("136000", "4301.44", "258086.40"),
+                Triple("233333", "7379.92", "442795.20")
+            ),
+            "OPC MAX" to listOf(
+                Triple("199999", "6651.42", "399085.20"),
+                Triple("99999", "3325.69", "199541.40"),
+                Triple("89995", "2992.99", "179579.40"),
+                Triple("256666", "8536.01", "512160.60"),
+                Triple("190000", "6318.88", "379132.80"),
+                Triple("136000", "4522.99", "271379.40"),
+                Triple("233333", "7760.01", "465600.60")
+            )
+        )
+        cases.forEach { (product, rows) ->
+            val config = FinancialConfig.PRODUCTS.getValue(product)
+            val minimum = config.minTermMap[60] ?: config.minGlobal
+            rows.forEach { (amount, payment, total) ->
+                val computed = BigDecimal(amount).multiply(config.factorsTrad.getValue(60))
+                    .divide(BigDecimal("1000")).setScale(2, RoundingMode.HALF_UP)
+                assertEquals("Cuota $product: $amount", BigDecimal(payment), computed)
+                assertEquals("Total $product: $amount", BigDecimal(total), computed * BigDecimal("60"))
+
+                // $99,999 y $89,995 calibran CSB ESP, pero la app conserva su
+                // mínimo vigente de $100,000.
+                val result = FinancialEngine.calculate(
+                    product, BigDecimal(amount), 60, true, false, BigDecimal.ZERO
+                )
+                if (BigDecimal(amount) < minimum) {
+                    assertNull("$product: $amount bajo el mínimo", result)
+                } else {
+                    assertEquals("Motor $product: $amount", BigDecimal(payment), result!!.first.payment)
+                }
+            }
         }
     }
 }
