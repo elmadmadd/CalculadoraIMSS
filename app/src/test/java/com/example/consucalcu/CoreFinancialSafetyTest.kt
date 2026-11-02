@@ -87,7 +87,7 @@ class CoreFinancialSafetyTest {
     }
 
     @Test
-    fun requestedAmountOnlyHasToBeInsideAgreementRange() {
+    fun requestedAmountOnlyHasToReachAgreementMinimum() {
         val imss = FinancialConfig.agreementFor(FinancialConfig.AGREEMENT_IMSS)
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("50000")))
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("12300")))
@@ -96,17 +96,17 @@ class CoreFinancialSafetyTest {
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("233333")))
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("123456.78")))
         assertFalse(imss.acceptsRequestedAmount(BigDecimal("4900")))
-        assertFalse(imss.acceptsRequestedAmount(BigDecimal("1000100")))
+        // MAX, ESP y VIP no tienen monto máximo.
+        assertTrue(imss.acceptsRequestedAmount(BigDecimal("1000100")))
     }
 
     @Test
-    fun premiumCapacityCanExceedAgreementMaximumSoOffersMustBeCapped() {
-        // El motor no conoce el tope del convenio; el ViewModel debe filtrar.
+    fun premiumQuotersHaveNoMaximumAmount() {
         val imss = FinancialConfig.agreementFor(FinancialConfig.AGREEMENT_IMSS)
         val vip = FinancialEngine.calculate(
-            "CSB VIP", BigDecimal("40000"), 60, false, false, BigDecimal("500")
+            "CSB VIP", BigDecimal("40000"), 60, false, false, imss.amountStep
         )!!
-        assertEquals(BigDecimal("1292000"), vip.first.amount)
+        assertEquals(BigDecimal("1292200"), vip.first.amount)
         assertTrue(vip.first.amount > imss.maxAmount)
     }
 }

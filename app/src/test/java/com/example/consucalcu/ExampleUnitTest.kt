@@ -100,9 +100,9 @@ class ExampleUnitTest {
     @Test
     fun premiumProductsKeepTheInheritedSixtyMonthConditions() {
         val expected = mapOf(
-            "OPC MAX" to PremiumConditions("33.2572543", "2.26", "50000"),
+            "OPC MAX" to PremiumConditions("33.6034742", "2.3", "50000"),
             "OPC ESP" to PremiumConditions("32.737765", "2.2", "75000"),
-            "CSB ESP" to PremiumConditions("31.628272", "2.07", "100000"),
+            "CSB ESP" to PremiumConditions("31.8810807", "2.1", "100000"),
             "CSB VIP" to PremiumConditions("30.954185", "1.99", "150000")
         )
 

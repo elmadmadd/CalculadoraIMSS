@@ -456,10 +456,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                             if (calc != null) {
                                 val (res, _) = calc
                                 val minRequired = config.minTermMap[60] ?: config.minGlobal
-                                if (res.amount >= minRequired &&
-                                    res.amount <= selectedAgreement.maxAmount &&
-                                    FinancialEngine.isValidTermAndAmount(prodKey, 60, res.amount)
-                                ) {
+                                if (res.amount >= minRequired && FinancialEngine.isValidTermAndAmount(prodKey, 60, res.amount)) {
                                     results.add(
                                         LoanOffer(
                                             prodKey, res.amount, res.payment, 60,

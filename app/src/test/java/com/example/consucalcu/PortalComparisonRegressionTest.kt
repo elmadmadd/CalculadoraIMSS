@@ -38,41 +38,10 @@ class PortalComparisonRegressionTest {
         }
     }
 
-    // Fuente: ConsuCalcu_Banco_Comparaciones_2026-09-08.pdf.
-    // Identificar por marca Y CAT: OPC 36.42 = MAX; CSB 32.94 = ESP.
-    // Las filas de Consupago/Más Nómina no calibran OPC o CSB base.
-    @Test
-    fun portalPaymentsMatchAtSixtyMonths() {
-        val amounts = listOf("205000", "123456", "153400", "100000")
-        val expected = mapOf(
-            "OPC MAX" to listOf("6817.74", "4105.81", "5101.66", "3325.73"),
-            "CSB ESP" to listOf("6483.80", "3904.70", "4851.78", "3162.83")
-        )
-        expected.forEach { (product, payments) ->
-            amounts.zip(payments).forEach { (amount, payment) ->
-                val result = FinancialEngine.calculate(
-                    product, BigDecimal(amount), 60, true, false, BigDecimal.ZERO
-                )
-                assertNotNull("$product: $amount", result)
-                assertEquals("$product: $amount", BigDecimal(payment), result!!.first.payment)
-            }
-        }
-    }
-
-    @Test
-    fun portalAmountsProduceTheReferencePayrollDeduction() {
-        mapOf("OPC MAX" to "352083.8", "CSB ESP" to "370217.5").forEach { (product, amount) ->
-            val result = FinancialEngine.calculate(
-                product, BigDecimal(amount), 60, true, false, BigDecimal.ZERO
-            )!!
-            assertEquals(BigDecimal("11709.34"), result.first.payment)
-        }
-    }
-
     @Test
     fun capacityModeRespectsTheAppAmountStepAndDoesNotExceedCapacity() {
-        // Por descuento la app ofrece múltiplos de $100; el PDF conserva décimas.
-        mapOf("OPC MAX" to "352000", "CSB ESP" to "370200").forEach { (product, amount) ->
+        // Por descuento la app ofrece múltiplos de $100.
+        mapOf("OPC MAX" to "348400", "CSB ESP" to "367200").forEach { (product, amount) ->
             val capacity = BigDecimal("11709.34")
             val result = FinancialEngine.calculate(
                 product, capacity, 60, false, false, BigDecimal("100")
@@ -84,21 +53,6 @@ class PortalComparisonRegressionTest {
             )!!
             assertTrue(next.first.payment > capacity)
         }
-    }
-
-    @Test
-    fun opcMaxQuarterMillionMatchesPortalWithoutSpecialCase() {
-        // El factor calibrado reproduce la cuota del portal en ambos modos.
-        val byAmount = FinancialEngine.calculate(
-            "OPC MAX", BigDecimal("250000"), 60, true, false, BigDecimal.ZERO
-        )!!
-        assertEquals(BigDecimal("8314.31"), byAmount.first.payment)
-
-        val byCapacity = FinancialEngine.calculate(
-            "OPC MAX", BigDecimal("8314.32"), 60, false, false, BigDecimal("100")
-        )!!
-        assertEquals(BigDecimal("250000"), byCapacity.first.amount)
-        assertEquals(BigDecimal("8314.31"), byCapacity.first.payment)
     }
 
     @Test
@@ -155,48 +109,30 @@ class PortalComparisonRegressionTest {
     }
 
     @Test
-    fun premiumSixtyMonthMatchesOfficialSimulations2026_10_29() {
+    fun premiumSixtyMonthMatchesOfficialSimulations2026_11_02() {
         // Simulaciones oficiales: monto, descuento mensual y total a 60 meses.
-        // CSB ESP con CAT 32.94 % y OPC MAX (Opcipres) con CAT 36.42 %.
+        // CSB ESP con CAT 33.48 % y OPC MAX (Opcipres) con CAT 37.16 %.
         val cases = mapOf(
             "CSB ESP" to listOf(
-                Triple("199999", "6325.62", "379537.20"),
-                Triple("99999", "3162.80", "189768.00"),
-                Triple("89995", "2846.39", "170783.40"),
-                Triple("256666", "8117.90", "487074.00"),
-                Triple("190000", "6009.37", "360562.20"),
-                Triple("136000", "4301.44", "258086.40"),
-                Triple("233333", "7379.92", "442795.20")
+                Triple("100000", "3188.11", "191286.60"),
+                Triple("199999", "6376.18", "382570.80"),
+                Triple("333333", "10627.02", "637621.20"),
+                Triple("456789", "14562.93", "873775.80")
             ),
             "OPC MAX" to listOf(
-                Triple("199999", "6651.42", "399085.20"),
-                Triple("99999", "3325.69", "199541.40"),
-                Triple("89995", "2992.99", "179579.40"),
-                Triple("256666", "8536.01", "512160.60"),
-                Triple("190000", "6318.88", "379132.80"),
-                Triple("136000", "4522.99", "271379.40"),
-                Triple("233333", "7760.01", "465600.60")
+                Triple("100000", "3360.35", "201621.00"),
+                Triple("199999", "6720.66", "403239.60"),
+                Triple("333333", "11201.15", "672069.00"),
+                Triple("456789", "15349.70", "920982.00")
             )
         )
         cases.forEach { (product, rows) ->
-            val config = FinancialConfig.PRODUCTS.getValue(product)
-            val minimum = config.minTermMap[60] ?: config.minGlobal
             rows.forEach { (amount, payment, total) ->
-                val computed = BigDecimal(amount).multiply(config.factorsTrad.getValue(60))
-                    .divide(BigDecimal("1000")).setScale(2, RoundingMode.HALF_UP)
-                assertEquals("Cuota $product: $amount", BigDecimal(payment), computed)
-                assertEquals("Total $product: $amount", BigDecimal(total), computed * BigDecimal("60"))
-
-                // $99,999 y $89,995 calibran CSB ESP, pero la app conserva su
-                // mínimo vigente de $100,000.
                 val result = FinancialEngine.calculate(
                     product, BigDecimal(amount), 60, true, false, BigDecimal.ZERO
-                )
-                if (BigDecimal(amount) < minimum) {
-                    assertNull("$product: $amount bajo el mínimo", result)
-                } else {
-                    assertEquals("Motor $product: $amount", BigDecimal(payment), result!!.first.payment)
-                }
+                )!!
+                assertEquals("Cuota $product: $amount", BigDecimal(payment), result.first.payment)
+                assertEquals("Total $product: $amount", BigDecimal(total), result.first.payment * BigDecimal("60"))
             }
         }
     }
@@ -235,6 +171,8 @@ class PortalComparisonRegressionTest {
     @Test
     fun opcEspNewCatMapsToItsMonthlyRate() {
         assertEquals(2.20, FinancialEngine.getNormalizedRate("35.31%"), 0.0)
+        assertEquals(2.10, FinancialEngine.getNormalizedRate("33.48%"), 0.0)
+        assertEquals(2.30, FinancialEngine.getNormalizedRate("37.16%"), 0.0)
         // Los créditos vigentes con el CAT anterior se siguen reconociendo.
         assertEquals(2.14, FinancialEngine.getNormalizedRate("34.21"), 0.0)
     }

@@ -39,11 +39,11 @@ object FinancialConfig {
             get() = paymentFrequency == PAYMENT_FREQUENCY_BIWEEKLY
 
         /**
-         * Por monto se acepta cualquier cantidad dentro del rango del convenio.
-         * [amountStep] solo aplica al calcular por descuento.
+         * Por monto se acepta cualquier cantidad desde el mínimo del convenio.
+         * [amountStep] solo aplica al calcular por descuento, y [maxAmount] solo a
+         * los cotizadores base: MAX, ESP y VIP no tienen monto máximo.
          */
-        fun acceptsRequestedAmount(amount: BigDecimal): Boolean =
-            amount >= minAmount && amount <= maxAmount
+        fun acceptsRequestedAmount(amount: BigDecimal): Boolean = amount >= minAmount
     }
 
     const val AGREEMENT_IMSS = "imss"
@@ -97,12 +97,12 @@ object FinancialConfig {
             )
         ),
         // Hereda las condiciones financieras de CSP Especial.
-        // Calibración 2026-10-29: factor derivado del CAT con IVA 36.42 %
-        // (i = 1.3642^(1/12) - 1, anualidad a 60 meses). Reproduce las
-        // simulaciones oficiales, incluida $233,333 -> $7,760.01.
+        // Condiciones 2026-11-02: CAT 37.16 %, unos 2.30 % mensual sin IVA.
+        // Factor derivado del CAT (i = 1.3716^(1/12) - 1, anualidad a 60 meses);
+        // reproduce las simulaciones oficiales. Sustituye a CAT 36.42 %.
         "OPC MAX" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("33.2572543")),
-            meta = ProductMeta(2.26, "36.42%", "36.42%"),
+            factorsTrad = mapOf(60 to BigDecimal("33.6034742")),
+            meta = ProductMeta(2.30, "37.16%", "37.16%"),
             minGlobal = BigDecimal("50000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(60 to BigDecimal("50000"))
@@ -145,12 +145,12 @@ object FinancialConfig {
                 36 to 2.50, 24 to 2.55, 12 to 2.57
             )
         ),
-        // Calibración 2026-10-29: factor derivado del CAT con IVA 32.94 %
-        // (i = 1.3294^(1/12) - 1, anualidad a 60 meses). Reproduce las
-        // simulaciones oficiales, incluida $136,000 -> $4,301.44.
+        // Condiciones 2026-11-02: CAT 33.48 %, unos 2.10 % mensual sin IVA.
+        // Factor derivado del CAT (i = 1.3348^(1/12) - 1, anualidad a 60 meses);
+        // reproduce las simulaciones oficiales. Sustituye a CAT 32.94 %.
         "CSB ESP" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("31.628272")),
-            meta = ProductMeta(2.07, "32.94%", "32.94%"),
+            factorsTrad = mapOf(60 to BigDecimal("31.8810807")),
+            meta = ProductMeta(2.10, "33.48%", "33.48%"),
             minGlobal = BigDecimal("100000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(60 to BigDecimal("100000"))

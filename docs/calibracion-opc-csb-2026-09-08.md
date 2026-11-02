@@ -139,5 +139,30 @@ compatible; se usa 0.030954185 tal como lo publica la plataforma. Las reglas de
 
 **Por descuento**, el monto se redondea hacia abajo a múltiplos de $100 (el
 `amountStep` del convenio) sin superar el descuento capturado. **Por monto** no
-hay incremento: se acepta cualquier cantidad dentro del rango del convenio,
-con decimales. IMSS Bienestar, desactivado, conserva su incremento de $500.
+hay incremento: se acepta cualquier cantidad desde el mínimo, con decimales. IMSS Bienestar, desactivado, conserva su incremento de $500.
+
+## Actualización CSB ESP y OPC MAX — 2026-11-02
+
+Ocho simulaciones oficiales a 60 meses (cuatro por producto: $100,000, $199,999,
+$333,333 y $456,789) confirman nuevas condiciones. Ningún monto coincidía con los
+factores anteriores.
+
+| Producto | CAT anterior | CAT nuevo | Tasa inferida | Factor nuevo | Intervalo compatible |
+| --- | ---: | ---: | ---: | ---: | --- |
+| CSB ESP | 32.94 % | **33.48 %** | 2.10 % | **31.8810807** | [31.8810769, 31.8810844) |
+| OPC MAX | 36.42 % | **37.16 %** | 2.30 % | **33.6034742** | [33.6034690, 33.6034909) |
+
+Los factores salen del CAT (`i = (1 + CAT)^(1/12) - 1`). Las tasas son aproximadas:
+del CAT resultan 2.0997 % y 2.3001 %, y una anualidad con 2.10 % o 2.30 % exactos
+queda fuera de los intervalos. Los casos del Excel y del portal con los CAT
+anteriores se retiraron de las pruebas; `ExcelQuoteRegressionTest` queda con 15
+casos. `getNormalizedRate` conserva los CAT anteriores para créditos vigentes.
+
+Con cuatro montos el intervalo es más ancho que en calibraciones anteriores, en
+especial en OPC MAX: faltan montos altos y casos por descuento para cerrarlo.
+
+## Mínimos y plazos de MAX, ESP y VIP — 2026-11-02
+
+Confirmado por el usuario: plazo de 60 meses y mínimos de $50,000 (OPC MAX),
+$75,000 (OPC ESP), $100,000 (CSB ESP) y $150,000 (CSB VIP), sin monto máximo.
+El tope de $1,000,000 del convenio sigue aplicando solo a OPC y CSB base.
