@@ -46,6 +46,7 @@ data class CalculatorUiState(
     val creditAgreementId: String = FinancialConfig.AGREEMENT_IMSS,
     val isByAmount: Boolean = false,
     val offersNew: List<LoanOffer> = emptyList(),
+    val hasQuotedNewCredit: Boolean = false,
     val showClientForm: Boolean = false,
     val showConfigDialog: Boolean = false,
     val showSupportModal: Boolean = false,
@@ -243,6 +244,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
             it.copy(
                 creditAgreementId = agreement.id,
                 offersNew = emptyList(),
+                hasQuotedNewCredit = false,
                 showOffersComparator = false,
                 showOfferPreview = false,
                 selectedOfferForLayout = null,
@@ -256,12 +258,17 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
         // capacidad): al cambiar de modo se limpian captura y resultados.
         _uiState.update {
             if (it.isByAmount == byAmount) it
-            else it.copy(isByAmount = byAmount, newCreditInput = "", offersNew = emptyList())
+            else it.copy(
+                isByAmount = byAmount,
+                newCreditInput = "",
+                offersNew = emptyList(),
+                hasQuotedNewCredit = false
+            )
         }
     }
 
     fun clearNewCreditData() {
-        _uiState.update { it.copy(newCreditInput = "", offersNew = emptyList()) }
+        _uiState.update { it.copy(newCreditInput = "", offersNew = emptyList(), hasQuotedNewCredit = false) }
     }
 
     fun toggleConfigDialog(show: Boolean) {
@@ -514,7 +521,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                 // Sin ofertas disponibles
                 _effects.emit(CalculatorEffect.PlaySound("ui_error"))
             }
-            _uiState.update { it.copy(isLoading = false, offersNew = calculatedOffers) }
+            _uiState.update { it.copy(isLoading = false, offersNew = calculatedOffers, hasQuotedNewCredit = true) }
             recordCalculationForSupport()
         }
     }

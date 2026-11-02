@@ -88,6 +88,9 @@
     <string name="compare_offers">COMPARAR OFERTAS</string>
     <string name="no_offers_title">Sin ofertas para ti</string>
     <string name="no_offers_desc">Ajusta la capacidad de pago o plazo</string>
+    <string name="quote_prompt_amount_title">Captura un monto para ver ofertas</string>
+    <string name="quote_prompt_capacity_title">Captura un descuento para ver ofertas</string>
+    <string name="quote_prompt_desc">Después toca COTIZAR</string>
 
     <!-- Insurance Screen -->
     <string name="insurance_calculator_title">SEGURO DE CRÉDITO</string>

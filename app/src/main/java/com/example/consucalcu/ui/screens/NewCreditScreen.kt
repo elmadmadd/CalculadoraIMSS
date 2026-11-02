@@ -334,9 +334,16 @@ fun NewCreditScreen(
                             viewModel.showAmortizationFor(offer)
                         },
                         emptyContent = {
+                            // Antes de cotizar no hay resultado negativo que mostrar.
                             EmptyStateIllustration(
-                                title = stringResource(R.string.no_offers_title),
-                                message = stringResource(R.string.no_offers_desc),
+                                title = when {
+                                    state.hasQuotedNewCredit -> stringResource(R.string.no_offers_title)
+                                    state.isByAmount -> stringResource(R.string.quote_prompt_amount_title)
+                                    else -> stringResource(R.string.quote_prompt_capacity_title)
+                                },
+                                message = stringResource(
+                                    if (state.hasQuotedNewCredit) R.string.no_offers_desc else R.string.quote_prompt_desc
+                                ),
                                 emoji = "🔍"
                             )
                         },

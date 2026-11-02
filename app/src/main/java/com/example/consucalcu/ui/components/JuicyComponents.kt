@@ -292,7 +292,7 @@ fun JuicyInput(
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val smartPlaceholder = placeholder ?: when {
-        isCurrency -> "10,000"
+        isCurrency -> "Ej. 10,000"
         label.contains("NSS", ignoreCase = true) -> "12345678901"
         label.contains("Teléfono", ignoreCase = true) || label.contains("Celular", ignoreCase = true) -> "5512345678"
         label.contains("Nombre", ignoreCase = true) -> "Juan Pérez"
@@ -317,7 +317,7 @@ fun JuicyInput(
         targetValue = when {
             isError -> MaterialTheme.colorScheme.error
             isFocused -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
         },
         animationSpec = tween(300),
         label = "borderColor"
@@ -441,7 +441,7 @@ fun JuicyInput(
                                     smartPlaceholder,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                     style = TextStyle(
-                                        fontSize = 17.sp,
+                                        fontSize = 15.sp,
                                         fontWeight = FontWeight.Normal
                                     )
                                 )
@@ -949,11 +949,11 @@ fun CompactInput(
 // =================================================================================================
 // SEMÁFORO DE OFERTAS - Sistema de colores por ranking
 // =================================================================================================
-enum class SortMode {
-    MEJOR_VALOR,
-    MAYOR_MONTO,
-    MENOR_DESCUENTO,
-    MAYOR_PLAZO
+enum class SortMode(val label: String) {
+    MEJOR_VALOR("Mejor valor"),
+    MAYOR_MONTO("Mayor monto"),
+    MENOR_DESCUENTO("Menor descuento"),
+    MAYOR_PLAZO("Mayor plazo")
 }
 
 fun LoanOffer.sortKey(mode: SortMode): Comparable<*> = when (mode) {
@@ -1003,6 +1003,7 @@ fun GroupedResultsSection(
         if (offers.any { it.agreementId == FinancialConfig.AGREEMENT_IMSS_BIENESTAR }) add("CONSUBANCO")
     }
     var sortMode by remember { mutableStateOf(SortMode.MEJOR_VALOR) }
+    var sortMenuOpen by remember { mutableStateOf(false) }
 
     @Composable
     fun brandColor(brand: String): Color = when (brand) {
@@ -1092,12 +1093,11 @@ fun GroupedResultsSection(
             emptyContent()
         } else {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = ConsuSpacing.lg)
-                    .horizontalScroll(rememberScrollState())
             ) {
                 if (hasPremiumOffers) {
                     FilterChip(
@@ -1135,36 +1135,40 @@ fun GroupedResultsSection(
                         ),
                         shape = RoundedCornerShape(50)
                     )
-                    Box(
-                        Modifier
-                            .width(1.dp)
-                            .height(20.dp)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-                    )
                 }
-                SortMode.entries.forEach { mode ->
-                    val isSelected = mode == sortMode
-                    val label = when (mode) {
-                        SortMode.MEJOR_VALOR     -> "Mejor Valor"
-                        SortMode.MAYOR_MONTO     -> "Mayor Monto"
-                        SortMode.MENOR_DESCUENTO -> "Menor Desc."
-                        SortMode.MAYOR_PLAZO     -> "Mayor Plazo"
-                    }
-                    FilterChip(
-                        selected = isSelected,
-                        onClick  = { sortMode = mode },
-                        label = {
-                            Text(
-                                text       = label,
-                                fontSize   = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
-                            selectedLabelColor     = MaterialTheme.colorScheme.onSurface
+                Spacer(Modifier.weight(1f))
+                Box {
+                    TextButton(
+                        onClick = { sortMenuOpen = true },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                        contentPadding = PaddingValues(start = 8.dp, end = 4.dp)
+                    ) {
+                        Text("Ordenar por: ${sortMode.label}", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Icon(
+                            Icons.Rounded.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
                         )
-                    )
+                    }
+                    DropdownMenu(
+                        expanded = sortMenuOpen,
+                        onDismissRequest = { sortMenuOpen = false }
+                    ) {
+                        SortMode.entries.forEach { mode ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        mode.label,
+                                        fontWeight = if (mode == sortMode) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                onClick = {
+                                    sortMode = mode
+                                    sortMenuOpen = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
