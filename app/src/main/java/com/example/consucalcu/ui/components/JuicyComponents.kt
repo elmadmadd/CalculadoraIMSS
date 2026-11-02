@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -1116,7 +1117,7 @@ fun GroupedResultsSection(
                                 modifier = Modifier.size(16.dp)
                             )
                         },
-                        // El naranja queda reservado para la mejor oferta y la navegación.
+                        // Filtro neutro: el color se reserva para las tarjetas y la navegación.
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
                             selectedLabelColor      = MaterialTheme.colorScheme.onSurface,
@@ -1267,7 +1268,18 @@ fun ResultCard(
         else                               -> null
     }
 
-    val variantColor = if (variant != null) accentColor else null
+    // Especiales y VIP resaltan con el color de su marca: CSB naranja, OPC verde.
+    val isCsbPremium = offer.product.startsWith("CSB")
+    val premiumColor = when {
+        !isPremium   -> null
+        isCsbPremium -> ConsuOrange
+        else         -> ConsuSuccess
+    }
+    val variantColor = when {
+        variant == null -> null
+        isCsbPremium    -> ConsuOrangeDark
+        else            -> ConsuSuccessDark
+    }
 
     // El monto es la cifra principal; la mensualidad queda como dato secundario.
     val isRemnant = offer.amount > offer.mainValue
@@ -1277,17 +1289,22 @@ fun ResultCard(
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        color = premiumColor?.copy(alpha = 0.10f)?.compositeOver(MaterialTheme.colorScheme.surface)
+            ?: MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(ConsuRadius.xl),
         border = BorderStroke(
-            width = if (isBest || isPremium) 1.dp else 0.5.dp,
+            width = when {
+                isPremium -> 1.5.dp
+                isBest    -> 1.dp
+                else      -> 0.5.dp
+            },
             color = when {
-                isBest    -> ConsuOrange.copy(alpha = 0.5f)
-                isPremium -> accentColor.copy(alpha = 0.3f)
-                else      -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                premiumColor != null -> premiumColor.copy(alpha = 0.65f)
+                isBest               -> ConsuOrange.copy(alpha = 0.5f)
+                else                 -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
             }
         ),
-        shadowElevation = if (isBest) 2.dp else 0.dp
+        shadowElevation = if (isBest || isPremium) 2.dp else 0.dp
     ) {
         Column(
             modifier = Modifier.padding(horizontal = ConsuSpacing.lg, vertical = ConsuSpacing.md + 2.dp)
@@ -1307,7 +1324,7 @@ fun ResultCard(
                     Text(
                         text = baseName,
                         fontWeight = FontWeight.Black,
-                        color = accentColor,
+                        color = variantColor ?: accentColor,
                         fontSize = 15.sp,
                         letterSpacing = 0.5.sp
                     )
@@ -1327,17 +1344,19 @@ fun ResultCard(
                     }
                 }
 
-                // Variante en el color de la marca; el naranja solo para la mejor oferta.
+                // La variante va en color sólido; la mejor oferta, siempre en naranja suave.
                 val badges = buildList {
                     if (variant != null && variantColor != null) add(Triple(variant, variantColor, if (variant == "VIP") Icons.Rounded.AutoAwesome else Icons.Rounded.Star))
                     if (isBest) add(Triple("MEJOR OPCIÓN", ConsuOrange, Icons.Rounded.Star))
                 }
                 badges.forEach { (badgeText, badgeColor, badgeIcon) ->
+                    val solid = badgeText == variant
+                    val badgeContent = if (solid) Color.White else badgeColor
                     Spacer(Modifier.width(ConsuSpacing.sm))
                     Surface(
-                        color = badgeColor.copy(alpha = 0.12f),
+                        color = if (solid) badgeColor else badgeColor.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(ConsuRadius.sm),
-                        border = BorderStroke(1.dp, badgeColor.copy(alpha = 0.35f))
+                        border = if (solid) null else BorderStroke(1.dp, badgeColor.copy(alpha = 0.35f))
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -1346,7 +1365,7 @@ fun ResultCard(
                             Icon(
                                 badgeIcon,
                                 contentDescription = null,
-                                tint = badgeColor,
+                                tint = badgeContent,
                                 modifier = Modifier.size(11.dp)
                             )
                             Spacer(Modifier.width(4.dp))
@@ -1354,7 +1373,7 @@ fun ResultCard(
                                 text = badgeText,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = badgeColor,
+                                color = badgeContent,
                                 letterSpacing = 0.3.sp
                             )
                         }

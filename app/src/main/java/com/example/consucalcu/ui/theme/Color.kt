@@ -40,6 +40,7 @@ val ConsuDividerDark  = Color(0xFF24416B)
 
 // ── STATE COLORS ─────────────────────────────────────────────────────────────
 val ConsuSuccess  = Color(0xFF10B981)  // Emerald 500
+val ConsuSuccessDark = Color(0xFF047857)  // Emerald 700 — fondo con texto blanco
 val ConsuWarning  = Color(0xFFF59E0B)  // Amber 500
 val ConsuError    = Color(0xFFEF4444)  // Red 500
 
