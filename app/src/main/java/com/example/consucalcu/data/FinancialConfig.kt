@@ -61,19 +61,17 @@ object FinancialConfig {
         productKey.endsWith(" MAX") || productKey.endsWith(" ESP") || productKey.endsWith(" VIP")
 
     val PRODUCTS = mapOf(
-        // Nueva oferta IMSS. Los factores base usan la tasa nominal anual de la
-        // tabla oficial, IVA de 16 % sobre intereses y amortización fija,
-        // excepto OPC/CSB a 60 meses: condiciones 2026-11-02, factores derivados
-        // del CAT y verificados con simulaciones oficiales. Los plazos menores
-        // aún no se actualizan. Véase docs/calibracion-opc-csb-2026-09-08.md.
+        // Condiciones 2026-11-02. Los factores de OPC y CSB salen del CAT de cada
+        // plazo (i = (1 + CAT)^(1/12) - 1 y anualidad a n meses) y están verificados
+        // con simulaciones oficiales. Véase docs/calibracion-opc-csb-2026-09-08.md.
         "OPC" to ProductData(
             factorsTrad = mapOf(
                 60 to BigDecimal("36.7774805"),
-                54 to BigDecimal("37.89928"),
-                48 to BigDecimal("39.92836"),
-                36 to BigDecimal("46.21135"),
-                24 to BigDecimal("59.50058"),
-                12 to BigDecimal("100.95868")
+                54 to BigDecimal("38.2522771"),
+                48 to BigDecimal("40.1857737"),
+                36 to BigDecimal("46.3724411"),
+                24 to BigDecimal("59.5762581"),
+                12 to BigDecimal("100.9601550")
             ),
             meta = ProductMeta(2.66, "43.96%", "43.96%"),
             minGlobal = BigDecimal("5000"),
@@ -87,12 +85,12 @@ object FinancialConfig {
                 12 to BigDecimal("25000")
             ),
             catTradByTerm = mapOf(
-                60 to "43.96%", 54 to "43.19%", 48 to "43.38%",
-                36 to "43.57%", 24 to "43.77%", 12 to "43.96%"
+                60 to "43.96%", 54 to "43.96%", 48 to "43.96%",
+                36 to "43.96%", 24 to "43.96%", 12 to "43.96%"
             ),
             tasaRefByTerm = mapOf(
-                60 to 2.66, 54 to 2.62, 48 to 2.63,
-                36 to 2.64, 24 to 2.65, 12 to 2.66
+                60 to 2.66, 54 to 2.66, 48 to 2.66,
+                36 to 2.66, 24 to 2.66, 12 to 2.66
             )
         ),
         // Hereda las condiciones financieras de CSP Especial.
@@ -118,11 +116,11 @@ object FinancialConfig {
         "CSB" to ProductData(
             factorsTrad = mapOf(
                 60 to BigDecimal("34.8749909"),
-                54 to BigDecimal("36.27268"),
-                48 to BigDecimal("38.26465"),
-                36 to BigDecimal("45.12292"),
-                24 to BigDecimal("58.78059"),
-                12 to BigDecimal("100.34938")
+                54 to BigDecimal("36.4021171"),
+                48 to BigDecimal("38.8488146"),
+                36 to BigDecimal("45.1213316"),
+                24 to BigDecimal("58.9263198"),
+                12 to BigDecimal("100.3478859")
             ),
             meta = ProductMeta(2.45, "39.88%", "39.88%"),
             minGlobal = BigDecimal("30000"),
@@ -136,12 +134,12 @@ object FinancialConfig {
                 12 to BigDecimal("45000")
             ),
             catTradByTerm = mapOf(
-                60 to "39.88%", 54 to "39.60%", 48 to "39.60%",
-                36 to "40.92%", 24 to "41.88%", 12 to "42.26%"
+                60 to "39.88%", 54 to "39.88%", 48 to "40.92%",
+                36 to "40.92%", 24 to "42.26%", 12 to "42.26%"
             ),
             tasaRefByTerm = mapOf(
-                60 to 2.45, 54 to 2.43, 48 to 2.43,
-                36 to 2.50, 24 to 2.55, 12 to 2.57
+                60 to 2.45, 54 to 2.45, 48 to 2.50,
+                36 to 2.50, 24 to 2.57, 12 to 2.57
             )
         ),
         // Condiciones 2026-11-02: CAT 33.48 %, unos 2.10 % mensual sin IVA.

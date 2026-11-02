@@ -186,4 +186,58 @@ class PortalComparisonRegressionTest {
         val offer = LoanOffer("CSB VIP", BigDecimal("199999"), BigDecimal("6190.81"), 60)
         assertEquals(BigDecimal("371448.60"), offer.totalToPay)
     }
+
+    @Test
+    fun baseProductsMatchOfficialSimulationsAtShorterTerms() {
+        // Simulaciones oficiales 2026-11-02: producto, plazo, monto, descuento y total.
+        val cases = listOf(
+            listOf("CSB", "54", "270886", "9860.82", "532484.28"),
+            listOf("CSB", "54", "282054", "10267.36", "554437.44"),
+            listOf("CSB", "54", "287001", "10447.44", "564161.76"),
+            listOf("CSB", "54", "288000", "10483.81", "566125.74"),
+            listOf("OPC", "54", "270886", "10362.01", "559548.54"),
+            listOf("OPC", "54", "282054", "10789.21", "582617.34"),
+            listOf("OPC", "54", "287001", "10978.44", "592835.76"),
+            listOf("OPC", "54", "288000", "11016.66", "594899.64"),
+            listOf("CSB", "48", "244692", "9505.99", "456287.52"),
+            listOf("CSB", "48", "256559", "9967.01", "478416.48"),
+            listOf("CSB", "48", "263143", "10222.79", "490693.92"),
+            listOf("CSB", "48", "274000", "10644.58", "510939.84"),
+            listOf("OPC", "48", "244692", "9833.14", "471990.72"),
+            listOf("OPC", "48", "256559", "10310.02", "494880.96"),
+            listOf("OPC", "48", "263143", "10574.61", "507581.28"),
+            listOf("OPC", "48", "274000", "11010.90", "528523.20"),
+            listOf("CSB", "36", "210524", "9499.12", "341968.32"),
+            listOf("CSB", "36", "229945", "10375.42", "373515.12"),
+            listOf("CSB", "36", "236313", "10662.76", "383859.36"),
+            listOf("CSB", "36", "237000", "10693.76", "384975.36"),
+            listOf("OPC", "36", "210524", "9762.51", "351450.36"),
+            listOf("OPC", "36", "229945", "10663.11", "383871.96"),
+            listOf("OPC", "36", "236313", "10958.41", "394502.76"),
+            listOf("OPC", "36", "237000", "10990.27", "395649.72"),
+            listOf("CSB", "24", "154838", "9124.03", "218976.72"),
+            listOf("CSB", "24", "181989", "10723.94", "257374.56"),
+            listOf("CSB", "24", "183253", "10798.42", "259162.08"),
+            listOf("CSB", "24", "185000", "10901.37", "261632.88"),
+            listOf("OPC", "24", "154838", "9224.67", "221392.08"),
+            listOf("OPC", "24", "181989", "10842.22", "260213.28"),
+            listOf("OPC", "24", "183253", "10917.53", "262020.72"),
+            listOf("OPC", "24", "185000", "11021.61", "264518.64"),
+            listOf("CSB", "12", "93261", "9358.54", "112302.48"),
+            listOf("CSB", "12", "106401", "10677.12", "128125.44"),
+            listOf("CSB", "12", "106611", "10698.19", "128378.28"),
+            listOf("CSB", "12", "109000", "10937.92", "131255.04"),
+            listOf("OPC", "12", "106401", "10742.26", "128907.12"),
+            listOf("OPC", "12", "106611", "10763.46", "129161.52"),
+            listOf("OPC", "12", "109000", "11004.66", "132055.92")
+        )
+        cases.forEach { (product, termText, amount, payment, total) ->
+            val term = termText.toInt()
+            val result = FinancialEngine.calculate(
+                product, BigDecimal(amount), term, true, false, BigDecimal.ZERO
+            )!!
+            assertEquals("Cuota $product $term: $amount", BigDecimal(payment), result.first.payment)
+            assertEquals("Total $product $term: $amount", BigDecimal(total), result.first.payment * BigDecimal(term))
+        }
+    }
 }

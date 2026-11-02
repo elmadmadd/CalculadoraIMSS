@@ -33,11 +33,11 @@ class ExampleUnitTest {
         assertEquals(
             mapOf(
                 60 to BigDecimal("36.7774805"),
-                54 to BigDecimal("37.89928"),
-                48 to BigDecimal("39.92836"),
-                36 to BigDecimal("46.21135"),
-                24 to BigDecimal("59.50058"),
-                12 to BigDecimal("100.95868")
+                54 to BigDecimal("38.2522771"),
+                48 to BigDecimal("40.1857737"),
+                36 to BigDecimal("46.3724411"),
+                24 to BigDecimal("59.5762581"),
+                12 to BigDecimal("100.9601550")
             ),
             opc.factorsTrad
         )
@@ -53,13 +53,13 @@ class ExampleUnitTest {
             opc.minTermMap
         )
         assertEquals(
-            mapOf(60 to 2.66, 54 to 2.62, 48 to 2.63, 36 to 2.64, 24 to 2.65, 12 to 2.66),
+            mapOf(60 to 2.66, 54 to 2.66, 48 to 2.66, 36 to 2.66, 24 to 2.66, 12 to 2.66),
             opc.tasaRefByTerm
         )
         assertEquals(
             mapOf(
-                60 to "43.96%", 54 to "43.19%", 48 to "43.38%",
-                36 to "43.57%", 24 to "43.77%", 12 to "43.96%"
+                60 to "43.96%", 54 to "43.96%", 48 to "43.96%",
+                36 to "43.96%", 24 to "43.96%", 12 to "43.96%"
             ),
             opc.catTradByTerm
         )
@@ -72,11 +72,11 @@ class ExampleUnitTest {
         assertEquals(
             mapOf(
                 60 to BigDecimal("34.8749909"),
-                54 to BigDecimal("36.27268"),
-                48 to BigDecimal("38.26465"),
-                36 to BigDecimal("45.12292"),
-                24 to BigDecimal("58.78059"),
-                12 to BigDecimal("100.34938")
+                54 to BigDecimal("36.4021171"),
+                48 to BigDecimal("38.8488146"),
+                36 to BigDecimal("45.1213316"),
+                24 to BigDecimal("58.9263198"),
+                12 to BigDecimal("100.3478859")
             ),
             csb.factorsTrad
         )
@@ -92,7 +92,7 @@ class ExampleUnitTest {
             csb.minTermMap
         )
         assertEquals(
-            mapOf(60 to 2.45, 54 to 2.43, 48 to 2.43, 36 to 2.50, 24 to 2.55, 12 to 2.57),
+            mapOf(60 to 2.45, 54 to 2.45, 48 to 2.50, 36 to 2.50, 24 to 2.57, 12 to 2.57),
             csb.tasaRefByTerm
         )
     }

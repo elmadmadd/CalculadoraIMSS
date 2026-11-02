@@ -179,6 +179,23 @@ con los factores anteriores.
 | OPC | 42.99 % | **43.96 %** | 2.66 % | **36.7774805** | [36.7774781, 36.7774914) |
 
 Los factores salen del CAT. Las tasas se redondean para mostrarlas (del CAT resultan
-2.4451 % y 2.6577 %). Los plazos de 12 a 54 meses conservan sus factores, CAT y
-tasas hasta recibir sus simulaciones. Los ocho casos base del Excel y de
-`qwdqdssdas.pdf` se retiraron; `ExcelQuoteRegressionTest` queda con 7 casos.
+2.4451 % y 2.6577 %). Los ocho casos base del Excel y de `qwdqdssdas.pdf` se
+retiraron; `ExcelQuoteRegressionTest` queda con 7 casos.
+
+## OPC y CSB base de 12 a 54 meses — 2026-11-02
+
+Treinta y nueve simulaciones oficiales. La misma fórmula del CAT, ahora con `n`
+igual al plazo (`1000 × i / (1 - (1 + i)^-n)`), cae dentro del intervalo
+compatible en los diez cotizadores y reproduce las 39 cuotas y sus totales.
+
+| Plazo | CAT CSB | Tasa CSB | Factor CSB | CAT OPC | Tasa OPC | Factor OPC |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 60 | 39.88 % | 2.45 % | 34.8749909 | 43.96 % | 2.66 % | 36.7774805 |
+| 54 | 39.88 % | 2.45 % | 36.4021171 | 43.96 % | 2.66 % | 38.2522771 |
+| 48 | 40.92 % | 2.50 % | 38.8488146 | 43.96 % | 2.66 % | 40.1857737 |
+| 36 | 40.92 % | 2.50 % | 45.1213316 | 43.96 % | 2.66 % | 46.3724411 |
+| 24 | 42.26 % | 2.57 % | 58.9263198 | 43.96 % | 2.66 % | 59.5762581 |
+| 12 | 42.26 % | 2.57 % | 100.3478859 | 43.96 % | 2.66 % | 100.9601550 |
+
+Las tasas son el valor redondeado que resulta del CAT. Faltó OPC a 12 meses por
+$93,261: esa simulación llegó duplicada como CSB. Los mínimos no cambian.
