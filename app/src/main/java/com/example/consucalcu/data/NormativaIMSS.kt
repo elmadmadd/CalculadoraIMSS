@@ -1,8 +1,12 @@
 package com.example.consucalcu.data
 
-import com.example.consucalcu.model.TipoPension
+import com.example.consucalcu.model.InsuranceAmortizationRow
 import com.example.consucalcu.model.InsuranceDictamenResult
+import com.example.consucalcu.model.InsuranceSchedule
+import com.example.consucalcu.model.TipoPension
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 
 object NormativaIMSS {
 
@@ -129,29 +133,23 @@ object NormativaIMSS {
         )
     }
 
+    // Cálculo de Seguro CSB V.18 y OPC V.09 (02.11.2026). Tasas sin IVA exactas:
+    // la tasa de la tarjeta es este valor redondeado.
     fun getTasaMensual(producto: String, plazo: Int): Double {
         val prodClean = producto.uppercase().trim()
         return when {
-            prodClean == "OPC MAX" -> 2.26
-            prodClean == "OPC ESP" -> 2.14
+            prodClean == "OPC MAX" -> 2.30
+            prodClean == "OPC ESP" -> 2.20
             prodClean == "OPC" -> when (plazo) {
-                12 -> 2.66
-                24 -> 2.65
-                36 -> 2.64
-                48 -> 2.63
-                54 -> 2.62
-                60 -> 2.61
+                12, 24, 36, 48, 54, 60 -> 2.6578
                 else -> Double.NaN
             }
             prodClean == "CSB VIP" -> 1.99
-            prodClean == "CSB ESP" -> 2.07
+            prodClean == "CSB ESP" -> 2.10
             prodClean == "CSB" -> when (plazo) {
-                12 -> 2.57
-                24 -> 2.55
-                36 -> 2.50
-                48 -> 2.43
-                54 -> 2.43
-                60 -> 2.40
+                12, 24 -> 2.57
+                36, 48 -> 2.50
+                54, 60 -> 2.445
                 else -> Double.NaN
             }
             else -> Double.NaN
@@ -160,12 +158,62 @@ object NormativaIMSS {
 
     fun getFactorSeguro(producto: String): Double {
         val prodClean = producto.uppercase().trim()
-        return when {
-            prodClean == "OPC MAX" || prodClean == "OPC ESP" -> 1.99
-            prodClean == "OPC" -> 1.7571
-            prodClean == "CSB ESP" -> 1.99
-            prodClean == "CSB" || prodClean == "CSB VIP" -> 1.7571
+        return when (prodClean) {
+            "OPC", "OPC MAX", "OPC ESP", "CSB", "CSB ESP", "CSB VIP" -> 1.7571
             else -> Double.NaN
         }
     }
+
+    /**
+     * Reproduce la hoja del producto: PMT con la tasa con IVA y una tabla donde el
+     * seguro mensual es el valor asegurable (saldo + interés + IVA) por factor / 1000.
+     * Usa su propio PMT, que no es el descuento del cotizador.
+     *
+     * Dos hojas se apartan del resto y se replican tal cual: OPC a 36 meses redondea
+     * el PMT a pesos, y CSB VIP no redondea ningún valor intermedio.
+     */
+    fun calcularTablaSeguro(producto: String, monto: BigDecimal, plazo: Int): InsuranceSchedule {
+        val prodClean = producto.uppercase().trim()
+        val sinRedondeo = prodClean == "CSB VIP"
+        val centavos: (BigDecimal) -> BigDecimal = { valor ->
+            if (sinRedondeo) valor.round(MC) else valor.setScale(2, RoundingMode.HALF_UP)
+        }
+
+        val tasa = BigDecimal(getTasaMensual(producto, plazo).toString()).divide(BD_100, MC)
+        val factor = BigDecimal(getFactorSeguro(producto).toString())
+        val tasaConIva = tasa.multiply(UNO_MAS_IVA, MC)
+        val descuento = BigDecimal.ONE.subtract(
+            BigDecimal.ONE.divide(BigDecimal.ONE.add(tasaConIva).pow(plazo, MC), MC),
+            MC
+        )
+        val pmtExacto = monto.multiply(tasaConIva, MC).divide(descuento, MC)
+        val pmt = if (prodClean == "OPC" && plazo == 36) {
+            pmtExacto.setScale(0, RoundingMode.HALF_UP)
+        } else {
+            centavos(pmtExacto)
+        }
+
+        var saldo = centavos(monto)
+        val rows = (1..plazo).map { mes ->
+            val interes = centavos(saldo.multiply(tasa, MC))
+            val iva = centavos(interes.multiply(IVA, MC))
+            val capital = centavos(pmt.subtract(interes).subtract(iva))
+            val saldoFinal = centavos(saldo.subtract(capital))
+            val valorAsegurable = centavos(saldo.add(interes).add(iva))
+            val seguro = centavos(valorAsegurable.multiply(factor, MC).divide(BD_1000, MC))
+            InsuranceAmortizationRow(mes, saldo, interes, iva, capital, saldoFinal, valorAsegurable, seguro)
+                .also { saldo = saldoFinal }
+        }
+
+        fun suma(filas: List<InsuranceAmortizationRow>) =
+            filas.sumOf { it.monthlyInsurance }.setScale(2, RoundingMode.HALF_UP)
+
+        return InsuranceSchedule(rows, suma(rows.take(12)), suma(rows))
+    }
+
+    private val MC = MathContext(34, RoundingMode.HALF_UP)
+    private val BD_100 = BigDecimal("100")
+    private val BD_1000 = BigDecimal("1000")
+    private val IVA = BigDecimal("0.16")
+    private val UNO_MAS_IVA = BigDecimal("1.16")
 }

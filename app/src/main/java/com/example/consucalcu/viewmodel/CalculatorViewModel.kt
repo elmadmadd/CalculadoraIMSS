@@ -23,7 +23,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 import java.math.MathContext
-import java.math.RoundingMode
 
 // =================================================================================================
 // 10. VIEWMODEL STATE
@@ -712,7 +711,6 @@ CAT: ${o.cat}
             delay(800)
 
             val result = withContext(Dispatchers.Default) {
-                val provider = current.insProvider
                 val term = current.insTerm
 
                 val tipoPension = when(current.insPensionType) {
@@ -728,7 +726,7 @@ CAT: ${o.cat}
                 }
 
                 val dictamenResult = NormativaIMSS.evaluarDictamenSeguro(
-                    producto = provider,
+                    producto = productKey,
                     montoSolicitado = amount.toDouble(),
                     plazo = term,
                     sexo = current.insGender,
@@ -787,83 +785,10 @@ CAT: ${o.cat}
                 )
                 val pagoMensual = calcRes.first.payment
 
-                val tasaMensualBD = BigDecimal(dictamenResult.tasaMensual.toString())
-                val factorSeguroBD = BigDecimal(dictamenResult.factorSeguro.toString())
-
-                var saldoInicial = amount
-                var totalSeguroAcum = BigDecimal.ZERO
-                val rows = mutableListOf<InsuranceAmortizationRow>()
-
-                for (m in 1..term) {
-                    val interes = saldoInicial.multiply(tasaMensualBD).divide(BigDecimal("100"), 2, RoundingMode.HALF_UP)
-                    val iva = interes.multiply(BigDecimal("0.16")).setScale(2, RoundingMode.HALF_UP)
-                    val capital = pagoMensual.subtract(interes).subtract(iva)
-
-                    val adjustedCapital = if (m == term) saldoInicial else capital
-                    val finalBalance = if (m == term) BD_ZERO else saldoInicial.subtract(adjustedCapital)
-
-                    val valorAsegurable = saldoInicial.add(interes).add(iva)
-                    val seguroMensualRaw = valorAsegurable.multiply(factorSeguroBD).divide(BigDecimal("1000"))
-                    val seguroMensualRounded = seguroMensualRaw.setScale(2, RoundingMode.HALF_UP)
-
-                    if (dictamenResult.tipoSeguro == "PRIMER_ANIO" && m <= 12) {
-                        totalSeguroAcum = totalSeguroAcum.add(seguroMensualRaw)
-                    } else if (dictamenResult.tipoSeguro == "PLAZO_COMPLETO") {
-                        totalSeguroAcum = totalSeguroAcum.add(seguroMensualRaw)
-                    }
-
-                    rows.add(
-                        InsuranceAmortizationRow(
-                            month = m,
-                            initialBalance = saldoInicial,
-                            interest = interes,
-                            iva = iva,
-                            principal = adjustedCapital,
-                            finalBalance = finalBalance,
-                            insurableValue = valorAsegurable,
-                            monthlyInsurance = seguroMensualRounded
-                        )
-                    )
-
-                    saldoInicial = finalBalance
-                }
-
-                var cost1Year = if (dictamenResult.tipoSeguro == "PRIMER_ANIO") totalSeguroAcum.setScale(2, RoundingMode.HALF_UP) else BD_ZERO
-                var costTotal = if (dictamenResult.tipoSeguro == "PLAZO_COMPLETO") totalSeguroAcum.setScale(2, RoundingMode.HALF_UP) else BD_ZERO
-
-                // --- AJUSTE: Sobreescribir con factores estáticos extraídos de los Excel para match exacto ---
-                val provCleanUpper = provider.uppercase().trim()
-                val staticFactorsKey = when {
-                    provCleanUpper.startsWith("CSB") && provCleanUpper.contains("VIP") -> "CSB_VIP"
-                    provCleanUpper.startsWith("CSB") && provCleanUpper.contains("ESP") -> "CSB_ESP"
-                    provCleanUpper.startsWith("CSB") -> "CSB"
-                    provCleanUpper == "OPC MAX" -> "OPC_MAX"
-                    provCleanUpper == "OPC ESP" -> "OPC_ESP"
-                    provCleanUpper.startsWith("OPC") -> "OPC"
-                    else -> null
-                }
-
-                if (staticFactorsKey != null) {
-                    val staticFactorsMap = FinancialConfig.INSURANCE_FACTORS[staticFactorsKey]
-
-                    val staticPair = staticFactorsMap?.get(term)
-
-                    if (staticPair != null) {
-                        if (dictamenResult.tipoSeguro == "PRIMER_ANIO") {
-                            cost1Year = amount.multiply(staticPair.first).setScale(2, RoundingMode.HALF_UP)
-                        } else if (dictamenResult.tipoSeguro == "PLAZO_COMPLETO") {
-                            costTotal = amount.multiply(staticPair.second).setScale(2, RoundingMode.HALF_UP)
-                        }
-                    }
-                }
-
-                // Fine-tune matching for CSB 54 months to align with Excel's 1-cent rounding difference
-                if (provCleanUpper.startsWith("CSB") && term == 54 && costTotal.compareTo(BigDecimal("12258.51")) == 0) {
-                    costTotal = BigDecimal("12258.52")
-                }
-                if (provCleanUpper.startsWith("CSB") && term == 48 && costTotal.compareTo(BigDecimal("10733.59")) == 0) {
-                    costTotal = BigDecimal("10733.60")
-                }
+                val schedule = NormativaIMSS.calcularTablaSeguro(productKey, amount, term)
+                val rows = schedule.rows
+                val cost1Year = if (dictamenResult.tipoSeguro == "PRIMER_ANIO") schedule.firstYearCost else BD_ZERO
+                val costTotal = if (dictamenResult.tipoSeguro == "PLAZO_COMPLETO") schedule.fullTermCost else BD_ZERO
 
                 val seguroText = if (dictamenResult.tipoSeguro == "PRIMER_ANIO") "1 AÑO" else "PLAZO COMPLETO"
                 val displayTotal = if (dictamenResult.tipoSeguro == "PRIMER_ANIO") cost1Year else costTotal

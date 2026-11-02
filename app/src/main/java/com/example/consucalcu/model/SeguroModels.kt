@@ -19,6 +19,12 @@ data class InsuranceAmortizationRow(
     val monthlyInsurance: BigDecimal
 )
 
+data class InsuranceSchedule(
+    val rows: List<InsuranceAmortizationRow>,
+    val firstYearCost: BigDecimal,
+    val fullTermCost: BigDecimal
+)
+
 data class InsuranceDictamenResult(
     val aprobado: Boolean,
     val producto: String,

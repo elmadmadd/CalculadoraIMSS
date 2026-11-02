@@ -248,36 +248,4 @@ object FinancialConfig {
             AGREEMENTS.getValue(AGREEMENT_IMSS)
         }
     }
-
-    val INSURANCE_FACTORS = mapOf(
-        "CSB" to mapOf(
-            12 to Pair(BigDecimal("0.01242424"), BigDecimal("0.01242424")),
-            24 to Pair(BigDecimal("0.01791518"), BigDecimal("0.02524355")),
-            36 to Pair(BigDecimal("0.01957399"), BigDecimal("0.03893088")),
-            48 to Pair(BigDecimal("0.02036369"), BigDecimal("0.05366801")),
-            54 to Pair(BigDecimal("0.02060137"), BigDecimal("0.06129260")),
-            60 to Pair(BigDecimal("0.02080281"), BigDecimal("0.06932477"))
-        ),
-        "CSB_VIP" to mapOf(
-            60 to Pair(BigDecimal("0.02056227"), BigDecimal("0.06676468"))
-        ),
-        "CSB_ESP" to mapOf(
-            60 to Pair(BigDecimal("0.02334237"), BigDecimal("0.07618676"))
-        ),
-        // OPC base conserva el esquema de seguro de CSP, que cubre los seis plazos.
-        "OPC" to mapOf(
-            12 to Pair(BigDecimal("0.01242424"), BigDecimal("0.01242424")),
-            24 to Pair(BigDecimal("0.01791518"), BigDecimal("0.02524355")),
-            36 to Pair(BigDecimal("0.01966443"), BigDecimal("0.03929658")),
-            48 to Pair(BigDecimal("0.02048595"), BigDecimal("0.05452240")),
-            54 to Pair(BigDecimal("0.02074001"), BigDecimal("0.06251714")),
-            60 to Pair(BigDecimal("0.02093617"), BigDecimal("0.07078555"))
-        ),
-        "OPC_MAX" to mapOf(
-            60 to Pair(BigDecimal("0.02346923"), BigDecimal("0.07753356"))
-        ),
-        "OPC_ESP" to mapOf(
-            60 to Pair(BigDecimal("0.02338957"), BigDecimal("0.07668513"))
-        )
-    )
 }

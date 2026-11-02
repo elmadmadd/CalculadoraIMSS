@@ -199,3 +199,20 @@ compatible en los diez cotizadores y reproduce las 39 cuotas y sus totales.
 
 Las tasas son el valor redondeado que resulta del CAT. Faltó OPC a 12 meses por
 $93,261: esa simulación llegó duplicada como CSB. Los mínimos no cambian.
+
+## Seguro de crédito — 2026-11-02
+
+Fuente: `Cálculo de Seguro CSB IMSS Pensionados V.18` y `OPC V.09` (02.11.2026).
+`NormativaIMSS.calcularTablaSeguro` replica sus 16 hojas y reproduce los cobros del
+primer año y del plazo total. Sustituye a los factores por monto
+`INSURANCE_FACTORS` y a los ajustes por centavo, que eran aproximaciones.
+
+- Factor de seguro: **1.7571** en todos los productos (ESP y MAX usaban 1.99).
+- Tasas exactas sin IVA: CSB 2.57 % (12 y 24), 2.50 % (36 y 48), 2.445 % (54 y 60);
+  CSB ESP 2.10 %; CSB VIP 1.99 %; OPC 2.6578 %; OPC ESP 2.20 %; OPC MAX 2.30 %.
+- La tabla del seguro usa su propio PMT con esas tasas. Difiere por centavos del
+  descuento del cotizador (CSB 60 meses por $30,000: $1,046.23 contra $1,046.25).
+
+Dos hojas se apartan del resto y se replican tal cual, pendientes de confirmar:
+**OPC 36 meses** redondea el PMT a pesos y **CSB 60 meses (VIP)** no redondea
+valores intermedios. Las reglas de elegibilidad y edad no están en estos archivos.
