@@ -32,7 +32,7 @@ class ExampleUnitTest {
 
         assertEquals(
             mapOf(
-                60 to BigDecimal("36.32581"),
+                60 to BigDecimal("36.7774805"),
                 54 to BigDecimal("37.89928"),
                 48 to BigDecimal("39.92836"),
                 36 to BigDecimal("46.21135"),
@@ -53,12 +53,12 @@ class ExampleUnitTest {
             opc.minTermMap
         )
         assertEquals(
-            mapOf(60 to 2.61, 54 to 2.62, 48 to 2.63, 36 to 2.64, 24 to 2.65, 12 to 2.66),
+            mapOf(60 to 2.66, 54 to 2.62, 48 to 2.63, 36 to 2.64, 24 to 2.65, 12 to 2.66),
             opc.tasaRefByTerm
         )
         assertEquals(
             mapOf(
-                60 to "42.99%", 54 to "43.19%", 48 to "43.38%",
+                60 to "43.96%", 54 to "43.19%", 48 to "43.38%",
                 36 to "43.57%", 24 to "43.77%", 12 to "43.96%"
             ),
             opc.catTradByTerm
@@ -71,7 +71,7 @@ class ExampleUnitTest {
 
         assertEquals(
             mapOf(
-                60 to BigDecimal("34.47785"),
+                60 to BigDecimal("34.8749909"),
                 54 to BigDecimal("36.27268"),
                 48 to BigDecimal("38.26465"),
                 36 to BigDecimal("45.12292"),
@@ -92,7 +92,7 @@ class ExampleUnitTest {
             csb.minTermMap
         )
         assertEquals(
-            mapOf(60 to 2.40, 54 to 2.43, 48 to 2.43, 36 to 2.50, 24 to 2.55, 12 to 2.57),
+            mapOf(60 to 2.45, 54 to 2.43, 48 to 2.43, 36 to 2.50, 24 to 2.55, 12 to 2.57),
             csb.tasaRefByTerm
         )
     }
@@ -189,7 +189,7 @@ class ExampleUnitTest {
     @Test
     fun cncaAllowsRaisingAndKeepingTheRate() {
         val raisesRate = checkCsb(debt(rate = "2.20"))
-        val keepsRate = checkCsb(debt(rate = "2.40"))
+        val keepsRate = checkCsb(debt(rate = "2.45"))
 
         assertTrue(raisesRate.first)
         assertEquals(listOf("Sube tasa"), raisesRate.second)
@@ -199,8 +199,8 @@ class ExampleUnitTest {
 
     @Test
     fun cncaAllowsADecreaseOfAtMostTwentyFiveBasisPoints() {
-        val atLimit = checkCsb(debt(rate = "2.65"))
-        val overLimit = checkCsb(debt(rate = "2.651"))
+        val atLimit = checkCsb(debt(rate = "2.70"))
+        val overLimit = checkCsb(debt(rate = "2.701"))
 
         assertTrue(atLimit.first)
         assertEquals(listOf("Baja la tasa hasta 25 pb"), atLimit.second)
@@ -209,9 +209,9 @@ class ExampleUnitTest {
 
     @Test
     fun cncaAllowsUpToFiftyBasisPointsWhenTermIncreasesBySixMonths() {
-        val sixMoreMonths = checkCsb(debt(rate = "2.90", originalTerm = "54"), offerTerm = 60)
-        val onlyFiveMoreMonths = checkCsb(debt(rate = "2.90", originalTerm = "55"), offerTerm = 60)
-        val moreThanFiftyPoints = checkCsb(debt(rate = "2.901", originalTerm = "54"), offerTerm = 60)
+        val sixMoreMonths = checkCsb(debt(rate = "2.95", originalTerm = "54"), offerTerm = 60)
+        val onlyFiveMoreMonths = checkCsb(debt(rate = "2.95", originalTerm = "55"), offerTerm = 60)
+        val moreThanFiftyPoints = checkCsb(debt(rate = "2.951", originalTerm = "54"), offerTerm = 60)
 
         assertTrue(sixMoreMonths.first)
         assertEquals(

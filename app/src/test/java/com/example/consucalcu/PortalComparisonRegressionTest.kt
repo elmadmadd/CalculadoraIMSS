@@ -11,29 +11,32 @@ import java.math.RoundingMode
 
 class PortalComparisonRegressionTest {
     @Test
-    fun baseProductsMatchUserPaymentsAndTotalsAtSixtyMonths() {
-        // qwdqdssdas.pdf (2026-09-08), también corroborado por los JSON
-        // de $40,000 y $205,000. Identificación por CAT, no solo por marca.
-        val amounts = listOf("254600", "30000", "40000", "205000")
+    fun baseProductsMatchOfficialSimulationsAtSixtyMonths() {
+        // Simulaciones oficiales 2026-11-02: monto, descuento y total a 60 meses.
+        // CSB (Consubanco) con CAT 39.88 % y OPC (Opcipres) con CAT 43.96 %.
         val cases = mapOf(
-            "OPC" to listOf(
-                "9248.55" to "554913.00", "1089.77" to "65386.20",
-                "1453.03" to "87181.80", "7446.79" to "446807.40"
-            ),
             "CSB" to listOf(
-                "8778.06" to "526683.60", "1034.34" to "62060.40",
-                "1379.11" to "82746.60", "7067.96" to "424077.60"
+                Triple("100000", "3487.50", "209250.00"),
+                Triple("199999", "6974.96", "418497.60"),
+                Triple("233333", "8137.49", "488249.40"),
+                Triple("277751", "9686.56", "581193.60"),
+                Triple("296254", "10331.86", "619911.60")
+            ),
+            "OPC" to listOf(
+                Triple("100000", "3677.75", "220665.00"),
+                Triple("199999", "7355.46", "441327.60"),
+                Triple("233333", "8581.40", "514884.00"),
+                Triple("277751", "10214.98", "612898.80"),
+                Triple("296254", "10895.48", "653728.80")
             )
         )
-        cases.forEach { (product, expected) ->
-            amounts.zip(expected).forEach { (amount, reference) ->
+        cases.forEach { (product, rows) ->
+            rows.forEach { (amount, payment, total) ->
                 val result = FinancialEngine.calculate(
                     product, BigDecimal(amount), 60, true, false, BigDecimal.ZERO
-                )
-                assertNotNull("$product: $amount", result)
-                val payment = result!!.first.payment
-                assertEquals("Cuota $product: $amount", BigDecimal(reference.first), payment)
-                assertEquals("Total $product: $amount", BigDecimal(reference.second), payment * BigDecimal("60"))
+                )!!
+                assertEquals("Cuota $product: $amount", BigDecimal(payment), result.first.payment)
+                assertEquals("Total $product: $amount", BigDecimal(total), result.first.payment * BigDecimal("60"))
             }
         }
     }
@@ -172,6 +175,7 @@ class PortalComparisonRegressionTest {
     fun opcEspNewCatMapsToItsMonthlyRate() {
         assertEquals(2.20, FinancialEngine.getNormalizedRate("35.31%"), 0.0)
         assertEquals(2.10, FinancialEngine.getNormalizedRate("33.48%"), 0.0)
+        assertEquals(2.45, FinancialEngine.getNormalizedRate("39.88%"), 0.0)
         assertEquals(2.30, FinancialEngine.getNormalizedRate("37.16%"), 0.0)
         // Los créditos vigentes con el CAT anterior se siguen reconociendo.
         assertEquals(2.14, FinancialEngine.getNormalizedRate("34.21"), 0.0)

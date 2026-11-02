@@ -63,20 +63,19 @@ object FinancialConfig {
     val PRODUCTS = mapOf(
         // Nueva oferta IMSS. Los factores base usan la tasa nominal anual de la
         // tabla oficial, IVA de 16 % sobre intereses y amortización fija,
-        // excepto OPC/CSB a 60 meses: calibrados con las 4 cuotas por producto
-        // de qwdqdssdas.pdf (2026-09-08), redondeo HALF_UP al centavo.
-        // Son factores compatibles con esas referencias, no tasas contractuales
-        // inferidas del CAT. Véase docs/calibracion-opc-csb-2026-09-08.md.
+        // excepto OPC/CSB a 60 meses: condiciones 2026-11-02, factores derivados
+        // del CAT y verificados con simulaciones oficiales. Los plazos menores
+        // aún no se actualizan. Véase docs/calibracion-opc-csb-2026-09-08.md.
         "OPC" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("36.32581"),
+                60 to BigDecimal("36.7774805"),
                 54 to BigDecimal("37.89928"),
                 48 to BigDecimal("39.92836"),
                 36 to BigDecimal("46.21135"),
                 24 to BigDecimal("59.50058"),
                 12 to BigDecimal("100.95868")
             ),
-            meta = ProductMeta(2.61, "42.99%", "42.99%"),
+            meta = ProductMeta(2.66, "43.96%", "43.96%"),
             minGlobal = BigDecimal("5000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(
@@ -88,11 +87,11 @@ object FinancialConfig {
                 12 to BigDecimal("25000")
             ),
             catTradByTerm = mapOf(
-                60 to "42.99%", 54 to "43.19%", 48 to "43.38%",
+                60 to "43.96%", 54 to "43.19%", 48 to "43.38%",
                 36 to "43.57%", 24 to "43.77%", 12 to "43.96%"
             ),
             tasaRefByTerm = mapOf(
-                60 to 2.61, 54 to 2.62, 48 to 2.63,
+                60 to 2.66, 54 to 2.62, 48 to 2.63,
                 36 to 2.64, 24 to 2.65, 12 to 2.66
             )
         ),
@@ -118,14 +117,14 @@ object FinancialConfig {
         ),
         "CSB" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("34.47785"),
+                60 to BigDecimal("34.8749909"),
                 54 to BigDecimal("36.27268"),
                 48 to BigDecimal("38.26465"),
                 36 to BigDecimal("45.12292"),
                 24 to BigDecimal("58.78059"),
                 12 to BigDecimal("100.34938")
             ),
-            meta = ProductMeta(2.40, "39.03%", "39.03%"),
+            meta = ProductMeta(2.45, "39.88%", "39.88%"),
             minGlobal = BigDecimal("30000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(
@@ -137,11 +136,11 @@ object FinancialConfig {
                 12 to BigDecimal("45000")
             ),
             catTradByTerm = mapOf(
-                60 to "39.03%", 54 to "39.60%", 48 to "39.60%",
+                60 to "39.88%", 54 to "39.60%", 48 to "39.60%",
                 36 to "40.92%", 24 to "41.88%", 12 to "42.26%"
             ),
             tasaRefByTerm = mapOf(
-                60 to 2.40, 54 to 2.43, 48 to 2.43,
+                60 to 2.45, 54 to 2.43, 48 to 2.43,
                 36 to 2.50, 24 to 2.55, 12 to 2.57
             )
         ),

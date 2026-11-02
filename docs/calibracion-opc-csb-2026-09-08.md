@@ -166,3 +166,19 @@ especial en OPC MAX: faltan montos altos y casos por descuento para cerrarlo.
 Confirmado por el usuario: plazo de 60 meses y mínimos de $50,000 (OPC MAX),
 $75,000 (OPC ESP), $100,000 (CSB ESP) y $150,000 (CSB VIP), sin monto máximo.
 El tope de $1,000,000 del convenio sigue aplicando solo a OPC y CSB base.
+
+## Actualización OPC y CSB base a 60 meses — 2026-11-02
+
+Diez simulaciones oficiales (cinco por producto: $100,000, $199,999, $233,333,
+$277,751 y $296,254) confirman nuevas condiciones a 60 meses. Ninguna coincidía
+con los factores anteriores.
+
+| Producto | CAT anterior | CAT nuevo | Tasa inferida | Factor nuevo | Intervalo compatible |
+| --- | ---: | ---: | ---: | ---: | --- |
+| CSB | 39.03 % | **39.88 %** | 2.45 % | **34.8749909** | [34.8749890, 34.8749959) |
+| OPC | 42.99 % | **43.96 %** | 2.66 % | **36.7774805** | [36.7774781, 36.7774914) |
+
+Los factores salen del CAT. Las tasas se redondean para mostrarlas (del CAT resultan
+2.4451 % y 2.6577 %). Los plazos de 12 a 54 meses conservan sus factores, CAT y
+tasas hasta recibir sus simulaciones. Los ocho casos base del Excel y de
+`qwdqdssdas.pdf` se retiraron; `ExcelQuoteRegressionTest` queda con 7 casos.
