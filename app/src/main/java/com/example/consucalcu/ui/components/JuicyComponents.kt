@@ -478,14 +478,6 @@ fun JuicyInput(
                             modifier = Modifier.size(12.dp)
                         )
                     }
-                } else if (isCurrency) {
-                    Text(
-                        text = "MXN",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
                 } else if (isError) {
                      Icon(
                         Icons.Rounded.Error,
@@ -964,23 +956,14 @@ fun LoanOffer.sortKey(mode: SortMode): Comparable<*> = when (mode) {
 }
 
 @Composable
-fun RollingCurrency(
+fun CurrencyText(
     value: BigDecimal,
     style: TextStyle,
     color: Color = Color.Unspecified
 ) {
-    val animatable = remember { Animatable(0f) }
-
-    LaunchedEffect(value) {
-        animatable.snapTo(0f)
-        animatable.animateTo(
-            targetValue = value.toFloat(),
-            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
-        )
-    }
-
+    // Sin animación: una captura nunca debe salir con una cifra a medio camino.
     Text(
-        text = "$${animatable.value.toBigDecimal().setScale(2, RoundingMode.HALF_UP).toCurrency()}",
+        text = "$${value.setScale(2, RoundingMode.HALF_UP).toCurrency()}",
         style = style,
         color = color
     )
@@ -1049,7 +1032,7 @@ fun GroupedResultsSection(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
                     )
                     Text(
                         text = "${visibleOffers.size} oferta${if (visibleOffers.size != 1) "s" else ""}",
@@ -1208,9 +1191,9 @@ fun GroupedResultsSection(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text       = "${brandOffers.size} opción${if (brandOffers.size != 1) "es" else ""}",
-                            fontSize   = 10.sp,
-                            color      = color.copy(alpha = 0.7f),
+                            text       = "${brandOffers.size} ${if (brandOffers.size == 1) "opción" else "opciones"}",
+                            fontSize   = 12.sp,
+                            color      = color.copy(alpha = 0.8f),
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -1288,7 +1271,7 @@ fun ResultCard(
     // El monto es la cifra principal; la mensualidad queda como dato secundario.
     val isRemnant = offer.amount > offer.mainValue
     val amountLabel = if (isRemnant) "REMANENTE" else "MONTO A RECIBIR"
-    val mutedText = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val mutedText = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
 
     Surface(
         onClick = onClick,
@@ -1425,12 +1408,12 @@ fun ResultCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = amountLabel,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = mutedText,
                         letterSpacing = 0.8.sp
                     )
-                    RollingCurrency(
+                    CurrencyText(
                         value = offer.mainValue,
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
@@ -1444,7 +1427,7 @@ fun ResultCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         "PLAZO",
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = mutedText,
                         letterSpacing = 0.8.sp
@@ -1618,7 +1601,7 @@ private fun ImssBienestarResultCard(
                     letterSpacing = 0.8.sp,
                     maxLines = 1
                 )
-                RollingCurrency(
+                CurrencyText(
                     value = offer.mainValue,
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
@@ -1755,9 +1738,8 @@ fun JuicyTermDropdown(
     Column {
         Text(
             "PLAZO",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
 
         ExposedDropdownMenuBox(

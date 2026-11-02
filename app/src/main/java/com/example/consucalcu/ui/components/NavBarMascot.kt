@@ -38,7 +38,8 @@ private const val MascotColumns = 6
 private const val MascotRows = 6
 
 /**
- * Cameo decorativo y no interactivo que cruza ocasionalmente la barra inferior.
+ * Cameo decorativo y no interactivo que cruza ocasionalmente la barra inferior,
+ * siempre dentro de ella para no tapar ofertas ni cifras.
  * Usa un atlas para mantener una sola imagen decodificada en memoria.
  */
 @Composable
@@ -111,7 +112,7 @@ fun SporadicNavBarMascot(
                     .offset {
                         IntOffset(
                             x = horizontalPosition.value.roundToInt(),
-                            y = -constraints.maxHeight / 2
+                            y = ((constraints.maxHeight - mascotSizePx) / 2).roundToInt()
                         )
                     }
                     .size(mascotSize)

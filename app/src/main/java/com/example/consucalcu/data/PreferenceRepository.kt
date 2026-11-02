@@ -83,6 +83,8 @@ class PreferenceRepository(context: Context) {
     fun getIsHapticEnabled(): Boolean = prefs.getBoolean("isHapticEnabled", true)
     // Apagado por defecto: las tarjetas suelen compartirse como captura con clientes.
     fun getShowRatesOnCards(): Boolean = prefs.getBoolean("showRatesOnCards", false)
+    fun getIsDarkTheme(default: Boolean): Boolean = prefs.getBoolean("isDarkTheme", default)
+    fun setIsDarkTheme(enabled: Boolean) = prefs.edit { putBoolean("isDarkTheme", enabled) }
 
     @Synchronized
     fun incrementSupportCalculationCount(): Int {

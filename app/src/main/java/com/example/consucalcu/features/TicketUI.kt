@@ -45,7 +45,7 @@ data class TicketData(
     val previousPayment: String,
     val savings: String,
     val paymentLabel: String = "PAGO",
-    val termDisplay: String = "$term Meses"
+    val termDisplay: String = "$term meses"
 )
 
 @Composable

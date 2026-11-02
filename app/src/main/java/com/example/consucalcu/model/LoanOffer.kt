@@ -42,8 +42,8 @@ data class LoanOffer(
 
     val termDisplay: String
         get() = if (paymentFrequency == "QUINCENAL") {
-            "$term Meses · $periodCount quincenas"
+            "$term meses · $periodCount quincenas"
         } else {
-            "$term Meses"
+            "$term meses"
         }
 }

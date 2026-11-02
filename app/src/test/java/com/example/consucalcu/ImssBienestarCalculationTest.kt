@@ -78,7 +78,7 @@ class ImssBienestarCalculationTest {
         )
 
         assertEquals("PAGO QUINCENAL", offer.paymentLabel)
-        assertEquals("48 Meses · 96 quincenas", offer.termDisplay)
+        assertEquals("48 meses · 96 quincenas", offer.termDisplay)
         assertEquals(96, table.size)
         assertEquals(BigDecimal.ZERO.setScale(2), table.last().balance)
     }

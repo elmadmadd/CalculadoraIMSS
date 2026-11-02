@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
 
             // Centralized Theme Management
             val systemDark = isSystemInDarkTheme()
-            var isDarkTheme by rememberSaveable { mutableStateOf(systemDark) }
+            var isDarkTheme by rememberSaveable { mutableStateOf(repository.getIsDarkTheme(systemDark)) }
 
             CompositionLocalProvider(
                 LocalHapticManager provides hapticManager,
@@ -137,7 +137,10 @@ class MainActivity : ComponentActivity() {
                         ConsuCalcuApp(
                             viewModel = viewModel,
                             isDark = isDarkTheme,
-                        ) { isDarkTheme = !isDarkTheme }
+                        ) {
+                            isDarkTheme = !isDarkTheme
+                            repository.setIsDarkTheme(isDarkTheme)
+                        }
                         if (showSplash) {
                             SplashScreen { showSplash = false }
                         }
@@ -157,7 +160,7 @@ enum class NavigationTab(
     // Oculta: la pantalla sigue registrada para restaurar borradores del historial.
     REFINANCE("refinance", R.string.nav_refinance, Icons.Rounded.Loop, showInNavBar = false),
     NEW_CREDIT("new_credit", R.string.nav_quotation, Icons.Rounded.AttachMoney),
-    INSURANCE("insurance", R.string.nav_simulator, Icons.Rounded.Savings),
+    INSURANCE("insurance", R.string.nav_simulator, Icons.Rounded.Shield),
     ACADEMY("academy", R.string.nav_academy, Icons.Rounded.School);
 
     companion object {
@@ -638,6 +641,8 @@ fun DynamicIslandHeader(
 
         Surface(
             color = ConsuNavy,
+            // En modo oscuro el contorno separa la isla del fondo azul marino.
+            border = if (isDark) BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)) else null,
             shape = RoundedCornerShape(cornerRadius),
             modifier = Modifier
                 .width(width)
@@ -745,7 +750,7 @@ fun DynamicIslandHeader(
                             ) {
                                 Column {
                                     Text(
-                                        text = "Ajustes de Asesor",
+                                        text = "Ajustes de asesor",
                                         color = Color.White,
                                         fontWeight = FontWeight.Black,
                                         fontSize = 16.sp
@@ -814,7 +819,7 @@ fun DynamicIslandHeader(
                                     )
                                     Spacer(Modifier.width(12.dp))
                                     Text(
-                                        text = "Historial de Cotizaciones",
+                                        text = "Historial de cotizaciones",
                                         color = Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium
@@ -841,7 +846,7 @@ fun DynamicIslandHeader(
                                     )
                                     Spacer(Modifier.width(12.dp))
                                     Text(
-                                        text = "Configuración de Convenio",
+                                        text = "Configuración de convenio",
                                         color = Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium
@@ -870,7 +875,7 @@ fun DynamicIslandHeader(
                                         )
                                         Spacer(Modifier.width(12.dp))
                                         Text(
-                                            text = "Modo Oscuro",
+                                            text = "Modo oscuro",
                                             color = Color.White,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium
@@ -906,7 +911,7 @@ fun DynamicIslandHeader(
                                         )
                                         Spacer(Modifier.width(12.dp))
                                         Text(
-                                            text = "Efectos de Sonido",
+                                            text = "Efectos de sonido",
                                             color = Color.White,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium
@@ -942,7 +947,7 @@ fun DynamicIslandHeader(
                                         )
                                         Spacer(Modifier.width(12.dp))
                                         Text(
-                                            text = "Vibración Háptica",
+                                            text = "Vibración háptica",
                                             color = Color.White,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium

@@ -110,6 +110,9 @@ data class CalculatorUiState(
 // =================================================================================================
 // 11. VIEWMODEL LOGIC
 // =================================================================================================
+// Pausa breve para que la carga se perciba; el cálculo en sí es instantáneo.
+private const val QUOTE_FEEDBACK_MS = 350L
+
 class CalculatorViewModel(private val repository: PreferenceRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(CalculatorUiState())
     val uiState = _uiState.asStateFlow()
@@ -352,7 +355,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
             }
 
             _uiState.update { it.copy(isLoading = true, offersCNCA = emptyList()) }
-            delay(1500)
+            delay(QUOTE_FEEDBACK_MS)
             val calculatedOffers = withContext(Dispatchers.Default) {
                 val capVal = current.capacityCNCA.toBD()
 
@@ -446,7 +449,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                  return@launch
             }
             _uiState.update { it.copy(isLoading = true, offersNew = emptyList()) }
-            delay(1500)
+            delay(QUOTE_FEEDBACK_MS)
             val calculatedOffers = withContext(Dispatchers.Default) {
                 val inputVal = current.newCreditInput.toBD()
                 val results = mutableListOf<LoanOffer>()
@@ -715,7 +718,7 @@ CAT: ${o.cat}
             }
 
             _uiState.update { it.copy(isLoading = true) }
-            delay(800)
+            delay(QUOTE_FEEDBACK_MS)
 
             val result = withContext(Dispatchers.Default) {
                 val term = current.insTerm

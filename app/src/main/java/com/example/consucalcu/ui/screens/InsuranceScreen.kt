@@ -67,7 +67,7 @@ fun InsuranceScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 8.dp)
+                        .padding(top = ConsuSpacing.sm)
                 ) {
                     Text(
                         text = stringResource(R.string.insurance_calculator_title),
@@ -91,13 +91,13 @@ fun InsuranceScreen(
                     color = MaterialTheme.colorScheme.surface,
                     shadowColor = MaterialTheme.colorScheme.outline
                 ) {
-                    Column(Modifier.padding(ConsuSpacing.xl)) {
+                    Column(Modifier.padding(ConsuSpacing.lg)) {
                         Text(
                             stringResource(R.string.credit_data),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(ConsuSpacing.md))
 
                         JuicyProviderDropdown(
                             selectedValue = state.insProvider,
@@ -145,7 +145,7 @@ fun InsuranceScreen(
                     color = MaterialTheme.colorScheme.surface,
                     shadowColor = MaterialTheme.colorScheme.outline
                 ) {
-                    Column(Modifier.padding(ConsuSpacing.xl).animateContentSize()) {
+                    Column(Modifier.padding(ConsuSpacing.lg).animateContentSize()) {
                         Text(
                             stringResource(R.string.client_data_header),
                             style = MaterialTheme.typography.titleMedium,
@@ -157,10 +157,9 @@ fun InsuranceScreen(
 
                         // 2. Tipo de Pensión Dropdown
                         Text(
-                            "Tipo de Pensión",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            "TIPO DE PENSIÓN",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                         )
                         Spacer(Modifier.height(8.dp))
                         var pensionExpanded by remember { mutableStateOf(false) }
