@@ -1060,7 +1060,9 @@ fun AmortizationSimulator(
             ) {
                 BoxWithConstraints {
                     val compact = maxWidth < 420.dp
-                    val totalPaid = amortizationTable.sumOf { it.payment }
+                    // La tabla ajusta el último pago para cerrar el saldo; el total
+                    // oficial es la cuota por el número de pagos.
+                    val totalPaid = offer.totalToPay
                     if (compact) {
                         Column(
                             modifier = Modifier.padding(ConsuSpacing.lg),

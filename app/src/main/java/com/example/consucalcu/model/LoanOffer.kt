@@ -36,6 +36,10 @@ data class LoanOffer(
     val periodsPerYear: Int
         get() = if (paymentFrequency == "QUINCENAL") 24 else 12
 
+    /** Total del crédito: siempre la cuota ya redondeada por el número de pagos. */
+    val totalToPay: BigDecimal
+        get() = monthlyPayment.multiply(BigDecimal(periodCount))
+
     val termDisplay: String
         get() = if (paymentFrequency == "QUINCENAL") {
             "$term Meses · $periodCount quincenas"

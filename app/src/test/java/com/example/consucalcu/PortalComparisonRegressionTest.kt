@@ -2,6 +2,7 @@ package com.example.consucalcu
 
 import com.example.consucalcu.data.FinancialConfig
 import com.example.consucalcu.features.FinancialEngine
+import com.example.consucalcu.model.LoanOffer
 import com.example.consucalcu.utils.calculateAmortizationTable
 import org.junit.Assert.*
 import org.junit.Test
@@ -70,16 +71,16 @@ class PortalComparisonRegressionTest {
 
     @Test
     fun capacityModeRespectsTheAppAmountStepAndDoesNotExceedCapacity() {
-        // La app ofrece múltiplos de $500; el PDF conserva montos con décimas.
-        mapOf("OPC MAX" to "352000", "CSB ESP" to "370000").forEach { (product, amount) ->
+        // Por descuento la app ofrece múltiplos de $100; el PDF conserva décimas.
+        mapOf("OPC MAX" to "352000", "CSB ESP" to "370200").forEach { (product, amount) ->
             val capacity = BigDecimal("11709.34")
             val result = FinancialEngine.calculate(
-                product, capacity, 60, false, false, BigDecimal("500")
+                product, capacity, 60, false, false, BigDecimal("100")
             )!!
             assertEquals(BigDecimal(amount), result.first.amount)
             assertTrue(result.first.payment <= capacity)
             val next = FinancialEngine.calculate(
-                product, result.first.amount + BigDecimal("500"), 60, true, false, BigDecimal.ZERO
+                product, result.first.amount + BigDecimal("100"), 60, true, false, BigDecimal.ZERO
             )!!
             assertTrue(next.first.payment > capacity)
         }
@@ -94,7 +95,7 @@ class PortalComparisonRegressionTest {
         assertEquals(BigDecimal("8314.31"), byAmount.first.payment)
 
         val byCapacity = FinancialEngine.calculate(
-            "OPC MAX", BigDecimal("8314.32"), 60, false, false, BigDecimal("500")
+            "OPC MAX", BigDecimal("8314.32"), 60, false, false, BigDecimal("100")
         )!!
         assertEquals(BigDecimal("250000"), byCapacity.first.amount)
         assertEquals(BigDecimal("8314.31"), byCapacity.first.payment)
@@ -102,7 +103,7 @@ class PortalComparisonRegressionTest {
 
     @Test
     fun csbVipMatchesOfficialFactorGuide() {
-        // Guía 2026-10-21: factor 0.0309541837 a 60 meses (CAT 31.5 %).
+        // Guía 2026-10-21: 13 simulaciones a 60 meses (CAT 31.5 %).
         // 13 simulaciones oficiales más el caso de $350,000 del Excel.
         mapOf(
             "170000" to "5262.21",
@@ -127,9 +128,9 @@ class PortalComparisonRegressionTest {
         }
 
         val byCapacity = FinancialEngine.calculate(
-            "CSB VIP", BigDecimal("6000"), 60, false, false, BigDecimal("500")
+            "CSB VIP", BigDecimal("6000"), 60, false, false, BigDecimal("100")
         )!!
-        assertEquals(BigDecimal("193500"), byCapacity.first.amount)
+        assertEquals(BigDecimal("193800"), byCapacity.first.amount)
         assertTrue(byCapacity.first.payment <= BigDecimal("6000"))
     }
 
@@ -198,5 +199,49 @@ class PortalComparisonRegressionTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun csbVipAndOpcEspMatchOriginPlatformMatrix() {
+        // resumen_de_motor_de_calculo.md (2026-11-02): capital, cuota y total a
+        // 60 meses. El total siempre es la cuota redondeada por 60.
+        val cases = listOf(
+            listOf("CSB VIP", "74833", "2316.39", "138983.40"),
+            listOf("CSB VIP", "123456.78", "3821.50", "229290.00"),
+            listOf("CSB VIP", "199999", "6190.81", "371448.60"),
+            listOf("OPC ESP", "15550.50", "509.09", "30545.40"),
+            listOf("OPC ESP", "88888.88", "2910.02", "174601.20"),
+            listOf("OPC ESP", "123456.78", "4041.70", "242502.00")
+        )
+        cases.forEach { (product, amount, payment, total) ->
+            val config = FinancialConfig.PRODUCTS.getValue(product)
+            val computed = BigDecimal(amount).multiply(config.factorsTrad.getValue(60))
+                .divide(BigDecimal("1000")).setScale(2, RoundingMode.HALF_UP)
+            assertEquals("Cuota $product: $amount", BigDecimal(payment), computed)
+            assertEquals("Total $product: $amount", BigDecimal(total), computed * BigDecimal("60"))
+
+            // Los capitales bajo el mínimo vigente calibran, pero no se ofrecen.
+            val result = FinancialEngine.calculate(
+                product, BigDecimal(amount), 60, true, false, BigDecimal.ZERO
+            )
+            if (BigDecimal(amount) < (config.minTermMap[60] ?: config.minGlobal)) {
+                assertNull("$product: $amount bajo el mínimo", result)
+            } else {
+                assertEquals("Motor $product: $amount", BigDecimal(payment), result!!.first.payment)
+            }
+        }
+    }
+
+    @Test
+    fun opcEspNewCatMapsToItsMonthlyRate() {
+        assertEquals(2.20, FinancialEngine.getNormalizedRate("35.31%"), 0.0)
+        // Los créditos vigentes con el CAT anterior se siguen reconociendo.
+        assertEquals(2.14, FinancialEngine.getNormalizedRate("34.21"), 0.0)
+    }
+
+    @Test
+    fun offerTotalIsRoundedPaymentTimesPeriods() {
+        val offer = LoanOffer("CSB VIP", BigDecimal("199999"), BigDecimal("6190.81"), 60)
+        assertEquals(BigDecimal("371448.60"), offer.totalToPay)
     }
 }

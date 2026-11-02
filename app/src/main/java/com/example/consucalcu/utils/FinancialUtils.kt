@@ -22,7 +22,6 @@ fun Color.blendWith(other: Color, ratio: Float = 0.5f): Color {
 }
 
 val BD_ZERO = BigDecimal.ZERO
-val BD_500 = BigDecimal("500")
 
 fun String.toBD(): BigDecimal = this.replace(",", "").replace("$", "").trim().toBigDecimalOrNull() ?: BD_ZERO
 fun Double.toBD(): BigDecimal = BigDecimal.valueOf(this)

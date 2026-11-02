@@ -87,13 +87,14 @@ class CoreFinancialSafetyTest {
     }
 
     @Test
-    fun requestedAmountMustRespectAgreementRangeAndStep() {
+    fun requestedAmountOnlyHasToBeInsideAgreementRange() {
         val imss = FinancialConfig.agreementFor(FinancialConfig.AGREEMENT_IMSS)
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("50000")))
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("12300")))
         assertTrue(imss.acceptsRequestedAmount(BigDecimal("1000000")))
-        assertFalse(imss.acceptsRequestedAmount(BigDecimal("12345")))
-        assertFalse(imss.acceptsRequestedAmount(BigDecimal("12300.50")))
+        // Montos reales de las simulaciones oficiales: el incremento no aplica.
+        assertTrue(imss.acceptsRequestedAmount(BigDecimal("233333")))
+        assertTrue(imss.acceptsRequestedAmount(BigDecimal("123456.78")))
         assertFalse(imss.acceptsRequestedAmount(BigDecimal("4900")))
         assertFalse(imss.acceptsRequestedAmount(BigDecimal("1000100")))
     }

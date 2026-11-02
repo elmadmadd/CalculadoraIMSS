@@ -88,8 +88,8 @@ referencias, cubiertas en `PortalComparisonRegressionTest`:
 
 El primer renglón de la tabla de amortización de $157,154.85 es: interés
 $3,127.12, IVA $500.34, abono a capital $1,237.14. Por capacidad, la app
-redondea el monto hacia abajo a múltiplos de $500: $6,000 da $193,500,
-no los $193,834.86 del ejemplo de la guía.
+redondea el monto hacia abajo a múltiplos de $100 (véase la regla de
+2026-11-02): $6,000 da $193,800, no los $193,834.86 del ejemplo de la guía.
 
 ## Actualización CSB ESP y OPC MAX — 2026-10-29
 
@@ -107,9 +107,37 @@ efectiva anual: `i = (1 + CAT)^(1/12) - 1` y `1000 × i / (1 - (1 + i)^-60)`.
 | OPC MAX | 36.42 % | 33.257255 | **33.2572543** | [33.2572500, 33.2572547) |
 
 Los intervalos incluyen los casos del Excel 2026-09-08, el portal y
-$250,000 → $8,314.31 de OPC MAX. Por capacidad no cambia nada: $11,709.34
-sigue dando $370,000 (CSB ESP) y $352,000 (OPC MAX).
+$250,000 → $8,314.31 de OPC MAX. Con pasos de $500, los montos por capacidad
+no cambiaron: $11,709.34 daba $370,000 (CSB ESP) y $352,000 (OPC MAX).
 
 CSB ESP por $99,999 y $89,995 sirven para calibrar, pero quedan bajo el
 mínimo vigente de $100,000 de la app, que no se modifica. El total de
 OPC MAX por $190,000 venía como $379,132; corresponde a $379,132.80.
+
+## Actualización CSB VIP y OPC ESP — 2026-11-02
+
+Fuente: `resumen_de_motor_de_c_lculo.md` (plataforma de origen, 60 meses).
+
+**OPC ESP cambia de condiciones.** Pasa de CAT 34.21 % a **CAT 35.31 %**, con
+factor **32.737765** y tasa **2.20 %** mensual sin IVA (inferida del CAT:
+`(1.3531^(1/12) - 1) / 1.16 = 2.2000 %`). Las siete cuotas de OPC ESP del Excel
+2026-09-08 no son compatibles con el factor nuevo y se retiraron de
+`ExcelQuoteRegressionTest`, que queda con 25 casos. `getNormalizedRate` reconoce
+el CAT nuevo y conserva 34.21 % para créditos vigentes. El mínimo sigue en $75,000.
+
+**CSB VIP** pasa de 30.9541837 a **30.954185**. Ambos reproducen las 3 cuotas del
+resumen, los 7 casos del Excel y las 13 simulaciones oficiales, así que los datos
+no permiten distinguirlos; difieren un centavo en 128 de los 1,701 múltiplos de
+$500 entre $150,000 y $1,000,000, por ejemplo $162,500 ($5,030.05 contra $5,030.06).
+
+El resumen describe el factor como truncado a 9 decimales. El valor exacto
+derivado del CAT truncado sería 0.030954183, que queda fuera del intervalo
+compatible; se usa 0.030954185 tal como lo publica la plataforma. Las reglas de
+`Number.EPSILON` no aplican: el motor usa BigDecimal con HALF_UP.
+
+## Incremento de monto — 2026-11-02
+
+**Por descuento**, el monto se redondea hacia abajo a múltiplos de $100 (el
+`amountStep` del convenio) sin superar el descuento capturado. **Por monto** no
+hay incremento: se acepta cualquier cantidad dentro del rango del convenio,
+con decimales. IMSS Bienestar, desactivado, conserva su incremento de $500.

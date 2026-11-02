@@ -372,7 +372,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                                 term,
                                 false,
                                 false,
-                                BD_500
+                                FinancialConfig.agreementFor(FinancialConfig.AGREEMENT_IMSS).amountStep
                             )
                             if (calcData != null) {
                                 val (res, _) = calcData
@@ -452,8 +452,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
 
                         if (isPremiumVariant) {
                             // MAX, ESP y VIP: solo 60 meses, sin fallback.
-                            val step = if (current.isByAmount) BigDecimal("100") else BigDecimal("500")
-                            val calc = FinancialEngine.calculate(prodKey, inputVal, 60, current.isByAmount, false, step)
+                            val calc = FinancialEngine.calculate(prodKey, inputVal, 60, current.isByAmount, false, selectedAgreement.amountStep)
                             if (calc != null) {
                                 val (res, _) = calc
                                 val minRequired = config.minTermMap[60] ?: config.minGlobal
@@ -478,8 +477,7 @@ class CalculatorViewModel(private val repository: PreferenceRepository) : ViewMo
                         } else {
                             // MODO TRADICIONAL: calcular todos los plazos disponibles
                             config.factorsTrad.keys.sorted().forEach { term ->
-                                val step = if (current.isByAmount) selectedAgreement.amountStep else BigDecimal("500")
-                                val calcTrad = FinancialEngine.calculate(prodKey, inputVal, term, current.isByAmount, false, step)
+                                val calcTrad = FinancialEngine.calculate(prodKey, inputVal, term, current.isByAmount, false, selectedAgreement.amountStep)
                                 if (calcTrad != null) {
                                     val (res, _) = calcTrad
                                     val minRequired = config.minTermMap[term] ?: config.minGlobal

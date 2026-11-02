@@ -38,10 +38,12 @@ object FinancialConfig {
         val isBiweekly: Boolean
             get() = paymentFrequency == PAYMENT_FREQUENCY_BIWEEKLY
 
-        /** Monto solicitado dentro del rango y en múltiplos del incremento del convenio. */
+        /**
+         * Por monto se acepta cualquier cantidad dentro del rango del convenio.
+         * [amountStep] solo aplica al calcular por descuento.
+         */
         fun acceptsRequestedAmount(amount: BigDecimal): Boolean =
-            amount >= minAmount && amount <= maxAmount &&
-                amount.remainder(amountStep).signum() == 0
+            amount >= minAmount && amount <= maxAmount
     }
 
     const val AGREEMENT_IMSS = "imss"
@@ -105,10 +107,11 @@ object FinancialConfig {
             minInc = BigDecimal("500"),
             minTermMap = mapOf(60 to BigDecimal("50000"))
         ),
-        // Hereda las condiciones financieras de OPC Especial.
+        // Condiciones 2026-11-02: CAT 35.31 %, equivalente a 2.20 % mensual sin
+        // IVA. Sustituye a CAT 34.21 %; el factor sale de la plataforma de origen.
         "OPC ESP" to ProductData(
-            factorsTrad = mapOf(60 to BigDecimal("32.22284")),
-            meta = ProductMeta(2.14, "34.21%", "34.21%"),
+            factorsTrad = mapOf(60 to BigDecimal("32.737765")),
+            meta = ProductMeta(2.20, "35.31%", "35.31%"),
             minGlobal = BigDecimal("75000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(60 to BigDecimal("75000"))
@@ -153,10 +156,10 @@ object FinancialConfig {
             minTermMap = mapOf(60 to BigDecimal("100000"))
         ),
         "CSB VIP" to ProductData(
-            // Guía oficial 2026-10-21: CAT con IVA 31.5 % como tasa efectiva
-            // anual, i = 1.315^(1/12) - 1 y anualidad a 60 meses => 0.0309541837
-            // por peso. Reproduce las cuotas del Excel 2026-09-08 y de la guía.
-            factorsTrad = mapOf(60 to BigDecimal("30.9541837")),
+            // Factor de la plataforma de origen (2026-11-02): 0.030954185 por
+            // peso, CAT 31.5 %. Reproduce el Excel 2026-09-08 y las 13
+            // simulaciones oficiales, igual que 0.0309541837 derivado del CAT.
+            factorsTrad = mapOf(60 to BigDecimal("30.954185")),
             meta = ProductMeta(1.99, "31.50%", "31.50%"),
             minGlobal = BigDecimal("150000"),
             minInc = BigDecimal("500"),
