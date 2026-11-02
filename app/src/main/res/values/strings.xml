@@ -80,14 +80,14 @@
     <string name="new_credit_title">CRÉDITO NUEVO</string>
     <string name="new_credit_subtitle">Cotizador multi-producto</string>
     <string name="quotation_data">Configura tu crédito</string>
-    <string name="by_capacity">Por capacidad</string>
+    <string name="by_capacity">Por descuento</string>
     <string name="by_amount">Por monto</string>
     <string name="how_much_needed">¿CUÁNTO NECESITAS?</string>
     <string name="how_much_can_pay">¿CUÁNTO PUEDES PAGAR?</string>
     <string name="action_quote">COTIZAR</string>
     <string name="compare_offers">COMPARAR OFERTAS</string>
     <string name="no_offers_title">Sin ofertas para ti</string>
-    <string name="no_offers_desc">Ajusta la capacidad de pago o plazo</string>
+    <string name="no_offers_desc">Ajusta el monto, el descuento o el plazo</string>
     <string name="quote_prompt_amount_title">Captura un monto para ver ofertas</string>
     <string name="quote_prompt_capacity_title">Captura un descuento para ver ofertas</string>
     <string name="quote_prompt_desc">Después toca COTIZAR</string>

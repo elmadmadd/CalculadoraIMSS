@@ -7,6 +7,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -54,7 +56,25 @@ fun NewCreditScreen(
         stringResource(R.string.how_much_can_pay)
     }
 
+    val focusManager = LocalFocusManager.current
+    val quote = {
+        focusManager.clearFocus()
+        viewModel.calculateNewCredit()
+    }
+
+    // Al terminar de cotizar, lleva al promotor a las ofertas.
+    val listState = rememberLazyListState()
+    val resultsIndex = if (agreementOptions.size > 1) 4 else 3
+    var wasLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isLoading) {
+        if (wasLoading && !state.isLoading && state.offersNew.isNotEmpty()) {
+            listState.animateScrollToItem(resultsIndex)
+        }
+        wasLoading = state.isLoading
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).imePadding(),
         // Un solo borde izquierdo para todo: 16 dp. Bloques separados por 16 dp;
         // dentro de cada bloque se usa 8, 12 o 16 dp.
@@ -223,7 +243,8 @@ fun NewCreditScreen(
                                 leadingIcon = Icons.Rounded.AttachMoney,
                                 isCurrency = true,
                                 isError = state.inputError,
-                                imeAction = ImeAction.Done
+                                imeAction = ImeAction.Done,
+                                onImeDone = quote
                             )
                         } else {
                             JuicyInput(
@@ -234,7 +255,8 @@ fun NewCreditScreen(
                                 leadingIcon = Icons.Outlined.Savings,
                                 isCurrency = true,
                                 isError = state.inputError,
-                                imeAction = ImeAction.Done
+                                imeAction = ImeAction.Done,
+                                onImeDone = quote
                             )
                         }
                     }
@@ -257,9 +279,7 @@ fun NewCreditScreen(
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(ConsuRadius.lg))
                             .background(MaterialTheme.colorScheme.primary)
-                            .bouncyClick {
-                                viewModel.calculateNewCredit()
-                            }
+                            .bouncyClick { quote() }
                     ) {
                         if (state.isLoading) {
                             CircularProgressIndicator(

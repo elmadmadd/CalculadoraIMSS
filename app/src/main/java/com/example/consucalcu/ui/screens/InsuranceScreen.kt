@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -48,12 +49,19 @@ fun InsuranceScreen(
     val haptic = LocalHapticFeedback.current
     val listState = rememberLazyListState()
 
-    // Auto-scroll cuando hay resultado
-    LaunchedEffect(state.insResultStatus) {
-        if (state.insResultStatus.isNotEmpty()) {
-            delay(500)
-            listState.animateScrollToItem(index = 5)
+    // Al terminar de calcular, lleva al promotor al resultado.
+    var wasLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isLoading) {
+        if (wasLoading && !state.isLoading && state.insResultStatus.isNotEmpty()) {
+            listState.animateScrollToItem(index = 4)
         }
+        wasLoading = state.isLoading
+    }
+
+    val focusManager = LocalFocusManager.current
+    val calculate = {
+        focusManager.clearFocus()
+        viewModel.calculateInsurance()
     }
 
     LazyColumn(
@@ -161,7 +169,7 @@ fun InsuranceScreen(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(4.dp))
                         var pensionExpanded by remember { mutableStateOf(false) }
                         val pensionTypes = listOf(
                             "Jubilación", "Vejez", "Cesantía", "Viudez", "Invalidez", "Orfandad", "Riesgo de Trabajo", "Ascendencia", "Otra"
@@ -174,9 +182,9 @@ fun InsuranceScreen(
                                 Surface(
                                     onClick = { pensionExpanded = true },
                                     modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable, true),
-                                    shape = RoundedCornerShape(ConsuRadius.md),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                                    shape = RoundedCornerShape(ConsuRadius.lg),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f))
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
@@ -223,7 +231,8 @@ fun InsuranceScreen(
                             leadingIcon = if (isAgeError) Icons.Rounded.Close else Icons.Rounded.Person,
                             isCurrency = false,
                             isError = isAgeError,
-                            imeAction = ImeAction.Next
+                            imeAction = ImeAction.Done,
+                            onImeDone = calculate
                         )
 
 
@@ -257,7 +266,7 @@ fun InsuranceScreen(
                     Box(Modifier.weight(1f)) {
                         JuicyButton(
                             text = stringResource(R.string.action_calculate),
-                            icon = Icons.Outlined.Savings,
+                            icon = Icons.Rounded.Calculate,
                             color = MaterialTheme.colorScheme.primary,
                             shadowColor = Color.Transparent,
                             textColor = MaterialTheme.colorScheme.onPrimary,
@@ -265,12 +274,12 @@ fun InsuranceScreen(
                             isLoading = state.isLoading,
                             onClick = {
                                 soundManager?.play("pop")
-                                viewModel.calculateInsurance()
+                                calculate()
                             }
                         )
                     }
                     JuicyIconButton(
-                        icon = Icons.Rounded.DeleteSweep,
+                        icon = Icons.Rounded.DeleteOutline,
                         contentDescription = "Limpiar datos del seguro",
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         shadowColor = Color.Transparent,

@@ -16,6 +16,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.CompareArrows
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -290,6 +292,7 @@ fun JuicyInput(
     placeholder: String? = null,
     maxLength: Int? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    onImeDone: (() -> Unit)? = null,
 ) {
     val smartPlaceholder = placeholder ?: when {
         isCurrency -> "Ej. 10,000"
@@ -298,7 +301,7 @@ fun JuicyInput(
         label.contains("Nombre", ignoreCase = true) -> "Juan Pérez"
         label.contains("Monto", ignoreCase = true) -> "50000"
         label.contains("Plazo", ignoreCase = true) || label.contains("Meses", ignoreCase = true) -> "60"
-        label.contains("Edad", ignoreCase = true) -> "35"
+        label.contains("Edad", ignoreCase = true) -> "Ej. 35"
         label.contains("Antigüedad", ignoreCase = true) -> "10"
         type == KeyboardType.Number || type == KeyboardType.Decimal -> "0"
         else -> "Ingresa $label"
@@ -432,6 +435,11 @@ fun JuicyInput(
                         keyboardType = if (isCurrency) KeyboardType.Decimal else type,
                         imeAction = imeAction
                     ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (onImeDone != null) onImeDone() else defaultKeyboardAction(ImeAction.Done)
+                        }
+                    ),
                     singleLine = true,
                     visualTransformation = if (isCurrency) CurrencyVisualTransformation() else visualTransformation,
                     decorationBox = { innerTextField ->
@@ -509,7 +517,13 @@ fun JuicyProviderDropdown(
         else         -> Color.Gray
     }
 
-    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "PRODUCTO",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -517,9 +531,9 @@ fun JuicyProviderDropdown(
             Surface(
                 onClick = { expanded = true },
                 modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
-                shape = RoundedCornerShape(ConsuRadius.md),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                shape = RoundedCornerShape(ConsuRadius.lg),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
@@ -1135,7 +1149,8 @@ fun GroupedResultsSection(
                     }
                     DropdownMenu(
                         expanded = sortMenuOpen,
-                        onDismissRequest = { sortMenuOpen = false }
+                        onDismissRequest = { sortMenuOpen = false },
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         SortMode.entries.forEach { mode ->
                             DropdownMenuItem(
@@ -1268,6 +1283,9 @@ fun ResultCard(
         else            -> ConsuSuccessDark
     }
 
+    // Sobre fondo oscuro el tono oscuro de la marca pierde contraste.
+    val isDarkSurface = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
     // El monto es la cifra principal; la mensualidad queda como dato secundario.
     val isRemnant = offer.amount > offer.mainValue
     val amountLabel = if (isRemnant) "REMANENTE" else "MONTO A RECIBIR"
@@ -1311,7 +1329,7 @@ fun ResultCard(
                     Text(
                         text = baseName,
                         fontWeight = FontWeight.Black,
-                        color = variantColor ?: accentColor,
+                        color = (if (isDarkSurface) premiumColor else variantColor) ?: accentColor,
                         fontSize = 15.sp,
                         letterSpacing = 0.5.sp
                     )
@@ -1454,7 +1472,7 @@ fun ResultCard(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(color = mutedText)) {
-                            append("${offer.shortPaymentLabel.lowercase().replaceFirstChar { it.uppercase() }} ")
+                            append("${offer.paymentNoun} ")
                         }
                         withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)) {
                             append("$${offer.monthlyPayment.toCurrency()}")
@@ -1739,7 +1757,8 @@ fun JuicyTermDropdown(
         Text(
             "PLAZO",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            modifier = Modifier.padding(bottom = 4.dp)
         )
 
         ExposedDropdownMenuBox(
@@ -1747,7 +1766,7 @@ fun JuicyTermDropdown(
             onExpandedChange = { expanded = !expanded }
         ) {
             OutlinedTextField(
-                value = "$selectedValue Meses",
+                value = "$selectedValue meses",
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -1764,10 +1783,10 @@ fun JuicyTermDropdown(
                     Icon(Icons.Rounded.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary)
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(ConsuRadius.md),
+                shape = RoundedCornerShape(ConsuRadius.lg),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
                 )
             )
 
@@ -1780,7 +1799,7 @@ fun JuicyTermDropdown(
                     DropdownMenuItem(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("$term Meses", fontWeight = FontWeight.SemiBold)
+                                Text("$term meses", fontWeight = FontWeight.SemiBold)
                                 Spacer(Modifier.weight(1f))
                                 val widthFraction = term / 60f
                                 Box(

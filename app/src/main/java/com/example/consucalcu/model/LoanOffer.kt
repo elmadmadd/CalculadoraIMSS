@@ -27,6 +27,9 @@ data class LoanOffer(
     val shortPaymentLabel: String
         get() = if (paymentFrequency == "QUINCENAL") "QUINCENAL" else "MENSUAL"
 
+    val paymentNoun: String
+        get() = if (paymentFrequency == "QUINCENAL") "Quincenal" else "Mensual"
+
     val periodLabel: String
         get() = if (paymentFrequency == "QUINCENAL") "Quincenas" else "Meses"
 

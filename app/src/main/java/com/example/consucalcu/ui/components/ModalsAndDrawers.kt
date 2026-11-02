@@ -377,6 +377,7 @@ fun OfferPreviewModal(
     val state by viewModel.uiState.collectAsState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
@@ -421,13 +422,15 @@ fun OfferPreviewModal(
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center
                 )
-                Text(
-                    text = offer.tipoTasa,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center
-                )
+                if (state.showRatesOnCards) {
+                    Text(
+                        text = offer.tipoTasa,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center
+                    )
+                }
                 if (offer.agreementLabel.isNotBlank()) {
                     Text(
                         text = offer.agreementLabel,
@@ -540,14 +543,16 @@ fun OfferPreviewModal(
                             value = offer.termDisplay,
                             valueColor = MaterialTheme.colorScheme.onSurface
                         )
-                        DashedDivider()
+                        if (state.showRatesOnCards) {
+                            DashedDivider()
 
-                        DetailRow(
-                            icon = Icons.AutoMirrored.Rounded.TrendingDown,
-                            label = "CAT",
-                            value = offer.cat,
-                            valueColor = MaterialTheme.colorScheme.onSurface
-                        )
+                            DetailRow(
+                                icon = Icons.AutoMirrored.Rounded.TrendingDown,
+                                label = "CAT",
+                                value = offer.cat,
+                                valueColor = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
 
@@ -882,6 +887,7 @@ fun OffersComparator(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -991,7 +997,7 @@ private fun ComparatorOfferRow(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(ConsuSpacing.sm)) {
                     ComparatorMetric("Monto", "$${offer.amount.toCurrency()}", Modifier.weight(1f))
-                    ComparatorMetric(offer.shortPaymentLabel, "$${offer.monthlyPayment.toCurrency()}", Modifier.weight(1f))
+                    ComparatorMetric(offer.paymentNoun, "$${offer.monthlyPayment.toCurrency()}", Modifier.weight(1f))
                 }
                 ComparatorMetric("Plazo", offer.termDisplay, Modifier.fillMaxWidth())
             }
@@ -1033,6 +1039,7 @@ fun AmortizationSimulator(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
@@ -1068,18 +1075,18 @@ fun AmortizationSimulator(
                             modifier = Modifier.padding(ConsuSpacing.lg),
                             verticalArrangement = Arrangement.spacedBy(ConsuSpacing.sm),
                         ) {
-                            AmortizationSummaryMetric("Monto", "$${offer.amount.toCurrency()}", MaterialTheme.colorScheme.primary)
-                            AmortizationSummaryMetric(offer.shortPaymentLabel, "$${offer.monthlyPayment.toCurrency()}", ConsuSuccess)
-                            AmortizationSummaryMetric("Total a pagar", "$${totalPaid.toCurrency()}", MaterialTheme.colorScheme.secondary)
+                            AmortizationSummaryMetric("Monto", "$${offer.amount.toCurrency()}", MaterialTheme.colorScheme.onSurface)
+                            AmortizationSummaryMetric(offer.paymentNoun, "$${offer.monthlyPayment.toCurrency()}", MaterialTheme.colorScheme.onSurface)
+                            AmortizationSummaryMetric("Total a pagar", "$${totalPaid.toCurrency()}", MaterialTheme.colorScheme.onSurface)
                         }
                     } else {
                         Row(
                             modifier = Modifier.padding(ConsuSpacing.lg),
                             horizontalArrangement = Arrangement.SpaceAround,
                         ) {
-                            AmortizationSummaryMetric("Monto", "$${offer.amount.toCurrency()}", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                            AmortizationSummaryMetric(offer.shortPaymentLabel, "$${offer.monthlyPayment.toCurrency()}", ConsuSuccess, Modifier.weight(1f))
-                            AmortizationSummaryMetric("Total a pagar", "$${totalPaid.toCurrency()}", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+                            AmortizationSummaryMetric("Monto", "$${offer.amount.toCurrency()}", MaterialTheme.colorScheme.onSurface, Modifier.weight(1f))
+                            AmortizationSummaryMetric(offer.paymentNoun, "$${offer.monthlyPayment.toCurrency()}", MaterialTheme.colorScheme.onSurface, Modifier.weight(1f))
+                            AmortizationSummaryMetric("Total a pagar", "$${totalPaid.toCurrency()}", MaterialTheme.colorScheme.onSurface, Modifier.weight(1f))
                         }
                     }
                 }
@@ -1130,7 +1137,7 @@ private fun AmortizationSummaryMetric(
     valueColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = modifier) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
