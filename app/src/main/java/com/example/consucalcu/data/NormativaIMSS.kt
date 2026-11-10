@@ -116,7 +116,7 @@ object NormativaIMSS {
         }
 
         // Paso 4: Tasa de Interés Mensual
-        val tasaMensual = getTasaMensual(producto, plazo)
+        val tasaMensual = getTasaMensual(producto, plazo, tipoPension == TipoPension.JUBILACION)
 
         // Paso 5: Factor de Seguro
         val factorSeguro = getFactorSeguro(producto)
@@ -133,15 +133,23 @@ object NormativaIMSS {
         )
     }
 
-    // Cálculo de Seguro CSB V.18 y OPC V.09 (02.11.2026). Tasas sin IVA exactas:
-    // la tasa de la tarjeta es este valor redondeado.
-    fun getTasaMensual(producto: String, plazo: Int): Double {
+    // Cálculo de Seguro CSB V.18 (02.11.2026) y OPC V.10 (09.11.2026). Tasas sin IVA
+    // exactas: la tasa de la tarjeta es este valor redondeado. OPC tiene hojas aparte
+    // para Jubilados («_Jub»); CSB usa las mismas tasas para todos.
+    fun getTasaMensual(producto: String, plazo: Int, jubilado: Boolean = false): Double {
         val prodClean = producto.uppercase().trim()
         return when {
             prodClean == "OPC MAX" -> 2.30
             prodClean == "OPC ESP" -> 2.20
+            prodClean == "OPC" && jubilado -> when (plazo) {
+                12 -> 2.641
+                24, 36 -> 2.606
+                48, 54 -> 2.633
+                60 -> 2.62
+                else -> Double.NaN
+            }
             prodClean == "OPC" -> when (plazo) {
-                12, 24, 36, 48, 54, 60 -> 2.6578
+                12, 24, 36, 48, 54, 60 -> 2.641
                 else -> Double.NaN
             }
             prodClean == "CSB VIP" -> 1.99
@@ -155,6 +163,21 @@ object NormativaIMSS {
             else -> Double.NaN
         }
     }
+
+    private val PRODUCTOS_ESPECIALES = setOf("OPC MAX", "OPC ESP", "CSB ESP", "CSB VIP")
+
+    /**
+     * Plazos con hoja de seguro. Los especiales suman 54 meses por el Excel de
+     * Retención V.1 (09.11.2026): solo para cotizar el seguro, no el descuento.
+     */
+    fun plazosSeguro(producto: String): List<Int> = when (producto.uppercase().trim()) {
+        in PRODUCTOS_ESPECIALES -> listOf(54, 60)
+        "OPC", "CSB" -> listOf(12, 24, 36, 48, 54, 60)
+        else -> emptyList()
+    }
+
+    fun esRetencion(producto: String, plazo: Int): Boolean =
+        producto.uppercase().trim() in PRODUCTOS_ESPECIALES && plazo == 54
 
     fun getFactorSeguro(producto: String): Double {
         val prodClean = producto.uppercase().trim()
@@ -170,16 +193,22 @@ object NormativaIMSS {
      * Usa su propio PMT, que no es el descuento del cotizador.
      *
      * Dos hojas se apartan del resto y se replican tal cual: OPC a 36 meses redondea
-     * el PMT a pesos, y CSB VIP no redondea ningún valor intermedio.
+     * el PMT a pesos, y CSB VIP a 60 meses (CSB V.18) no redondea ningún valor
+     * intermedio. La hoja VIP de Retención a 54 meses sí redondea.
      */
-    fun calcularTablaSeguro(producto: String, monto: BigDecimal, plazo: Int): InsuranceSchedule {
+    fun calcularTablaSeguro(
+        producto: String,
+        monto: BigDecimal,
+        plazo: Int,
+        jubilado: Boolean = false
+    ): InsuranceSchedule {
         val prodClean = producto.uppercase().trim()
-        val sinRedondeo = prodClean == "CSB VIP"
+        val sinRedondeo = prodClean == "CSB VIP" && plazo == 60
         val centavos: (BigDecimal) -> BigDecimal = { valor ->
             if (sinRedondeo) valor.round(MC) else valor.setScale(2, RoundingMode.HALF_UP)
         }
 
-        val tasa = BigDecimal(getTasaMensual(producto, plazo).toString()).divide(BD_100, MC)
+        val tasa = BigDecimal(getTasaMensual(producto, plazo, jubilado).toString()).divide(BD_100, MC)
         val factor = BigDecimal(getFactorSeguro(producto).toString())
         val tasaConIva = tasa.multiply(UNO_MAS_IVA, MC)
         val descuento = BigDecimal.ONE.subtract(
@@ -208,7 +237,7 @@ object NormativaIMSS {
         fun suma(filas: List<InsuranceAmortizationRow>) =
             filas.sumOf { it.monthlyInsurance }.setScale(2, RoundingMode.HALF_UP)
 
-        return InsuranceSchedule(rows, suma(rows.take(12)), suma(rows))
+        return InsuranceSchedule(pmt, rows, suma(rows.take(12)), suma(rows))
     }
 
     private val MC = MathContext(34, RoundingMode.HALF_UP)

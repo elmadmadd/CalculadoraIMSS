@@ -618,7 +618,7 @@ CAT: ${o.cat}
     }
 
     fun updateInsProvider(provider: String) {
-        val validTerms = FinancialConfig.PRODUCTS[provider]?.factorsTrad?.keys.orEmpty()
+        val validTerms = NormativaIMSS.plazosSeguro(provider)
         _uiState.update {
             it.copy(
                 insProvider = provider,
@@ -676,12 +676,12 @@ CAT: ${o.cat}
             }
 
             val productKey = FinancialEngine.resolveProductKey(current.insProvider)
-            if (productKey == null || !FinancialEngine.hasValidFactor(productKey, current.insTerm, current.useRetention)) {
+            if (productKey == null || current.insTerm !in NormativaIMSS.plazosSeguro(productKey)) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         inputError = true,
-                        insResultStatus = "RECHAZADO: El producto no tiene un factor de cálculo para ${current.insTerm} meses.",
+                        insResultStatus = "RECHAZADO: El producto no tiene seguro a ${current.insTerm} meses.",
                         insResultColor = ErrorRed,
                         insCost1Year = BD_ZERO,
                         insCostTotal = BD_ZERO,
@@ -773,29 +773,23 @@ CAT: ${o.cat}
                     )
                 }
 
-                // Si está aprobado: calcular amortización
-                // Never synthesize a zero payment when a factor is absent. The selected product
-                // and term were checked above, but calculate remains the source of truth.
-                val calcRes = FinancialEngine.calculate(
+                // Si está aprobado: calcular la tabla del seguro con la hoja del Excel.
+                val schedule = NormativaIMSS.calcularTablaSeguro(
+                    productKey,
+                    amount,
+                    term,
+                    jubilado = tipoPension == TipoPension.JUBILACION
+                )
+                // Retención a 54 meses no tiene factor de cotización: se muestra el pago
+                // de la hoja del seguro.
+                val pagoMensual = FinancialEngine.calculate(
                     productKey,
                     amount,
                     term,
                     true,
                     current.useRetention,
                     BD_ZERO
-                ) ?: return@withContext InsCalcResult(
-                    approved = false,
-                    status = "RECHAZADO\nNo existe un factor válido para el producto y plazo seleccionados.",
-                    color = ErrorRed,
-                    cost1Year = BD_ZERO,
-                    costTotal = BD_ZERO,
-                    monthlyPayment = BD_ZERO,
-                    table = emptyList(),
-                    jsonStr = ""
-                )
-                val pagoMensual = calcRes.first.payment
-
-                val schedule = NormativaIMSS.calcularTablaSeguro(productKey, amount, term)
+                )?.first?.payment ?: schedule.payment
                 val rows = schedule.rows
                 val cost1Year = if (dictamenResult.tipoSeguro == "PRIMER_ANIO") schedule.firstYearCost else BD_ZERO
                 val costTotal = if (dictamenResult.tipoSeguro == "PLAZO_COMPLETO") schedule.fullTermCost else BD_ZERO

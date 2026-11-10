@@ -35,6 +35,7 @@ import com.example.consucalcu.R
 import com.example.consucalcu.*
 import com.example.consucalcu.model.*
 import com.example.consucalcu.data.FinancialConfig
+import com.example.consucalcu.data.NormativaIMSS
 import com.example.consucalcu.ui.components.*
 import com.example.consucalcu.viewmodel.*
 import kotlinx.coroutines.delay
@@ -119,11 +120,14 @@ fun InsuranceScreen(
 
                         JuicyTermDropdown(
                             selectedValue = state.insTerm,
-                            options = FinancialConfig.PRODUCTS[state.insProvider]
-                                ?.factorsTrad
-                                ?.keys
-                                ?.sorted()
-                                .orEmpty(),
+                            options = NormativaIMSS.plazosSeguro(state.insProvider),
+                            labelFor = { term ->
+                                if (NormativaIMSS.esRetencion(state.insProvider, term)) {
+                                    "$term meses · Retención"
+                                } else {
+                                    "$term meses"
+                                }
+                            },
                             onSelectionChange = {
                                 viewModel.updateInsTerm(it)
                                 soundManager?.play("pop")

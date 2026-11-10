@@ -235,3 +235,23 @@ cinco por plazo, coinciden al centavo con el factor que sale del CAT:
 Se guardan con 8 decimales: a 24 y 12 meses el valor redondeado a 7 queda fuera del
 intervalo compatible (a 12 meses el intervalo mide 0.0000002). OPC MAX, OPC ESP y la
 tasa del seguro de OPC (2.6578 % en el Excel V.09) no se modificaron.
+
+## Seguro de OPC y Jubilados — 2026-11-09
+
+Fuente: `Cálculo de Seguro OPC IMSS Pensionados & Jubilados V.10 (09.11.2026)`. El
+Excel CSB V.18 recibido otra vez es idéntico al aplicado el 02.11.2026.
+
+- OPC Pensionados: tasa **2.641 %** en todos los plazos (antes 2.6578 %).
+- OPC Jubilados (hojas «_Jub»): **2.641 %** a 12, **2.606 %** a 24 y 36, **2.633 %** a
+  48 y 54 y **2.62 %** a 60 meses. La app las usa cuando el tipo de pensión es
+  Jubilación. CSB no tiene hojas de Jubilados.
+- OPC MAX (2.30 %) y OPC ESP (2.20 %) no cambian. OPC a 36 meses sigue redondeando
+  el pago a pesos, también en la hoja de Jubilados.
+
+El Excel `CSB - OPC Retención V.1 (09.11.2026)` agrega seguro a **54 meses** para
+CSB ESP, CSB VIP, OPC MAX y OPC ESP con las mismas tasas que a 60 meses; sus ocho
+hojas se reproducen con la misma fórmula. Se aplica **solo para cotizar el seguro**:
+la pantalla de Seguro ofrece «54 meses · Retención» en los cuatro especiales y muestra
+el pago de la hoja, porque el cotizador de descuentos no tiene esos productos a 54
+meses. Su hoja VIP a 60 meses sí redondea los valores intermedios, a diferencia de la
+hoja VIP de CSB V.18; a 60 meses la app sigue usando CSB V.18.

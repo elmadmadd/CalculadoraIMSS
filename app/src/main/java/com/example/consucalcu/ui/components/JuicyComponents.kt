@@ -1749,6 +1749,7 @@ private fun BienestarMetric(
 fun JuicyTermDropdown(
     selectedValue: Int,
     options: List<Int> = listOf(12, 18, 24, 36, 48, 54, 60),
+    labelFor: (Int) -> String = { "$it meses" },
     onSelectionChange: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -1766,7 +1767,7 @@ fun JuicyTermDropdown(
             onExpandedChange = { expanded = !expanded }
         ) {
             OutlinedTextField(
-                value = "$selectedValue meses",
+                value = labelFor(selectedValue),
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -1799,7 +1800,7 @@ fun JuicyTermDropdown(
                     DropdownMenuItem(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("$term meses", fontWeight = FontWeight.SemiBold)
+                                Text(labelFor(term), fontWeight = FontWeight.SemiBold)
                                 Spacer(Modifier.weight(1f))
                                 val widthFraction = term / 60f
                                 Box(

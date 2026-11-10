@@ -20,6 +20,8 @@ data class InsuranceAmortizationRow(
 )
 
 data class InsuranceSchedule(
+    /** Pago de la hoja del seguro; no es el descuento del cotizador. */
+    val payment: BigDecimal,
     val rows: List<InsuranceAmortizationRow>,
     val firstYearCost: BigDecimal,
     val fullTermCost: BigDecimal
