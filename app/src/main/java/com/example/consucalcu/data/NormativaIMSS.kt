@@ -116,7 +116,7 @@ object NormativaIMSS {
         }
 
         // Paso 4: Tasa de Interés Mensual
-        val tasaMensual = getTasaMensual(producto, plazo, tipoPension == TipoPension.JUBILACION)
+        val tasaMensual = getTasaMensual(producto, plazo)
 
         // Paso 5: Factor de Seguro
         val factorSeguro = getFactorSeguro(producto)
@@ -133,21 +133,13 @@ object NormativaIMSS {
         )
     }
 
-    // Cálculo de Seguro CSB V.18 (02.11.2026) y OPC V.10 (09.11.2026). Tasas sin IVA
-    // exactas: la tasa de la tarjeta es este valor redondeado. OPC tiene hojas aparte
-    // para Jubilados («_Jub»); CSB usa las mismas tasas para todos.
-    fun getTasaMensual(producto: String, plazo: Int, jubilado: Boolean = false): Double {
+    // Cálculo de Seguro CSB V.18 (02.11.2026) y OPC V.10 (09.11.2026), hojas de IMSS
+    // Pensionados. Tasas sin IVA exactas: la tasa de la tarjeta es este valor redondeado.
+    fun getTasaMensual(producto: String, plazo: Int): Double {
         val prodClean = producto.uppercase().trim()
         return when {
             prodClean == "OPC MAX" -> 2.30
             prodClean == "OPC ESP" -> 2.20
-            prodClean == "OPC" && jubilado -> when (plazo) {
-                12 -> 2.641
-                24, 36 -> 2.606
-                48, 54 -> 2.633
-                60 -> 2.62
-                else -> Double.NaN
-            }
             prodClean == "OPC" -> when (plazo) {
                 12, 24, 36, 48, 54, 60 -> 2.641
                 else -> Double.NaN
@@ -196,19 +188,14 @@ object NormativaIMSS {
      * el PMT a pesos, y CSB VIP a 60 meses (CSB V.18) no redondea ningún valor
      * intermedio. La hoja VIP de Retención a 54 meses sí redondea.
      */
-    fun calcularTablaSeguro(
-        producto: String,
-        monto: BigDecimal,
-        plazo: Int,
-        jubilado: Boolean = false
-    ): InsuranceSchedule {
+    fun calcularTablaSeguro(producto: String, monto: BigDecimal, plazo: Int): InsuranceSchedule {
         val prodClean = producto.uppercase().trim()
         val sinRedondeo = prodClean == "CSB VIP" && plazo == 60
         val centavos: (BigDecimal) -> BigDecimal = { valor ->
             if (sinRedondeo) valor.round(MC) else valor.setScale(2, RoundingMode.HALF_UP)
         }
 
-        val tasa = BigDecimal(getTasaMensual(producto, plazo, jubilado).toString()).divide(BD_100, MC)
+        val tasa = BigDecimal(getTasaMensual(producto, plazo).toString()).divide(BD_100, MC)
         val factor = BigDecimal(getFactorSeguro(producto).toString())
         val tasaConIva = tasa.multiply(UNO_MAS_IVA, MC)
         val descuento = BigDecimal.ONE.subtract(

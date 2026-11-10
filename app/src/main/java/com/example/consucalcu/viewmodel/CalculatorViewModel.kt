@@ -774,12 +774,7 @@ CAT: ${o.cat}
                 }
 
                 // Si está aprobado: calcular la tabla del seguro con la hoja del Excel.
-                val schedule = NormativaIMSS.calcularTablaSeguro(
-                    productKey,
-                    amount,
-                    term,
-                    jubilado = tipoPension == TipoPension.JUBILACION
-                )
+                val schedule = NormativaIMSS.calcularTablaSeguro(productKey, amount, term)
                 // Retención a 54 meses no tiene factor de cotización: se muestra el pago
                 // de la hoja del seguro.
                 val pagoMensual = FinancialEngine.calculate(

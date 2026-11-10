@@ -39,28 +39,6 @@ class InsuranceCalculationTest {
     }
 
     @Test
-    fun opcRetireesUseTheirOwnSheets() {
-        // Hojas «OPC n meses_Jub» del Excel OPC V.10 (09.11.2026).
-        listOf(
-            listOf("12", "25000", "310.51", "310.51"),
-            listOf("24", "10000", "178.90", "251.89"),
-            listOf("36", "10000", "196.35", "391.33"),
-            listOf("48", "10000", "204.79", "544.74"),
-            listOf("54", "5000", "103.66", "312.38"),
-            listOf("60", "5000", "104.62", "353.36")
-        ).forEach { (term, amount, firstYear, fullTerm) ->
-            val schedule = NormativaIMSS.calcularTablaSeguro("OPC", BigDecimal(amount), term.toInt(), jubilado = true)
-            assertEquals("1er año OPC Jub $term", BigDecimal(firstYear), schedule.firstYearCost)
-            assertEquals("Total OPC Jub $term", BigDecimal(fullTerm), schedule.fullTermCost)
-        }
-        // CSB no tiene hojas de Jubilados: misma tasa.
-        assertEquals(
-            NormativaIMSS.calcularTablaSeguro("CSB", BigDecimal("30000"), 60).fullTermCost,
-            NormativaIMSS.calcularTablaSeguro("CSB", BigDecimal("30000"), 60, jubilado = true).fullTermCost
-        )
-    }
-
-    @Test
     fun retentionAddsFiftyFourMonthsToSpecialProducts() {
         // Cálculo de Seguro CSB - OPC Retención V.1 (09.11.2026), hojas de 54 meses.
         listOf(
