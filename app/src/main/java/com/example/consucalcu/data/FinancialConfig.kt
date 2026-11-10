@@ -66,14 +66,16 @@ object FinancialConfig {
         // con simulaciones oficiales. Véase docs/calibracion-opc-csb-2026-09-08.md.
         "OPC" to ProductData(
             factorsTrad = mapOf(
-                60 to BigDecimal("36.7774805"),
-                54 to BigDecimal("38.2522771"),
-                48 to BigDecimal("40.1857737"),
-                36 to BigDecimal("46.3724411"),
-                24 to BigDecimal("59.5762581"),
-                12 to BigDecimal("100.9601550")
+                60 to BigDecimal("36.62852957"),
+                54 to BigDecimal("38.10745421"),
+                48 to BigDecimal("40.04528403"),
+                36 to BigDecimal("46.24108894"),
+                24 to BigDecimal("59.45416897"),
+                12 to BigDecimal("100.84526405")
             ),
-            meta = ProductMeta(2.66, "43.96%", "43.96%"),
+            // Condiciones 2026-11-10: CAT 43.64 % en todos los plazos (2.64 % mensual
+            // sin IVA). Factores del CAT con 8 decimales: a 12 y 24 meses 7 no bastan.
+            meta = ProductMeta(2.64, "43.64%", "43.64%"),
             minGlobal = BigDecimal("5000"),
             minInc = BigDecimal("500"),
             minTermMap = mapOf(
@@ -85,12 +87,12 @@ object FinancialConfig {
                 12 to BigDecimal("25000")
             ),
             catTradByTerm = mapOf(
-                60 to "43.96%", 54 to "43.96%", 48 to "43.96%",
-                36 to "43.96%", 24 to "43.96%", 12 to "43.96%"
+                60 to "43.64%", 54 to "43.64%", 48 to "43.64%",
+                36 to "43.64%", 24 to "43.64%", 12 to "43.64%"
             ),
             tasaRefByTerm = mapOf(
-                60 to 2.66, 54 to 2.66, 48 to 2.66,
-                36 to 2.66, 24 to 2.66, 12 to 2.66
+                60 to 2.64, 54 to 2.64, 48 to 2.64,
+                36 to 2.64, 24 to 2.64, 12 to 2.64
             )
         ),
         // Hereda las condiciones financieras de CSP Especial.

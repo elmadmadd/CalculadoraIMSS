@@ -216,3 +216,22 @@ primer año y del plazo total. Sustituye a los factores por monto
 Dos hojas se apartan del resto y se replican tal cual, pendientes de confirmar:
 **OPC 36 meses** redondea el PMT a pesos y **CSB 60 meses (VIP)** no redondea
 valores intermedios. Las reglas de elegibilidad y edad no están en estos archivos.
+
+## OPC tradicional — 2026-11-10
+
+Opcipres cambió a **CAT 43.64 %** en todos los plazos (antes 43.96 %), equivalente a
+**2.64 %** mensual sin IVA (del CAT resulta 2.6412 %). Treinta simulaciones oficiales,
+cinco por plazo, coinciden al centavo con el factor que sale del CAT:
+
+| Plazo | Factor anterior | Factor nuevo |
+| ---: | ---: | ---: |
+| 60 | 36.7774805 | **36.62852957** |
+| 54 | 38.2522771 | **38.10745421** |
+| 48 | 40.1857737 | **40.04528403** |
+| 36 | 46.3724411 | **46.24108894** |
+| 24 | 59.5762581 | **59.45416897** |
+| 12 | 100.9601550 | **100.84526405** |
+
+Se guardan con 8 decimales: a 24 y 12 meses el valor redondeado a 7 queda fuera del
+intervalo compatible (a 12 meses el intervalo mide 0.0000002). OPC MAX, OPC ESP y la
+tasa del seguro de OPC (2.6578 % en el Excel V.09) no se modificaron.

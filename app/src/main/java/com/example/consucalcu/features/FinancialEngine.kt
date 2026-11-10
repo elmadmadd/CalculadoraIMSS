@@ -149,6 +149,7 @@ object FinancialEngine {
         val clean = rateInput.replace("%", "").trim()
         val mapped = when (clean) {
             "43.96" -> 2.66
+            "43.64" -> 2.64
             "43.77" -> 2.65
             "43.57" -> 2.64
             "43.38" -> 2.63
@@ -185,6 +186,7 @@ object FinancialEngine {
         if (parsed > 10.0) {
             val list = listOf(
                 Pair(43.96, 2.66),
+                Pair(43.64, 2.64),
                 Pair(43.77, 2.65),
                 Pair(43.57, 2.64),
                 Pair(43.38, 2.63),

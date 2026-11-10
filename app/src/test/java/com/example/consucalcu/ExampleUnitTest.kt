@@ -32,12 +32,12 @@ class ExampleUnitTest {
 
         assertEquals(
             mapOf(
-                60 to BigDecimal("36.7774805"),
-                54 to BigDecimal("38.2522771"),
-                48 to BigDecimal("40.1857737"),
-                36 to BigDecimal("46.3724411"),
-                24 to BigDecimal("59.5762581"),
-                12 to BigDecimal("100.9601550")
+                60 to BigDecimal("36.62852957"),
+                54 to BigDecimal("38.10745421"),
+                48 to BigDecimal("40.04528403"),
+                36 to BigDecimal("46.24108894"),
+                24 to BigDecimal("59.45416897"),
+                12 to BigDecimal("100.84526405")
             ),
             opc.factorsTrad
         )
@@ -53,13 +53,13 @@ class ExampleUnitTest {
             opc.minTermMap
         )
         assertEquals(
-            mapOf(60 to 2.66, 54 to 2.66, 48 to 2.66, 36 to 2.66, 24 to 2.66, 12 to 2.66),
+            mapOf(60 to 2.64, 54 to 2.64, 48 to 2.64, 36 to 2.64, 24 to 2.64, 12 to 2.64),
             opc.tasaRefByTerm
         )
         assertEquals(
             mapOf(
-                60 to "43.96%", 54 to "43.96%", 48 to "43.96%",
-                36 to "43.96%", 24 to "43.96%", 12 to "43.96%"
+                60 to "43.64%", 54 to "43.64%", 48 to "43.64%",
+                36 to "43.64%", 24 to "43.64%", 12 to "43.64%"
             ),
             opc.catTradByTerm
         )
