@@ -13,8 +13,10 @@ android {
         applicationId = "com.example.consucalcu"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "2.3"
+        // Sube versionCode en cada APK que se reparta: Android rechaza instalar
+        // encima una versión con el mismo número o uno menor.
+        versionCode = 2
+        versionName = "2.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
