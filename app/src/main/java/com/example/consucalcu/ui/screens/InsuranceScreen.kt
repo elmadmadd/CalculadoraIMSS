@@ -204,7 +204,8 @@ fun InsuranceScreen(
                                 }
                                 ExposedDropdownMenu(
                                     expanded = pensionExpanded,
-                                    onDismissRequest = { pensionExpanded = false }
+                                    onDismissRequest = { pensionExpanded = false },
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     pensionTypes.forEach { type ->
                                         DropdownMenuItem(
